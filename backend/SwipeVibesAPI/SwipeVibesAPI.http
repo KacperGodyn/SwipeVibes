@@ -1,0 +1,6 @@
+@SwipeVibesAPI_HostAddress = http://localhost:5078
+
+GET {{SwipeVibesAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

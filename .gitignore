@@ -89,3 +89,6 @@ Protos/obj/
 *.vsidx
 
 backend/SwipeVibesAPI/appsettings.json
+frontend/my-expo-app/firebase.ts
+
+/web-build

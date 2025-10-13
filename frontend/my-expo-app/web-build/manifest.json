@@ -1,0 +1,17 @@
+{
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "lang": "en",
+  "name": "my-expo-app",
+  "short_name": "my-expo-app",
+  "start_url": "/?utm_source=web_app_manifest",
+  "orientation": "portrait",
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "http://play.google.com/store/apps/details?id=com.anonymous.myexpoapp",
+      "id": "com.anonymous.myexpoapp"
+    }
+  ],
+  "prefer_related_applications": true
+}

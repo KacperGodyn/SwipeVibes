@@ -3,11 +3,11 @@
     "name": "my-expo-app",
     "slug": "my-expo-app",
     "version": "1.0.0",
-    "web": {
-      "favicon": "./assets/favicon.png",
-      "build": {
-        "publicUrl": "https://kacpergodyn.github.io/swipevibes"
-      }
+  "web": {
+    "favicon": "./assets/favicon.png",
+    "bundler": "metro",
+    "output": "static",
+    "publicPath": "/swipevibes/"
     },
     "experiments": {
       "tsconfigPaths": true

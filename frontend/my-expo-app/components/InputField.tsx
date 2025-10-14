@@ -1,4 +1,5 @@
 import { TextInput, TextInputProps } from "react-native";
+import React from "react";
 
 type InputFieldProps = TextInputProps & {
   className?: string;

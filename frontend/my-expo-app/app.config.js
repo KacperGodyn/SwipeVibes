@@ -1,0 +1,33 @@
+export default {
+  expo: {
+    name: "my-expo-app",
+    slug: "my-expo-app",
+    version: "1.0.0",
+    web: {
+      bundler: "metro",
+      output: "single",
+      publicPath: "./",
+      favicon: "./assets/favicon.png"
+    },
+    experiments: {
+      tsconfigPaths: true
+    },
+    orientation: "portrait",
+    icon: "./assets/icon.png",
+    userInterfaceStyle: "light",
+    splash: {
+      image: "./assets/splash.png",
+      resizeMode: "contain",
+      backgroundColor: "#ffffff"
+    },
+    assetBundlePatterns: ["**/*"],
+    ios: { supportsTablet: true },
+    android: {
+      adaptiveIcon: {
+        foregroundImage: "./assets/adaptive-icon.png",
+        backgroundColor: "#ffffff"
+      },
+      package: "com.anonymous.myexpoapp"
+    }
+  }
+};

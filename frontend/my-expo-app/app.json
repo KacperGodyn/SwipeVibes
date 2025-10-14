@@ -3,11 +3,12 @@
     "name": "my-expo-app",
     "slug": "my-expo-app",
     "version": "1.0.0",
-  "web": {
-    "favicon": "./assets/favicon.png",
-    "bundler": "metro",
-    "output": "single",
-    "publicPath": "/swipevibes/"
+    "sdkVersion": "54.0.0",
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "single",
+      "publicPath": "./"
     },
     "experiments": {
       "tsconfigPaths": true
@@ -21,12 +22,8 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "ios": {
-      "supportsTablet": true
-    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": { "supportsTablet": true },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

@@ -1,4 +1,5 @@
 import { Pressable, Text, PressableProps, View } from 'react-native';
+import React from "react";
 
 type PrimaryButtonProps = PressableProps & {
   title: string;

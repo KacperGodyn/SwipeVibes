@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
 import { Pressable, Text, PressableProps, View } from 'react-native';
+import React from "react";
 
 type ButtonLogInViaProps = {
   provider: 'spotify' | 'soundcloud' | 'steam' | 'google' | 'github';

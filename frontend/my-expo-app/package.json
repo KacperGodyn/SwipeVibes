@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "main": "expo-router/entry",
-  "homepage": "https://kacpergodyn.github.io/swipevibes",
+  "homepage": "https://kacpergodyn.github.io/SwipeVibes",
   "scripts": {
     "android": "expo run:android",
     "ios": "expo run:ios",

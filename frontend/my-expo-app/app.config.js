@@ -3,10 +3,11 @@ export default {
     name: "my-expo-app",
     slug: "my-expo-app",
     version: "1.0.0",
+    sdkVersion: "54.0.0",
     web: {
       bundler: "metro",
       output: "single",
-      publicPath: "./",
+      baseUrl: "/swipevibes/",
       favicon: "./assets/favicon.png"
     },
     experiments: {

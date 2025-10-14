@@ -10,7 +10,7 @@ config.resolver.sourceExts.push('svg');
 config.server = config.server || {};
 config.server.rewriteRequestUrl = (url) => {
   if (url.startsWith('/_expo/')) {
-    return url.replace('/_expo/', '/swipevibes/_expo/');
+    return url.replace('/_expo/', '/SwipeVibes/_expo/');
   }
   return url;
 };

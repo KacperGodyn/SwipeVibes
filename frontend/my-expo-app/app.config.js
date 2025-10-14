@@ -1,34 +1,36 @@
 export default {
   expo: {
-    name: "my-expo-app",
-    slug: "my-expo-app",
-    version: "1.0.0",
-    sdkVersion: "54.0.0",
+    name: 'my-expo-app',
+    slug: 'my-expo-app',
+    version: '1.0.0',
+    sdkVersion: '54.0.0',
     web: {
-      bundler: "metro",
-      output: "single",
-      baseUrl: "/SwipeVibes/",
-      favicon: "./assets/favicon.png"
+      bundler: 'metro',
+      output: 'static',
+      //baseUrl: "/SwipeVibes",
+      favicon: './assets/favicon.png',
     },
     experiments: {
-      tsconfigPaths: true
+      tsconfigPaths: true,
+      baseUrl: '/SwipeVibes',
     },
-    orientation: "portrait",
-    icon: "./assets/icon.png",
-    userInterfaceStyle: "light",
+    plugins: [['expo-router', { origin: 'https://kacpergodyn.github.io' }]],
+    orientation: 'portrait',
+    icon: './assets/icon.png',
+    userInterfaceStyle: 'light',
     splash: {
-      image: "./assets/splash.png",
-      resizeMode: "contain",
-      backgroundColor: "#ffffff"
+      image: './assets/splash.png',
+      resizeMode: 'contain',
+      backgroundColor: '#ffffff',
     },
-    assetBundlePatterns: ["**/*"],
+    assetBundlePatterns: ['**/*'],
     ios: { supportsTablet: true },
     android: {
       adaptiveIcon: {
-        foregroundImage: "./assets/adaptive-icon.png",
-        backgroundColor: "#ffffff"
+        foregroundImage: './assets/adaptive-icon.png',
+        backgroundColor: '#ffffff',
       },
-      package: "com.anonymous.myexpoapp"
-    }
-  }
+      package: 'com.anonymous.myexpoapp',
+    },
+  },
 };

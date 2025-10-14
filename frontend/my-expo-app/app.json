@@ -8,7 +8,7 @@
       "favicon": "./assets/favicon.png",
       "bundler": "metro",
       "output": "single",
-      "publicPath": "./"
+      "publicPath": "/swipevibes/"
     },
     "experiments": {
       "tsconfigPaths": true

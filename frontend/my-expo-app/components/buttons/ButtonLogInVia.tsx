@@ -26,7 +26,7 @@ export default function ButtonLogInVia({ provider }: ButtonLogInViaProps) {
     <View>
       <Pressable
         onPress={handleProviderLogIn}
-        className="mx-2 my-2 h-24 w-24 items-center justify-center rounded-full border border-white/20 bg-white/30 shadow-md backdrop-blur-xl active:bg-white/40">
+        className="mx-2 my-2 h-20 w-20 items-center justify-center rounded-full border border-white/20 bg-white/30 shadow-md backdrop-blur-xl active:bg-white/40">
         <Icon width={40} height={40} />
       </Pressable>
     </View>

@@ -59,7 +59,7 @@ jobs:
         run: yarn build:web
         working-directory: ./frontend/my-expo-app
 
- - name: Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages
         run: |
           set -euo pipefail
           BUILD_DIR="./frontend/my-expo-app/dist"

@@ -7,7 +7,7 @@ export default {
     web: {
       bundler: "metro",
       output: "single",
-      baseUrl: "/swipevibes/",
+      baseUrl: "/SwipeVibes/",
       favicon: "./assets/favicon.png"
     },
     experiments: {

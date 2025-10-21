@@ -24,6 +24,11 @@ public class UserService
         return Task.FromResult(_users.FirstOrDefault(u => u.Username == username));
     }
 
+    public Task<User> GetUserByEmailAsync(string email)
+    {
+        return Task.FromResult(_users.FirstOrDefault(u => u.Email == email));
+    }
+
     public Task<List<User>> GetUsersAsync()
     {
         return Task.FromResult(_users.ToList());

@@ -37,6 +37,8 @@ Thumbs.db
 .env.*
 !.env.example
 
+_secrets/firebase-admin.json
+
 bin/
 obj/
 out/
@@ -71,6 +73,7 @@ packages/
 
 appsettings.*.json
 !appsettings.json
+android/app/google-services.json
 
 *.g.cs
 *.pb.cs

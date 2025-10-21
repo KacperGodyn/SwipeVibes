@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "843665882662",
+    "project_id": "swipevibes-31667",
+    "storage_bucket": "swipevibes-31667.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:843665882662:android:c0ba51a3f15e3a4a4730e7",
+        "android_client_info": {
+          "package_name": "com.kacgod.swipevibes"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "843665882662-nclrrevcp1bemf7rivrt7fvkr55n5pna.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kacgod.swipevibes",
+            "certificate_hash": "dfdef53b04d15f41846bedfb6b265a3b4748f5e9"
+          }
+        },
+        {
+          "client_id": "843665882662-itnelbfcc8h8kr00ort1lq06ec2henlh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBB_fPDCYeIaVvCdWXl3BFBddzL9s1-cmI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "843665882662-itnelbfcc8h8kr00ort1lq06ec2henlh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "843665882662-ev25re285112trl1e0b4vqac1mkuu08n.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "host.exp.Exponent"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

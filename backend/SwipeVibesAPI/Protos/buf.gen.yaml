@@ -1,0 +1,8 @@
+version: v1
+plugins:
+  - plugin: buf.build/bufbuild/es:v1.10.0
+    out: ../../../frontend/my-expo-app/services/auth/gRPC/user
+    opt: target=ts
+  - plugin: buf.build/bufbuild/connect-web:v0.8.6
+    out: ../../../frontend/my-expo-app/services/auth/gRPC/user
+    opt: target=ts,import_extension=none

@@ -58,6 +58,15 @@ jobs:
       - name: Build Expo Web
         run: yarn build:web
         working-directory: ./frontend/my-expo-app
+        env:
+          APP_ENV: development
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_SCOPES: ${{ secrets.SPOTIFY_SCOPES }}
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
+          GOOGLE_ANDROID_CLIENT_ID: ${{ secrets.GOOGLE_ANDROID_CLIENT_ID }}
+          # GOOGLE_IOS_CLIENT_ID: ${{ secrets.GOOGLE_IOS_CLIENT_ID }}
+          DEV_API_URL: ${{ secrets.DEV_API_URL }}
+          PROD_API_URL: ${{ secrets.PROD_API_URL }}
 
       - name: Deploy to GitHub Pages
         run: |

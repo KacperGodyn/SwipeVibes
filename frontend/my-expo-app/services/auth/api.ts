@@ -1,4 +1,3 @@
-// services/auth/api.ts
 import { userClient } from "./gRPC/user/connectClient";
 import type { PartialMessage } from "@bufbuild/protobuf";
 import type {
@@ -10,20 +9,20 @@ import type {
 import { setAccessToken } from "./token";
 import { Platform } from "react-native";
 
-export async function loginWithSpotify(idToken: string) {
+export async function loginWithSpotify(idTokenSpotify: string) {
   const req: PartialMessage<LoginRequest> = {
     provider: "spotify",
-    token: idToken,
+    token: idTokenSpotify,
   };
   const res: LoginReply = await userClient.login(req);
   setAccessToken(res.token);
   return res;
 }
 
-export async function loginWithGoogle(idToken: string) {
+export async function loginWithGoogle(idTokenGoogle: string) {
   const req: PartialMessage<LoginRequest> = {
     provider: "google",
-    token: idToken,
+    token: idTokenGoogle,
   };
   const res: LoginReply = await userClient.login(req);
   setAccessToken(res.token);

@@ -23,10 +23,13 @@ export function useSpotifyLogin({ onSuccess, onError }: UseSpotifyLoginOptions =
   const clientId: string | undefined = spotify.clientId;
   const scopes: string[] = Array.isArray(spotify.scopes) ? spotify.scopes : ['user-read-email'];
 
-    const redirectUri = 
-    Platform.OS === 'web'
-    ? 'https://auth.expo.io/@kacgod/swipevibes'
-    : makeRedirectUri({ scheme: 'swipevibes', path: 'oauth2redirect/spotify' })
+  const isWeb = Platform.OS === 'web';
+
+  const redirectUri = makeRedirectUri({
+    scheme: 'swipevibes',
+    path: 'oauth2redirect/spotify',
+    ...(Platform.OS === 'web' ? { useProxy: true } : {}),
+  });
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
@@ -84,10 +87,13 @@ export function useSpotifyLogin({ onSuccess, onError }: UseSpotifyLoginOptions =
   console.log('[useSpotifyLogin] Redirect URI:', redirectUri);
   console.log('[useSpotifyLogin] Request:', request);
   console.log('[useSpotifyLogin] Response:', response);
+  console.log('[useSpotifyLogin] Final Redirect URI:', request?.redirectUri);
+
   return {
     ready: !!request,
     loading,
     error: lastError,
-    promptAsync: (opts?: AuthSession.AuthRequestPromptOptions) => promptAsync
+    promptAsync: (opts?: AuthSession.AuthRequestPromptOptions) =>
+      promptAsync({ ...(opts ?? {}), ...(isWeb ? { useProxy: true } : {}) } as any),
   };
 }

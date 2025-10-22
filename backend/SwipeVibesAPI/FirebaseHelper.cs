@@ -19,4 +19,4 @@ public static class FirebaseHelper
     {
         return await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync(uid);
     }
-}
+};

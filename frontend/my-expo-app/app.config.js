@@ -73,7 +73,7 @@ export default ({ config }) => {
               {
                 // This MUST match com.googleusercontent.apps.<ANDROID_CLIENT_ID>:/oauth2redirect/google
                 scheme: ANDROID_REVERSED_SCHEME,
-                pathPrefix: '/oauth2redirect/google',
+                pathPrefix: '/oauth2redirect',
               },
             ],
           },

@@ -6,6 +6,9 @@ using FirebaseAdmin.Auth;
 using SwipeVibesAPI.Entities;
 using SwipeVibesAPI.Grpc;
 using SwipeVibesAPI.Utility;
+using System.Net.Http.Headers;
+using System.Net;
+using System.Text.Json;
 
 namespace SwipeVibesAPI.Services
 {
@@ -14,12 +17,15 @@ namespace SwipeVibesAPI.Services
         private readonly UserService _userService;
         private readonly JwtService _jwtService;
         private readonly IWebHostEnvironment _env;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public UserGrpcService(UserService userService, JwtService jwtService, IWebHostEnvironment env)
+        public UserGrpcService(UserService userService, JwtService jwtService, IWebHostEnvironment env, IHttpClientFactory httpClientFactory
+            )
         {
             _userService = userService;
             _jwtService = jwtService;
             _env = env;
+            _httpClientFactory = httpClientFactory;
         }
 
         private async Task<FirebaseToken> VerifyToken(string token)
@@ -33,6 +39,43 @@ namespace SwipeVibesAPI.Services
             {
                 throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
             }
+        }
+
+        private static bool IsProvider(string? p, string expected) =>
+            !string.IsNullOrWhiteSpace(p) && p.Equals(expected, StringComparison.OrdinalIgnoreCase);
+
+        private static async Task<string> VerifyGoogleAndGetEmailAsync(string firebaseIdToken)
+        {
+            var decoded = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(firebaseIdToken);
+            if (!decoded.Claims.TryGetValue("email", out var ve) || string.IsNullOrWhiteSpace(ve?.ToString()))
+                throw new RpcException(new Status(StatusCode.Unauthenticated, "Google token missing email"));
+            return ve!.ToString()!;
+        }
+
+        private async Task<(string? Email, string SpotifyId)> VerifySpotifyAndGetProfileAsync(string accessToken)
+        {
+            var client = _httpClientFactory.CreateClient();
+            using var req = new HttpRequestMessage(HttpMethod.Get, "https://api.spotify.com/v1/me");
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            using var res = await client.SendAsync(req);
+            if (res.StatusCode == HttpStatusCode.Unauthorized)
+                throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid Spotify access token"));
+
+            res.EnsureSuccessStatusCode();
+            var json = await res.Content.ReadAsStringAsync();
+
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            var id = root.GetProperty("id").GetString() ?? throw new RpcException(
+                new Status(StatusCode.Internal, "Spotify profile missing id"));
+
+            string? email = null;
+            if (root.TryGetProperty("email", out var e) && e.ValueKind == JsonValueKind.String)
+                email = e.GetString();
+
+            return (email, id);
         }
 
         public override async Task<UserReply> CreateUser(CreateUserRequest request, ServerCallContext context)
@@ -131,22 +174,60 @@ namespace SwipeVibesAPI.Services
         {
             Entities.User user;
 
-            if (!string.IsNullOrWhiteSpace(request.Provider) &&
-                request.Provider.Equals("google", StringComparison.OrdinalIgnoreCase))
+            // OAuth providers
+            if (!string.IsNullOrWhiteSpace(request.Provider))
             {
-                var decoded = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(request.Token);
-                var email = decoded.Claims.TryGetValue("email", out var v) ? v?.ToString() : null;
-                if (string.IsNullOrWhiteSpace(email))
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Google token missing email"));
+                if (IsProvider(request.Provider, "google"))
+                {
+                    // request.Token must be a Firebase ID token
+                    var email = await VerifyGoogleAndGetEmailAsync(request.Token);
 
-                user = await _userService.GetUserByEmailAsync(email)
-                       ?? await _userService.RegisterUserAsync(new User
-                       {
-                           Username = email.Split('@')[0],
-                           Email = email,
-                           Password = string.Empty,
-                           Role = "User"
-                       });
+                    user = await _userService.GetUserByEmailAsync(email)
+                           ?? await _userService.RegisterUserAsync(new User
+                           {
+                               Username = email.Split('@')[0],
+                               Email = email,
+                               Password = string.Empty,
+                               Role = "User"
+                           });
+                }
+                else if (IsProvider(request.Provider, "spotify"))
+                {
+                    // request.Token must be a Spotify access token
+                    var (email, spotifyId) = await VerifySpotifyAndGetProfileAsync(request.Token);
+
+                    // Prefer email if available; otherwise fall back to a stable username key
+                    if (!string.IsNullOrWhiteSpace(email))
+                    {
+                        user = await _userService.GetUserByEmailAsync(email)
+                               ?? await _userService.RegisterUserAsync(new User
+                               {
+                                   Username = email.Split('@')[0],
+                                   Email = email,
+                                   Password = string.Empty,
+                                   Role = "User"
+                               });
+                    }
+                    else
+                    {
+                        // Some Spotify accounts may not expose email without scope.
+                        // Use a deterministic username, and store a placeholder email
+                        var uname = $"spotify:{spotifyId}";
+                        user = await _userService.GetUserByUsernameAsync(uname)
+                               ?? await _userService.RegisterUserAsync(new User
+                               {
+                                   Username = uname,
+                                   Email = $"user+{spotifyId}@spotify.local", // placeholder to satisfy non-null
+                                   Password = string.Empty,
+                                   Role = "User"
+                               });
+                    }
+                }
+                // Unsupported provider, will add others later
+                else
+                {
+                    throw new RpcException(new Status(StatusCode.InvalidArgument, $"Unsupported provider '{request.Provider}'"));
+                }
             }
             else
             {
@@ -157,6 +238,7 @@ namespace SwipeVibesAPI.Services
                     throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid password"));
             }
 
+            // Issue tokns
             var access = _jwtService.GenerateAccess(user.Username, user.Role, TimeSpan.FromMinutes(15));
             var refresh = _jwtService.GenerateRefresh(user.Username, TimeSpan.FromDays(14));
 

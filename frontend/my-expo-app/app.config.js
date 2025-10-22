@@ -32,6 +32,10 @@ export default ({ config }) => {
       extra: {
         appEnv,
         apiUrl: isDev ? process.env.DEV_API_URL : process.env.PROD_API_URL,
+        spotify: {
+          clientId: process.env.SPOTIFY_CLIENT_ID,
+          scopes: (process.env.SPOTIFY_SCOPES || 'user-read-email user-read-private').split(' '),
+        },
         google: {
           expoClientId: process.env.GOOGLE_WEB_CLIENT_ID, // web only
           webClientId: process.env.GOOGLE_WEB_CLIENT_ID, // web only
@@ -71,7 +75,6 @@ export default ({ config }) => {
             category: ['BROWSABLE', 'DEFAULT'],
             data: [
               {
-                // This MUST match com.googleusercontent.apps.<ANDROID_CLIENT_ID>:/oauth2redirect/google
                 scheme: ANDROID_REVERSED_SCHEME,
                 pathPrefix: '/oauth2redirect',
               },

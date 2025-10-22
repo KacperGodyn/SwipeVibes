@@ -10,6 +10,16 @@ import type {
 import { setAccessToken } from "./token";
 import { Platform } from "react-native";
 
+export async function loginWithSpotify(idToken: string) {
+  const req: PartialMessage<LoginRequest> = {
+    provider: "spotify",
+    token: idToken,
+  };
+  const res: LoginReply = await userClient.login(req);
+  setAccessToken(res.token);
+  return res;
+}
+
 export async function loginWithGoogle(idToken: string) {
   const req: PartialMessage<LoginRequest> = {
     provider: "google",

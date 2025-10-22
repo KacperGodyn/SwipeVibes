@@ -1,4 +1,8 @@
 using DotNetEnv;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using SwipeVibesAPI.Services;
 using Microsoft.IdentityModel.Tokens;
@@ -16,6 +20,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<UserService>();
 builder.Services.AddSingleton<JwtService>();
+builder.Services.AddHttpClient();
 
 Env.Load();
 

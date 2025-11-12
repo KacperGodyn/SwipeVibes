@@ -1,0 +1,107 @@
+﻿syntax = "proto3";
+
+package deezer;
+option csharp_namespace = "SwipeVibesAPI.Grpc";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+service DeezerService {
+  rpc ListRadioStations (ListRadioStationsRequest) returns (ListRadioStationsResponse);
+  rpc GetRadioStation   (GetRadioStationRequest)   returns (GetRadioStationResponse);
+  rpc ListRadioTracks   (ListRadioTracksRequest)   returns (ListRadioTracksResponse);
+  rpc GetTrack          (GetTrackRequest)          returns (GetTrackResponse);
+  rpc GetRandomTrackFromRandomStation (google.protobuf.Empty) returns (GetTrackResponse);
+}
+
+message ListRadioStationsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+}
+
+message GetRadioStationRequest {
+  int64 id = 1;
+}
+
+message RadioStation {
+  int64 id = 1;
+  string title = 2;
+  string tracklist = 3;
+}
+
+message ListRadioStationsResponse {
+  repeated RadioStation stations = 1;
+}
+
+message GetRadioStationResponse {
+  RadioStation station = 1;
+}
+
+enum ExplicitLevel {
+  EXPLICIT_LEVEL_UNSPECIFIED = 0;
+  CLEAN = 1;
+  EXPLICIT = 2;
+}
+
+message Artist {
+  int64 id = 1;
+  string name = 2;
+  string link = 3;
+  string picture = 4;
+  string picture_small = 5;
+  string picture_medium = 6;
+  string picture_big = 7;
+  string picture_xl = 8;
+  string tracklist = 9;
+}
+
+message Album {
+  int64 id = 1;
+  string title = 2;
+  string cover = 3;
+  string cover_small = 4;
+  string cover_medium = 5;
+  string cover_big = 6;
+  string cover_xl = 7;
+  string tracklist = 8;
+}
+
+message Track {
+  int64 id = 1;
+  string title = 2;
+  string title_short = 3;
+  string isrc = 4;
+  string link = 5;
+  string share = 6;
+  int32 track_position = 7;
+  int32 disk_number = 8;
+  int32 rank = 9;
+  google.protobuf.Timestamp release_date = 10;
+  bool explicit_lyrics = 11;
+  ExplicitLevel explicit_content_lyrics = 12;
+  ExplicitLevel explicit_cover = 13;
+  string preview = 14;
+  double bpm = 15;
+  double gain = 16;
+  repeated string country_codes = 17;
+  repeated Artist artists = 18;
+  Album album = 19;
+}
+
+message ListRadioTracksRequest {
+  int64 station_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+message ListRadioTracksResponse {
+  repeated Track tracks = 1;
+}
+
+message GetTrackRequest {
+  int64 id = 1;
+}
+
+message GetTrackResponse {
+  Track track = 1;
+}

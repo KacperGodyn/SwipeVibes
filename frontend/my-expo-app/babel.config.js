@@ -1,3 +1,6 @@
+const dotenv = require('dotenv');
+dotenv.config();
+
 module.exports = function (api) {
   api.cache(true);
 
@@ -7,10 +10,20 @@ module.exports = function (api) {
         'babel-preset-expo',
         {
           jsxImportSource: 'nativewind',
-          runtime: 'automatic'
-        }
+          runtime: 'automatic',
+        },
       ],
-      'nativewind/babel'
+      'nativewind/babel',
+    ],
+    plugins: [
+      [
+        'module:react-native-dotenv',
+        {
+          moduleName: '@env',
+          path: '.env',
+          allowlist: ['EXPO_PUBLIC_DEEZER_API_URL'],
+        },
+      ],
     ],
   };
 };

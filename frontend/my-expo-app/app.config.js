@@ -43,6 +43,7 @@ export default ({ config }) => {
           androidReversedClientScheme: ANDROID_REVERSED_SCHEME, // WITHOUT domain (for redirect)
           // iosClientId: process.env.GOOGLE_IOS_CLIENT_ID,      // optional (later)
         },
+        deezerApiUrl: process.env.EXPO_PUBLIC_DEEZER_API_URL,
         eas: {
           projectId: '745c3276-782e-4cb5-8395-17e19efc5299',
         },

@@ -2,7 +2,10 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import ContainerFlexColumn from 'components/containers/ContainerFlexColumn';
 import SubContainerFlexRow from 'components/containers/SubContainerFlexRow';
-import NavigationContainer from 'components/containers/NavigationContainer';
+import CardNavigationContainer from 'components/containers/CardNavigationContainer';
+import GeneralNavigationContainer from 'components/containers/GeneralNavigationContainer';
+import MainCardDisplayedContent from 'components/MainCardDisplayedContent';
+
 
 export default function HomeScreen() {
   return (
@@ -10,14 +13,14 @@ export default function HomeScreen() {
       <View style={{ flex: 8 }}>
         <ContainerFlexColumn
           style={{ width: '85%', alignSelf: 'center', height: '85%' }}
-          colors={gradient}>
+          colors={cardGradient}>
           <SubContainerFlexRow style={{ width: '85%', alignSelf: 'center', height: '82%' }}>
-            <View className="bg-white">
-              <Text>sample</Text>
+            <View>
+              <MainCardDisplayedContent />
             </View>
           </SubContainerFlexRow>
           <SubContainerFlexRow>
-            <NavigationContainer /> 
+            <CardNavigationContainer />
           </SubContainerFlexRow>
         </ContainerFlexColumn>
       </View>
@@ -26,12 +29,12 @@ export default function HomeScreen() {
         <ContainerFlexColumn
           style={{ width: '85%', alignSelf: 'center', height: '60%', marginBottom: 60 }}>
           <SubContainerFlexRow>
-            <Text>navi</Text>
+            <GeneralNavigationContainer />
           </SubContainerFlexRow>
         </ContainerFlexColumn>
       </View>
     </View>
   );
-}
+};
 
-const gradient = ['#00F539', '#22CA49', '#35A04E', '#3B7548', '#324B38', '#2B332C'] as const;
+const cardGradient = ['#00F539', '#22CA49', '#35A04E', '#3B7548', '#324B38', '#2B332C'] as const;

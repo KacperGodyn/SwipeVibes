@@ -1,4 +1,4 @@
-import { Pressable, Text, View, ActivityIndicator } from "react-native";
+import { Pressable, View, ActivityIndicator } from "react-native";
 import React from "react";
 import SpotifyIcon from "../../assets/Provider/spotify_logo_colour.svg";
 import SoundCloudIcon from "../../assets/Provider/soundcloud_logo_colour.svg";

@@ -20,7 +20,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<UserService>();
 builder.Services.AddSingleton<JwtService>();
-builder.Services.AddHttpClient();
+builder.Services.AddHttpClient("deezer", c =>
+{
+    c.BaseAddress = new Uri("https://api.deezer.com/");
+});
+builder.Services.AddTransient<SwipeVibesAPI.Grpc.DeezerGrpcService>();
 
 Env.Load();
 
@@ -41,15 +45,21 @@ builder.Services
 
 builder.WebHost.ConfigureKestrel(options =>
 {
-    // gRPC HTTP/2 endpoint
-    // #TODO: might add TLS later
-    options.ListenLocalhost(5000, o => o.Protocols = HttpProtocols.Http2);
+    //// gRPC HTTP/2 endpoint
+    //// #TODO: might add TLS later
+    //options.ListenLocalhost(5000, o => o.Protocols = HttpProtocols.Http2);
 
-    // REST HTTP/1.1 endpoint
-    //options.ListenLocalhost(5001, o => o.Protocols = HttpProtocols.Http1);
+    //// REST HTTP/1.1 endpoint
+    ////options.ListenLocalhost(5001, o => o.Protocols = HttpProtocols.Http1);
+    //options.ListenLocalhost(5001, o =>
+    //{
+    //    o.Protocols = HttpProtocols.Http1;
+    //    o.UseHttps();
+    //});
+
     options.ListenLocalhost(5001, o =>
     {
-        o.Protocols = HttpProtocols.Http1;
+        o.Protocols = HttpProtocols.Http1AndHttp2;
         o.UseHttps();
     });
 });
@@ -102,6 +112,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapGrpcService<UserGrpcService>().EnableGrpcWeb();
+app.MapGrpcService<SwipeVibesAPI.Grpc.DeezerGrpcService>().EnableGrpcWeb();
 
 app.MapGet("/ping", () => "pong");
 

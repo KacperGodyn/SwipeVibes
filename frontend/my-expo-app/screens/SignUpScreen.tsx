@@ -52,7 +52,7 @@ export default function SignUpScreen() {
   const doGitHub = React.useCallback(() => alert('GitHub login TBD'), []);
 
   return (
-    <ContainerFlexColumn>
+    <ContainerFlexColumn style={{ width: '85%', height: '90%' }}>
       <SubContainerFlexRow>
         <ButtonSignUpClassic title="Sign up with an e-mail" />
       </SubContainerFlexRow>

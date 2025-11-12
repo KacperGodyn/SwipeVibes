@@ -19,8 +19,7 @@ namespace SwipeVibesAPI.Services
         private readonly IWebHostEnvironment _env;
         private readonly IHttpClientFactory _httpClientFactory;
 
-        public UserGrpcService(UserService userService, JwtService jwtService, IWebHostEnvironment env, IHttpClientFactory httpClientFactory
-            )
+        public UserGrpcService(UserService userService, JwtService jwtService, IWebHostEnvironment env, IHttpClientFactory httpClientFactory)
         {
             _userService = userService;
             _jwtService = jwtService;

@@ -1,10 +1,10 @@
-import { Pressable, Text, View, ActivityIndicator } from "react-native";
+import { Pressable, View, ActivityIndicator } from "react-native";
 import React from "react";
-import SpotifyIcon from "../../assets/spotify_logo_colour.svg";
-import SoundCloudIcon from "../../assets/soundcloud_logo_colour.svg";
-import SteamIcon from "../../assets/steam_logo_black.svg";
-import GoogleIcon from "../../assets/google_logo_colour.svg";
-import GitHubIcon from "../../assets/github_logo_black.svg";
+import SpotifyIcon from "../../assets/Provider/spotify_logo_colour.svg";
+import SoundCloudIcon from "../../assets/Provider/soundcloud_logo_colour.svg";
+import SteamIcon from "../../assets/Provider/steam_logo_black.svg";
+import GoogleIcon from "../../assets/Provider/google_logo_colour.svg";
+import GitHubIcon from "../../assets/Provider/github_logo_black.svg";
 
 type Provider = "spotify" | "soundcloud" | "steam" | "google" | "github";
 

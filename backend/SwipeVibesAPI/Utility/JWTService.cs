@@ -15,10 +15,7 @@ public class JwtService
     private readonly IConfiguration _config;
     private readonly JwtSecurityTokenHandler _handler = new();
 
-    public JwtService(IConfiguration config)
-    {
-        _config = config;
-    }
+    public JwtService(IConfiguration config) => _config = config;
 
     public string GenerateAccess(string username, string role, TimeSpan? ttl = null)
         => Generate(username, role, ttl ?? DefaultAccessTtl(), tokenType: TypeAccess);
@@ -36,14 +33,25 @@ public class JwtService
     {
         var claims = new List<Claim>
         {
+            new(JwtRegisteredClaimNames.Sub, username),
+            new(ClaimTypes.NameIdentifier, username),
             new(ClaimTypes.Name, username),
             new(TypeClaim, tokenType)
         };
 
         if (!string.IsNullOrWhiteSpace(role))
+        {
             claims.Add(new Claim(ClaimTypes.Role, role));
+            claims.Add(new Claim("role", role));
+        }
 
         var creds = new SigningCredentials(GetSigningKey(forRefresh: tokenType == TypeRefresh), SecurityAlgorithms.HmacSha256);
+
+        var issuer = _config["Jwt:Issuer"];
+        var audience = _config["Jwt:Audience"];
+
+        // <<< DODAJ TEN LOG >>>
+        Console.WriteLine($"[JwtService] Generowanie tokenu: Issuer='{issuer}', Audience='{audience}'");
 
         var token = new JwtSecurityToken(
             issuer: _config["Jwt:Issuer"],
@@ -61,60 +69,48 @@ public class JwtService
     {
         try
         {
-            var principal = _handler.ValidateToken(token, BuildValidationParameters(forRefresh), out var validated);
+            var principal = _handler.ValidateToken(token, BuildValidationParameters(forRefresh), out _);
             var type = principal.FindFirst(TypeClaim)?.Value;
-            if (!string.Equals(type, expectType, StringComparison.Ordinal))
-                return null;
+            if (!string.Equals(type, expectType, StringComparison.Ordinal)) return null;
             return principal;
         }
-        catch
-        {
-            return null;
-        }
+        catch { return null; }
     }
 
-    private TokenValidationParameters BuildValidationParameters(bool forRefresh)
+    private TokenValidationParameters BuildValidationParameters(bool forRefresh) => new()
     {
-        return new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidIssuer = _config["Jwt:Issuer"],
-
-            ValidateAudience = true,
-            ValidAudience = _config["Jwt:Audience"],
-
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = GetSigningKey(forRefresh),
-
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero,
-        };
-    }
+        ValidateIssuer = true,
+        ValidIssuer = _config["Jwt:Issuer"],
+        ValidateAudience = true,
+        ValidAudience = _config["Jwt:Audience"],
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = GetSigningKey(forRefresh),
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero,
+    };
 
     private SymmetricSecurityKey GetSigningKey(bool forRefresh)
     {
-        var key =
-            forRefresh
+        var key = forRefresh
             ? (_config["Jwt:RefreshKey"] ?? _config["Jwt:Key"])
-            : (_config["Jwt:AccessKey"] ?? _config["Jwt:Key"]);
+            : _config["Jwt:Key"];
 
         if (string.IsNullOrWhiteSpace(key))
             throw new InvalidOperationException("JWT key not configured. Set Jwt:Key (and optionally Jwt:AccessKey/Jwt:RefreshKey).");
+
+        // <<< DODAJ TEN LOG >>>
+        var keyType = forRefresh ? "Refresh" : "Access";
+        Console.WriteLine($"[JwtService] Używam klucza {keyType}: {key.Substring(0, 4)}... (dł: {key.Length})");
+        // <<< KONIEC LOGU >>>
 
         return new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
     }
 
     private TimeSpan DefaultAccessTtl()
-    {
-        if (int.TryParse(_config["Jwt:AccessMinutes"], out var minutes) && minutes > 0)
-            return TimeSpan.FromMinutes(minutes);
-        return TimeSpan.FromMinutes(15);
-    }
+        => int.TryParse(_config["Jwt:AccessMinutes"], out var minutes) && minutes > 0
+           ? TimeSpan.FromMinutes(minutes) : TimeSpan.FromMinutes(15);
 
     private TimeSpan DefaultRefreshTtl()
-    {
-        if (int.TryParse(_config["Jwt:RefreshDays"], out var days) && days > 0)
-            return TimeSpan.FromDays(days);
-        return TimeSpan.FromDays(14);
-    }
+        => int.TryParse(_config["Jwt:RefreshDays"], out var days) && days > 0
+           ? TimeSpan.FromDays(days) : TimeSpan.FromDays(14);
 }

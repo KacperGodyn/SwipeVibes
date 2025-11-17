@@ -75,20 +75,7 @@ export function useSpotifyLogin({ onSuccess, onError }: UseSpotifyLoginOptions =
       }
     })();
   }, [response]);
-
-  React.useEffect(() => {
-    if (request?.redirectUri) {
-      console.log('Spotify redirectUri:', request.redirectUri);
-    }
-  }, [request]);
-
-  console.log('[useSpotifyLogin] Platform:', Platform.OS);
-  console.log('[useSpotifyLogin] Client ID:', clientId);
-  console.log('[useSpotifyLogin] Redirect URI:', redirectUri);
-  console.log('[useSpotifyLogin] Request:', request);
-  console.log('[useSpotifyLogin] Response:', response);
-  console.log('[useSpotifyLogin] Final Redirect URI:', request?.redirectUri);
-
+  
   return {
     ready: !!request,
     loading,

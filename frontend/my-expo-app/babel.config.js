@@ -24,6 +24,7 @@ module.exports = function (api) {
           allowlist: ['EXPO_PUBLIC_DEEZER_API_URL'],
         },
       ],
+      'react-native-reanimated/plugin',
     ],
   };
 };

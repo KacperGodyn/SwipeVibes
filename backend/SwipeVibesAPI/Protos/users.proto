@@ -27,6 +27,7 @@ service UserService {
   rpc GetUser (UserRequest) returns (UserReply);
   rpc GetUsers (Empty) returns (UsersReply);
   rpc Login (LoginRequest) returns (LoginReply);
+  rpc GetUserInteractions (UserInteractionsRequest) returns (UserInteractionsReply);
 }
 
 message Empty {}
@@ -74,4 +75,23 @@ message LoginReply {
   string token = 1;
   string username = 2;
   string role = 3;
+}
+
+message UserInteractionsRequest {
+  string user_id = 1;
+}
+
+message UserInteractionsReply {
+  repeated InteractionReply interactions = 1;
+}
+
+message InteractionReply {
+  string id = 1;
+  string user_id = 2;
+  string isrc = 3;
+  string decision = 4;
+  int64 deezer_track_id = 5;
+  string source = 6;
+  string artist = 7;
+  string title = 8;
 }

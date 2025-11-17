@@ -2,38 +2,83 @@
 using Microsoft.AspNetCore.Mvc;
 using Google.Protobuf.WellKnownTypes;
 using Proto = SwipeVibesAPI.Grpc;
+using SwipeVibesAPI.Services;
+using Microsoft.AspNetCore.Authorization;
+using Grpc.Core;
 
 [ApiController]
 [Route("api/deezer")]
 public class DeezerController : ControllerBase
 {
     private readonly Proto.DeezerGrpcService _svc;
+    private readonly FirestoreService _fs;
+    private readonly ILogger<DeezerController> _logger;
 
-    public DeezerController(Proto.DeezerGrpcService svc)
+    public DeezerController(Proto.DeezerGrpcService svc, FirestoreService fs, ILogger<DeezerController> logger)
     {
         _svc = svc;
+        _fs = fs;
+        _logger = logger;
     }
 
-    [HttpGet("random-track")]
-    public async Task<ActionResult<RandomTrackResponse>> GetRandomTrack(CancellationToken ct)
+    [Authorize(AuthenticationSchemes = "AppJwt")]
+    [HttpGet("recommendation")]
+    public async Task<ActionResult<RandomTrackResponse>> GetRecommendation(CancellationToken ct)
     {
+        Console.WriteLine($"[DeezerController] IsAuthenticated={HttpContext.User?.Identity?.IsAuthenticated}");
+        Console.WriteLine($"[DeezerController] Name={HttpContext.User?.Identity?.Name}");
+
+        foreach (var cl in HttpContext.User.Claims)
+        {
+            Console.WriteLine($"[DeezerController] claim {cl.Type} = {cl.Value}");
+        }
+        var userId = HttpContext.User?.Identity?.Name;
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized(new { message = "Brak uwierzytelnienia. Nie można pobrać rekomendacji." });
+        }
+
         try
         {
-            var track = await _svc.GetRandomTrackFromRandomStationAsync(ct);
-            return Ok(RandomTrackResponse.FromProto(track));
+            var t = await _svc.GetAiRecommendedTrackAsync(userId, ct);
+
+            var dto = RandomTrackResponse.FromProto(t);
+
+            _ = _fs.AddInteractionAsync(new InteractionDoc
+            {
+                UserId = userId,
+                Isrc = dto.Isrc ?? "",
+                Decision = "impression",
+                DeezerTrackId = dto.Id,
+                Source = "gemini/recommendation",
+                PreviewUrl = dto.Preview,
+                Artist = dto.Artists?.FirstOrDefault()?.Name,
+                Title = dto.Title
+            });
+
+            return Ok(dto);
         }
-        catch (Grpc.Core.RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound)
+        catch (RpcException ex)
         {
-            return NotFound(new { message = ex.Status.Detail });
+            _logger.LogError(ex, "Błąd podczas pobierania rekomendacji dla {UserId}", userId);
+
+            var statusCode = ex.Status.StatusCode switch
+            {
+                global::Grpc.Core.StatusCode.NotFound => 404,
+                global::Grpc.Core.StatusCode.Internal => 500,
+                global::Grpc.Core.StatusCode.Unauthenticated => 401,
+                _ => 500
+            };
+            return StatusCode(statusCode, new { message = ex.Status.Detail });
         }
-        catch (Grpc.Core.RpcException ex)
+        catch (Exception ex)
         {
-            return StatusCode(502, new { message = "Upstream Deezer error", detail = ex.Status.Detail });
+            _logger.LogError(ex, "Nieoczekiwany błąd podczas pobierania rekomendacji dla {UserId}", userId);
+            return StatusCode(500, new { message = "Wystąpił wewnętrzny błąd serwera." });
         }
     }
 
-
-    // DTO
+    // DTO (Reszta pliku pozostaje bez zmian)
     public sealed record RandomTrackResponse(
         long Id,
         string Title,
@@ -46,7 +91,7 @@ public class DeezerController : ControllerBase
         int Rank,
         string? ReleaseDate,
         bool ExplicitLyrics,
-        string ExplicitContentLyrics,   // "Unspecified" / "Clean" / "Explicit"
+        string ExplicitContentLyrics,    // "Unspecified" / "Clean" / "Explicit"
         string ExplicitCover,
         string? Preview,
         double? Bpm,
@@ -58,7 +103,6 @@ public class DeezerController : ControllerBase
     {
         public static RandomTrackResponse FromProto(Proto.Track t)
         {
-            // Timestamp -> string (yyyy-MM-dd). t.ReleaseDate może być null.
             string? release = t.ReleaseDate != null
                 ? t.ReleaseDate.ToDateTime().ToUniversalTime().ToString("yyyy-MM-dd")
                 : null;
@@ -78,9 +122,9 @@ public class DeezerController : ControllerBase
                 ExplicitContentLyrics: t.ExplicitContentLyrics.ToString(),
                 ExplicitCover: t.ExplicitCover.ToString(),
                 Preview: t.Preview,
-                Bpm: t.Bpm,   // w .proto: double (nullable w runtime jako 0/hasValue nie dotyczy)
+                Bpm: t.Bpm,
                 Gain: t.Gain,
-                CountryCodes: t.CountryCodes.ToArray(), // RepeatedField<string>
+                CountryCodes: t.CountryCodes.ToArray(),
                 Artists: t.Artists.Select(a => new ArtistDto(
                     a.Id, a.Name, a.Link, a.Picture, a.PictureSmall, a.PictureMedium, a.PictureBig, a.PictureXl, a.Tracklist
                 )).ToList(),

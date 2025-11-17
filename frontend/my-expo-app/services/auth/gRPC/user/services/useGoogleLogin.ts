@@ -19,9 +19,6 @@ export function useGoogleLogin({ onSuccess, onError }: UseGoogleLoginOptions = {
   const webClientId: string | undefined = google.webClientId;
   const iosClientId: string | undefined = google.iosClientId;
 
-  console.log('[useGoogleLogin] Platform:', Platform.OS);
-  console.log('[useGoogleLogin] Client IDs:', { androidClientId, webClientId, iosClientId });
-
   // const androidReversed = androidClientId
   //   ? `com.googleusercontent.apps.${androidClientId.replace('.apps.googleusercontent.com', '')}`
   //   : undefined;
@@ -48,38 +45,25 @@ export function useGoogleLogin({ onSuccess, onError }: UseGoogleLoginOptions = {
             scopes: ['openid', 'email', 'profile'],
           } as const);
 
-  console.log('[useGoogleLogin] Config:', config);
-
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest(config as any);
 
   React.useEffect(() => {
-    console.log('[useGoogleLogin] Response changed:', response?.type);
     if (!response) return;
     if (response.type === 'success') {
-      console.log('[useGoogleLogin] Success response params:', response.params);
-      console.log('[useGoogleLogin] Success response authentication:', response.authentication);
       const idToken = (response.params as any)?.id_token ?? response.authentication?.idToken;
       if (!idToken) {
         console.error('[useGoogleLogin] No id_token found in response');
         return onError?.(new Error('No id_token in response'));
       }
-      console.log('[useGoogleLogin] ID token obtained, calling onSuccess');
       void onSuccess?.(idToken);
     } else if (response.type === 'error') {
       console.error('[useGoogleLogin] Error response:', response.error);
       onError?.(response.error);
     } else {
-      console.log('[useGoogleLogin] Response type:', response.type);
     }
   }, [response, onSuccess, onError]);
 
-  React.useEffect(() => {
-    if (request?.redirectUri) console.log('[useGoogleLogin] Auth redirect:', request.redirectUri);
-    console.log('[useGoogleLogin] Request state:', request ? 'ready' : 'not ready');
-  }, [request]);
-
   const readyState = { ready: !!request, loading: !request && !response };
-  console.log('[useGoogleLogin] Hook state:', readyState);
 
   return { ...readyState, promptAsync };
 }

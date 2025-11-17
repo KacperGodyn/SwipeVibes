@@ -14,8 +14,8 @@
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="DotNetEnv" Version="3.1.1" />
     <PackageReference Include="FirebaseAdmin" Version="3.3.0" />
+    <PackageReference Include="Google.Apis.Aiplatform.v1beta1" Version="1.70.0.3897" />
     <PackageReference Include="Google.Apis.Auth" Version="1.72.0" />
-    <PackageReference Include="Google.Cloud.AIPlatform.V1Beta1" Version="1.0.0-beta61" />
     <PackageReference Include="Google.Protobuf" Version="3.32.0" />
     <PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
     <PackageReference Include="Grpc.AspNetCore.Web" Version="2.71.0" />
@@ -27,10 +27,10 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.19" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
 	<PackageReference Include="Google.Cloud.Firestore" Version="3.12.0" />
-	  <Protobuf Include="Protos\interactions.proto" GrpcServices="Server" ProtoRoot="Protos\" />
-	  <Protobuf Include="Protos\deezer.proto" GrpcServices="Server" ProtoRoot="Protos\" />
-	  <Protobuf Include="Protos\users.proto" GrpcServices="Server" ProtoRoot="Protos\" />
-	  <Protobuf Include="Protos\gemini.proto" GrpcServices="Server" ProtoRoot="Protos\" />
+	  <Protobuf Include="Protos\interactions.proto" GrpcServices="Server" />
+	  <Protobuf Include="Protos\deezer.proto" GrpcServices="Server" />
+	  <Protobuf Include="Protos\users.proto" GrpcServices="Server" />
+	  <Protobuf Include="Protos\gemini.proto" GrpcServices="Server" />
   </ItemGroup>
 
   <ItemGroup>

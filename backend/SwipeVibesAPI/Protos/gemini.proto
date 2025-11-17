@@ -1,0 +1,20 @@
+﻿syntax = "proto3";
+
+package gemini;
+
+option csharp_namespace = "SwipeVibesAPI.Grpc";
+
+import "users.proto";
+
+service GeminiService {
+  rpc GetGeminiTrackRecommendation (GetGeminiTrackRecommendationRequest) returns (GetGeminiTrackRecommendationResponse);
+}
+
+message GetGeminiTrackRecommendationRequest {
+  string prompt = 1;
+  repeated users.InteractionReply interactions = 2;
+}
+
+message GetGeminiTrackRecommendationResponse {
+  repeated string recommended_artist_names = 1;
+}

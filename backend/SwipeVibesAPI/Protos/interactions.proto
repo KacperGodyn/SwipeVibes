@@ -1,0 +1,21 @@
+﻿syntax = "proto3";
+
+package swipevibes;
+
+option csharp_namespace = "SwipeVibesAPI.Grpc";
+
+service InteractionService {
+  rpc Log (LogRequest) returns (LogReply);
+}
+
+message LogRequest {
+  string isrc = 1;
+  string decision = 2; // like|dislike|skip|impression
+  int64 deezer_track_id = 3;
+  string source = 4;
+  string preview_url = 5;
+  string artist = 6;
+  string title = 7;
+}
+
+message LogReply { bool ok = 1; string id = 2; }

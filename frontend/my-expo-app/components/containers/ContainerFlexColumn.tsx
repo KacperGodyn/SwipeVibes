@@ -22,7 +22,7 @@ export default function ContainerFlexColumn({ style, children, colors = DEFAULT_
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView className="flex-1 shrink-0 items-center justify-center bg-white">
+      <SafeAreaView className="flex-1 shrink-0 items-center justify-center">
         <LinearGradient
           className="items-center justify-center"
           colors={colors}
@@ -42,5 +42,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 10,
+    maxWidth: 500,
   },
 });

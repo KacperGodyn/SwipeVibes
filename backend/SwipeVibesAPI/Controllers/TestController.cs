@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SwipeVibesAPI.Services;
 
 namespace SwipeVibesAPI.Controllers
@@ -7,6 +8,7 @@ namespace SwipeVibesAPI.Controllers
     [Route("api/test")]
     public class TestController : ControllerBase
     {
+        [Authorize]
         [HttpGet("firebase-token/{uid}")]
         public async Task<IActionResult> GetFirebaseToken(string uid)
         {

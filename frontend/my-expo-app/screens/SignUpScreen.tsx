@@ -7,6 +7,8 @@ import SubContainerFlexRow from '../components/containers/SubContainerFlexRow';
 
 import { useSpotifyLogin } from 'services/auth/gRPC/user/services/useSpotifyLogin';
 import { loginWithSpotify } from '../services/auth/api';
+import { setSavedUser } from '../services/auth/userInfo';
+import { setSavedAvatar } from '../services/auth/userInfo';
 
 import { useGoogleLogin } from '../services/auth/gRPC/user/services/useGoogleLogin';
 import { loginWithGoogle } from '../services/auth/api';
@@ -21,6 +23,24 @@ export default function SignUpScreen() {
   const spotify = useSpotifyLogin({
     onSuccess: async (spotifyIdToken) => {
       const res = await loginWithSpotify(spotifyIdToken); // sets access token internally
+      setSavedUser(res.username, (res as any).role);
+
+      try {
+        const meRes = await fetch('https://api.spotify.com/v1/me', {
+          headers: { Authorization: `Bearer ${spotifyIdToken}` },
+        });
+        if (meRes.ok) {
+          const me = await meRes.json();
+          const avatar =
+            (Array.isArray(me.images) && me.images.length > 0 && me.images[0]?.url) || null;
+          setSavedAvatar(avatar);
+        } else {
+          setSavedAvatar(null);
+        }
+      } catch {
+        setSavedAvatar(null);
+      }
+
       console.log('Logged in as:', res.username);
       router.replace('/home');
     },
@@ -38,6 +58,9 @@ export default function SignUpScreen() {
       const firebaseIdToken = await userCred.user.getIdToken();
 
       const res = await loginWithGoogle(firebaseIdToken); // sets access token internally
+      setSavedUser(res.username, (res as any).role);
+      const photo = userCred.user?.photoURL ?? null;
+      setSavedAvatar(photo);
       console.log('Logged in as:', res.username);
       router.replace('/home');
     },

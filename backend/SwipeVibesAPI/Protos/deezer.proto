@@ -6,35 +6,8 @@ option csharp_namespace = "SwipeVibesAPI.Grpc";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
-service DeezerService {
-  rpc ListRadioStations (ListRadioStationsRequest) returns (ListRadioStationsResponse);
-  rpc GetRadioStation   (GetRadioStationRequest)   returns (GetRadioStationResponse);
-  rpc ListRadioTracks   (ListRadioTracksRequest)   returns (ListRadioTracksResponse);
-  rpc GetTrack          (GetTrackRequest)          returns (GetTrackResponse);
-  rpc GetRandomTrackFromRandomStation (google.protobuf.Empty) returns (GetTrackResponse);
-}
-
-message ListRadioStationsRequest {
-  int32 page = 1;
-  int32 page_size = 2;
-}
-
-message GetRadioStationRequest {
-  int64 id = 1;
-}
-
-message RadioStation {
-  int64 id = 1;
-  string title = 2;
-  string tracklist = 3;
-}
-
-message ListRadioStationsResponse {
-  repeated RadioStation stations = 1;
-}
-
-message GetRadioStationResponse {
-  RadioStation station = 1;
+service DeezerService {  
+  rpc GetTrack (GetTrackRequest) returns (GetTrackResponse);
 }
 
 enum ExplicitLevel {
@@ -86,16 +59,6 @@ message Track {
   repeated string country_codes = 17;
   repeated Artist artists = 18;
   Album album = 19;
-}
-
-message ListRadioTracksRequest {
-  int64 station_id = 1;
-  int32 page = 2;
-  int32 page_size = 3;
-}
-
-message ListRadioTracksResponse {
-  repeated Track tracks = 1;
 }
 
 message GetTrackRequest {

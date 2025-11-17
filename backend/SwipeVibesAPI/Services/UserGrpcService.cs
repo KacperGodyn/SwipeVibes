@@ -9,18 +9,23 @@ using SwipeVibesAPI.Utility;
 using System.Net.Http.Headers;
 using System.Net;
 using System.Text.Json;
+using System.Collections.Generic;
+using Google.Cloud.Firestore;
+using Google.Cloud.Firestore.V1;
 
 namespace SwipeVibesAPI.Services
 {
     public class UserGrpcService : SwipeVibesAPI.Grpc.UserService.UserServiceBase
     {
+        private readonly FirestoreDb _firestoreDb;
         private readonly UserService _userService;
         private readonly JwtService _jwtService;
         private readonly IWebHostEnvironment _env;
         private readonly IHttpClientFactory _httpClientFactory;
 
-        public UserGrpcService(UserService userService, JwtService jwtService, IWebHostEnvironment env, IHttpClientFactory httpClientFactory)
+        public UserGrpcService(FirestoreDb firestoreDb, UserService userService, JwtService jwtService, IWebHostEnvironment env, IHttpClientFactory httpClientFactory)
         {
+            _firestoreDb = firestoreDb;
             _userService = userService;
             _jwtService = jwtService;
             _env = env;
@@ -173,12 +178,10 @@ namespace SwipeVibesAPI.Services
         {
             Entities.User user;
 
-            // OAuth providers
             if (!string.IsNullOrWhiteSpace(request.Provider))
             {
                 if (IsProvider(request.Provider, "google"))
                 {
-                    // request.Token must be a Firebase ID token
                     var email = await VerifyGoogleAndGetEmailAsync(request.Token);
 
                     user = await _userService.GetUserByEmailAsync(email)
@@ -192,10 +195,8 @@ namespace SwipeVibesAPI.Services
                 }
                 else if (IsProvider(request.Provider, "spotify"))
                 {
-                    // request.Token must be a Spotify access token
                     var (email, spotifyId) = await VerifySpotifyAndGetProfileAsync(request.Token);
 
-                    // Prefer email if available; otherwise fall back to a stable username key
                     if (!string.IsNullOrWhiteSpace(email))
                     {
                         user = await _userService.GetUserByEmailAsync(email)
@@ -209,20 +210,17 @@ namespace SwipeVibesAPI.Services
                     }
                     else
                     {
-                        // Some Spotify accounts may not expose email without scope.
-                        // Use a deterministic username, and store a placeholder email
                         var uname = $"spotify:{spotifyId}";
                         user = await _userService.GetUserByUsernameAsync(uname)
                                ?? await _userService.RegisterUserAsync(new User
                                {
                                    Username = uname,
-                                   Email = $"user+{spotifyId}@spotify.local", // placeholder to satisfy non-null
+                                   Email = $"user+{spotifyId}@spotify.local",
                                    Password = string.Empty,
                                    Role = "User"
                                });
                     }
                 }
-                // Unsupported provider, will add others later
                 else
                 {
                     throw new RpcException(new Status(StatusCode.InvalidArgument, $"Unsupported provider '{request.Provider}'"));
@@ -245,7 +243,7 @@ namespace SwipeVibesAPI.Services
             http.Response.Cookies.Append("sv_refresh", refresh, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = !_env.IsDevelopment(),
+                Secure = true,
                 SameSite = SameSiteMode.None,
                 Path = "/",
                 Expires = DateTimeOffset.UtcNow.AddDays(14),
@@ -293,6 +291,71 @@ namespace SwipeVibesAPI.Services
                 Expires = DateTimeOffset.UnixEpoch
             });
             return Task.FromResult(new LogoutReply { Success = true });
+        }
+        public override async Task<UserInteractionsReply> GetUserInteractions(UserInteractionsRequest request, ServerCallContext context)
+        {
+            if (string.IsNullOrWhiteSpace(request.UserId))
+            {
+                throw new RpcException(new Status(StatusCode.InvalidArgument, "UserId is required"));
+            }
+            const int InteractionLimit = 200;
+
+            try
+            {
+                var db = _firestoreDb;
+
+                var collectionRef = db.Collection("interactions");
+
+                var query = collectionRef
+                    .WhereEqualTo("UserId", request.UserId)
+                    .OrderByDescending("Ts")
+                    .Limit(InteractionLimit);
+
+                var snapshot = await query.GetSnapshotAsync();
+
+                var interactionsList = new List<InteractionReply>();
+
+                foreach (var doc in snapshot.Documents)
+                {
+                    var interaction = new InteractionReply
+                    {
+                        Id = doc.Id
+                    };
+
+                    if (doc.TryGetValue<string>("UserId", out var userId))
+                        interaction.UserId = userId;
+
+                    if (doc.TryGetValue<string>("ISRC", out var isrc))
+                        interaction.Isrc = isrc;
+
+                    if (doc.TryGetValue<string>("Decision", out var decision))
+                        interaction.Decision = decision;
+
+                    if (doc.TryGetValue<long>("DeezerTrackId", out var deezerTrackId))
+                        interaction.DeezerTrackId = deezerTrackId;
+
+                    if (doc.TryGetValue<string>("Source", out var source))
+                        interaction.Source = source;
+
+                    if (doc.TryGetValue<string>("Artist", out var artist))
+                        interaction.Artist = artist;
+
+                    if (doc.TryGetValue<string>("Title", out var title))
+                        interaction.Title = title;
+
+                    interactionsList.Add(interaction);
+                }
+
+                var reply = new UserInteractionsReply();
+                reply.Interactions.AddRange(interactionsList);
+
+                return reply;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"GetUserInteractions error: {ex.Message}");
+                throw new RpcException(new Status(StatusCode.Internal, $"GetUserInteractions error: {ex.Message}"));
+            }
         }
     }
 }

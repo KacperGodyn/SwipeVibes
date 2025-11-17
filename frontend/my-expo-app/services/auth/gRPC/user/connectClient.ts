@@ -15,6 +15,7 @@ const authInterceptor: Interceptor = (next) => async (req) => {
 const transport = createGrpcWebTransport({
   baseUrl: apiUrl,
   interceptors: [authInterceptor],
+  credentials: "include",
 });
 
 export const userClient: Client<typeof UserService> = createClient(UserService, transport);

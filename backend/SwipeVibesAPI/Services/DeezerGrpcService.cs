@@ -10,14 +10,43 @@ using System.Threading.Tasks;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
+using SwipeVibesAPI.Services;
 
 namespace SwipeVibesAPI.Grpc
 {
+    internal class FakeServerCallContext : ServerCallContext
+    {
+        private readonly CancellationToken _cancellationToken;
+        protected override CancellationToken CancellationTokenCore => _cancellationToken;
+
+        public FakeServerCallContext(CancellationToken ct)
+        {
+            _cancellationToken = ct;
+        }
+
+        #region not implemented
+        protected override Task WriteResponseHeadersAsyncCore(Metadata responseHeaders) => throw new NotImplementedException();
+        protected override ContextPropagationToken CreatePropagationTokenCore(ContextPropagationOptions options) => throw new NotImplementedException();
+        protected override string MethodCore => "";
+        protected override string HostCore => "";
+        protected override string PeerCore => "";
+        protected override DateTime DeadlineCore => DateTime.MaxValue;
+        protected override Metadata RequestHeadersCore => new Metadata();
+        protected override Metadata ResponseTrailersCore => new Metadata();
+        protected override Status StatusCore { get => Status.DefaultSuccess; set => throw new NotImplementedException(); }
+        protected override WriteOptions WriteOptionsCore { get => null; set => throw new NotImplementedException(); }
+        protected override AuthContext AuthContextCore => null;
+        #endregion
+    }
+
     public class DeezerGrpcService : DeezerService.DeezerServiceBase
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<DeezerGrpcService> _logger;
         private readonly Random _rng = new();
+
+        private readonly UserGrpcService _userSvc;
+        private readonly GeminiGrpcService _geminiSvc;
 
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
@@ -25,67 +54,16 @@ namespace SwipeVibesAPI.Grpc
             NumberHandling = JsonNumberHandling.AllowReadingFromString
         };
 
-        public DeezerGrpcService(IHttpClientFactory httpClientFactory, ILogger<DeezerGrpcService> logger)
+        public DeezerGrpcService(
+            IHttpClientFactory httpClientFactory,
+            ILogger<DeezerGrpcService> logger,
+            UserGrpcService userSvc,
+            GeminiGrpcService geminiSvc)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
-        }
-
-        public override async Task<ListRadioStationsResponse> ListRadioStations(ListRadioStationsRequest request, ServerCallContext context)
-        {
-            var (index, limit) = NormalizePaging(request.Page, request.PageSize);
-            var url = $"radio?index={index}&limit={limit}";
-            var api = Client;
-
-            var payload = await GetAsync<ApiList<RadioStationDto>>(api, url, context.CancellationToken);
-
-            var resp = new ListRadioStationsResponse();
-            if (payload?.Data != null)
-            {
-                resp.Stations.AddRange(payload.Data.Select(MapStation));
-            }
-
-            return resp;
-        }
-
-        public override async Task<GetRadioStationResponse> GetRadioStation(GetRadioStationRequest request, ServerCallContext context)
-        {
-            var api = Client;
-            var url = $"radio/{request.Id}";
-            var dto = await GetAsync<RadioStationDto>(api, url, context.CancellationToken, treat404AsNull: true);
-
-            if (dto == null)
-            {
-                throw new RpcException(new Status(StatusCode.NotFound, $"Radio station {request.Id} not found"));
-            }
-
-            return new GetRadioStationResponse
-            {
-                Station = MapStation(dto)
-            };
-        }
-
-        public override async Task<ListRadioTracksResponse> ListRadioTracks(ListRadioTracksRequest request, ServerCallContext context)
-        {
-            var api = Client;
-            var (index, limit) = NormalizePaging(request.Page, request.PageSize);
-            var url = $"radio/{request.StationId}/tracks?index={index}&limit={limit}";
-
-            var payload = await GetAsync<ApiList<TrackDto>>(api, url, context.CancellationToken, treat404AsNull: true);
-
-            if (payload == null)
-            {
-                throw new RpcException(new Status(StatusCode.NotFound, $"Radio station {request.StationId} not found or has no tracks"));
-            }
-
-            var resp = new ListRadioTracksResponse();
-            if (payload.Data != null)
-            {
-                foreach (var t in payload.Data)
-                    resp.Tracks.Add(MapTrack(t));
-            }
-
-            return resp;
+            _userSvc = userSvc;
+            _geminiSvc = geminiSvc;
         }
 
         public override async Task<GetTrackResponse> GetTrack(GetTrackRequest request, ServerCallContext context)
@@ -101,55 +79,86 @@ namespace SwipeVibesAPI.Grpc
 
             return new GetTrackResponse { Track = MapTrack(dto) };
         }
-        public async Task<Track> GetRandomTrackFromRandomStationAsync(CancellationToken ct = default)
+
+        public async Task<Track> GetAiRecommendedTrackAsync(string userId, CancellationToken ct = default)
         {
-            var stationsPayload = await GetAsync<ApiList<RadioStationDto>>(Client, "radio?index=0&limit=100", ct);
-            var stations = stationsPayload?.Data?.ToList() ?? new();
-            if (stations.Count == 0)
-                throw new RpcException(new Status(StatusCode.NotFound, "No radio stations available"));
+            var fakeContext = new FakeServerCallContext(ct);
 
-            var maxStationTries = Math.Min(10, stations.Count);
+            var interactionsRequest = new UserInteractionsRequest { UserId = userId };
+            var interactionsResponse = await _userSvc.GetUserInteractions(interactionsRequest, fakeContext);
 
-            for (int i = 0; i < maxStationTries; i++)
+            var recentTrackIds = interactionsResponse.Interactions
+                .Select(i => i.DeezerTrackId)
+                .ToHashSet();
+
+            if (interactionsResponse.Interactions.Count == 0)
             {
-                var station = stations[_rng.Next(stations.Count)];
+                var trackDto = await GetAsync<TrackDto>(Client, "track/913160312", ct); // Fallback: Blinding Lights
+                if (trackDto == null)
+                    throw new RpcException(new Status(StatusCode.NotFound, "Fallback track not found."));
 
-                var tracksPayload = await GetAsync<ApiList<TrackDto>>(Client, $"radio/{station.Id}/tracks?index=0&limit=100", ct, treat404AsNull: true);
-                var tracksAll = tracksPayload?.Data ?? new List<TrackDto>();
-
-                var tracks = tracksAll.Where(t => !string.IsNullOrWhiteSpace(t.Preview)).ToList();
-                if (tracks.Count == 0) continue;
-
-                var picked = tracks[_rng.Next(tracks.Count)];
-
-                var full = await GetAsync<TrackDto>(Client, $"track/{picked.Id}", ct, treat404AsNull: true);
-                var dto = full ?? picked;
-
-                if (string.IsNullOrWhiteSpace(dto.Preview)) continue;
-
-                return MapTrack(dto);
+                _logger.LogInformation("Użytkownik {UserId} nie ma interakcji, zwrócono utwór domyślny.", userId);
+                return MapTrack(trackDto);
             }
 
-            throw new RpcException(new Status(StatusCode.NotFound, "No tracks with preview found across random stations"));
-        }
+            var geminiRequest = new GetGeminiTrackRecommendationRequest();
+            geminiRequest.Interactions.AddRange(interactionsResponse.Interactions);
+            var geminiResponse = await _geminiSvc.GetGeminiTrackRecommendation(geminiRequest, fakeContext);
 
+            if (!geminiResponse.RecommendedArtistNames.Any())
+            {
+                throw new RpcException(new Status(StatusCode.Internal, "Gemini nie polecił żadnych artystów."));
+            }
 
-        public override async Task<GetTrackResponse> GetRandomTrackFromRandomStation(Google.Protobuf.WellKnownTypes.Empty request, ServerCallContext context)
-        {
-            var track = await GetRandomTrackFromRandomStationAsync(context.CancellationToken);
-            return new GetTrackResponse { Track = track };
+            foreach (var recommendedArtistName in geminiResponse.RecommendedArtistNames)
+            {
+                if (string.IsNullOrWhiteSpace(recommendedArtistName)) continue;
+
+                _logger.LogInformation("Próba znalezienia artysty: {ArtistName}", recommendedArtistName);
+
+                var searchUrl = $"/search/artist?q={Uri.EscapeDataString(recommendedArtistName)}";
+                var artistPayload = await GetAsync<ApiList<ArtistDto>>(Client, searchUrl, ct, treat404AsNull: true);
+
+                var artistId = artistPayload?.Data?.FirstOrDefault()?.Id;
+
+                if (artistId == null || artistId == 0)
+                {
+                    _logger.LogWarning("Rekomendacja Gemini ({ArtistName}) nie zwróciła wyników w Deezer. Próba następnego.", recommendedArtistName);
+                    continue;
+                }
+
+                var topTracksUrl = $"/artist/{artistId}/top?limit=10";
+                var tracksPayload = await GetAsync<ApiList<TrackDto>>(Client, topTracksUrl, ct, treat404AsNull: true);
+
+                if (tracksPayload?.Data == null || !tracksPayload.Data.Any())
+                {
+                    _logger.LogWarning("Artysta {ArtistName} (ID: {ArtistId}) nie ma top tracków.", recommendedArtistName, artistId);
+                    continue;
+                }
+
+                var validTracks = tracksPayload.Data
+                    .Where(t => !string.IsNullOrWhiteSpace(t.Preview) && !recentTrackIds.Contains(t.Id))
+                    .ToList();
+
+                if (!validTracks.Any())
+                {
+                    _logger.LogWarning("Artysta {ArtistName} (ID: {ArtistId}) nie ma nowych utworów z podglądem. Próba następnego artysty.", recommendedArtistName, artistId);
+                    continue;
+                }
+
+                var pickedTrackDto = validTracks[_rng.Next(validTracks.Count)];
+
+                _logger.LogInformation("Pomyślnie pobrano rekomendację dla {UserId} (Artysta: {ArtistName}, Utwór: {TrackTitle}).", userId, recommendedArtistName, pickedTrackDto.Title);
+
+                var fullTrackDto = await GetAsync<TrackDto>(Client, $"track/{pickedTrackDto.Id}", ct, treat404AsNull: true);
+                return MapTrack(fullTrackDto ?? pickedTrackDto);
+            }
+
+            _logger.LogError("Nie udało się pobrać poprawnej rekomendacji dla {UserId} po sprawdzeniu {Count} poleconych artystów.", userId, geminiResponse.RecommendedArtistNames.Count);
+            throw new RpcException(new Status(StatusCode.NotFound, "Żaden z poleconych artystów nie przyniósł pasujących wyników w Deezer."));
         }
 
         private HttpClient Client => _httpClientFactory.CreateClient("deezer");
-
-        private static (int index, int limit) NormalizePaging(int page, int pageSize)
-        {
-            var p = page <= 0 ? 1 : page;
-            var size = pageSize <= 0 ? 25 : pageSize;
-            size = Math.Clamp(size, 1, 100);
-            var index = (p - 1) * size;
-            return (index, size);
-        }
 
         private static async Task<T?> GetAsync<T>(HttpClient client, string relativeUrl, CancellationToken ct, bool treat404AsNull = false)
         {
@@ -168,14 +177,6 @@ namespace SwipeVibesAPI.Grpc
             await using var stream = await res.Content.ReadAsStreamAsync(ct);
             return await JsonSerializer.DeserializeAsync<T>(stream, JsonOptions, ct);
         }
-
-        private static RadioStation MapStation(RadioStationDto dto) =>
-            new()
-            {
-                Id = dto.Id,
-                Title = dto.Title ?? string.Empty,
-                Tracklist = dto.Tracklist ?? string.Empty
-            };
 
         private static Track MapTrack(TrackDto dto)
         {
@@ -266,24 +267,10 @@ namespace SwipeVibesAPI.Grpc
             if (value is null) return ExplicitLevel.Unspecified;
             return value == 0 ? ExplicitLevel.Clean : ExplicitLevel.Explicit;
         }
-
-        // DTO
         private sealed class ApiList<T>
         {
             [JsonPropertyName("data")]
             public List<T>? Data { get; set; }
-        }
-
-        private sealed class RadioStationDto
-        {
-            [JsonPropertyName("id")]
-            public long Id { get; set; }
-
-            [JsonPropertyName("title")]
-            public string? Title { get; set; }
-
-            [JsonPropertyName("tracklist")]
-            public string? Tracklist { get; set; }
         }
 
         private sealed class TrackDto

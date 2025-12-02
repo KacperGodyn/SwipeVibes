@@ -4,7 +4,7 @@
 // @ts-nocheck
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
-import { Message, proto3 } from "@bufbuild/protobuf";
+import { Message, proto3, protoInt64, Timestamp } from "@bufbuild/protobuf";
 
 /**
  * @generated from message users.RefreshRequest
@@ -552,6 +552,631 @@ export class LoginReply extends Message<LoginReply> {
 
   static equals(a: LoginReply | PlainMessage<LoginReply> | undefined, b: LoginReply | PlainMessage<LoginReply> | undefined): boolean {
     return proto3.util.equals(LoginReply, a, b);
+  }
+}
+
+/**
+ * @generated from message users.UserInteractionsRequest
+ */
+export class UserInteractionsRequest extends Message<UserInteractionsRequest> {
+  /**
+   * @generated from field: string user_id = 1;
+   */
+  userId = "";
+
+  constructor(data?: PartialMessage<UserInteractionsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.UserInteractionsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "user_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UserInteractionsRequest {
+    return new UserInteractionsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): UserInteractionsRequest {
+    return new UserInteractionsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): UserInteractionsRequest {
+    return new UserInteractionsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: UserInteractionsRequest | PlainMessage<UserInteractionsRequest> | undefined, b: UserInteractionsRequest | PlainMessage<UserInteractionsRequest> | undefined): boolean {
+    return proto3.util.equals(UserInteractionsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message users.UserInteractionsReply
+ */
+export class UserInteractionsReply extends Message<UserInteractionsReply> {
+  /**
+   * @generated from field: repeated users.InteractionReply interactions = 1;
+   */
+  interactions: InteractionReply[] = [];
+
+  constructor(data?: PartialMessage<UserInteractionsReply>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.UserInteractionsReply";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "interactions", kind: "message", T: InteractionReply, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UserInteractionsReply {
+    return new UserInteractionsReply().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): UserInteractionsReply {
+    return new UserInteractionsReply().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): UserInteractionsReply {
+    return new UserInteractionsReply().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: UserInteractionsReply | PlainMessage<UserInteractionsReply> | undefined, b: UserInteractionsReply | PlainMessage<UserInteractionsReply> | undefined): boolean {
+    return proto3.util.equals(UserInteractionsReply, a, b);
+  }
+}
+
+/**
+ * @generated from message users.InteractionReply
+ */
+export class InteractionReply extends Message<InteractionReply> {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id = "";
+
+  /**
+   * @generated from field: string user_id = 2;
+   */
+  userId = "";
+
+  /**
+   * @generated from field: string isrc = 3;
+   */
+  isrc = "";
+
+  /**
+   * @generated from field: string decision = 4;
+   */
+  decision = "";
+
+  /**
+   * @generated from field: int64 deezer_track_id = 5;
+   */
+  deezerTrackId = protoInt64.zero;
+
+  /**
+   * @generated from field: string source = 6;
+   */
+  source = "";
+
+  /**
+   * @generated from field: string artist = 7;
+   */
+  artist = "";
+
+  /**
+   * @generated from field: string title = 8;
+   */
+  title = "";
+
+  constructor(data?: PartialMessage<InteractionReply>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.InteractionReply";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "user_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "isrc", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "decision", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: "deezer_track_id", kind: "scalar", T: 3 /* ScalarType.INT64 */ },
+    { no: 6, name: "source", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 7, name: "artist", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 8, name: "title", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): InteractionReply {
+    return new InteractionReply().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): InteractionReply {
+    return new InteractionReply().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): InteractionReply {
+    return new InteractionReply().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: InteractionReply | PlainMessage<InteractionReply> | undefined, b: InteractionReply | PlainMessage<InteractionReply> | undefined): boolean {
+    return proto3.util.equals(InteractionReply, a, b);
+  }
+}
+
+/**
+ * @generated from message users.CreatePlaylistRequest
+ */
+export class CreatePlaylistRequest extends Message<CreatePlaylistRequest> {
+  /**
+   * @generated from field: string name = 1;
+   */
+  name = "";
+
+  constructor(data?: PartialMessage<CreatePlaylistRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.CreatePlaylistRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CreatePlaylistRequest {
+    return new CreatePlaylistRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): CreatePlaylistRequest {
+    return new CreatePlaylistRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): CreatePlaylistRequest {
+    return new CreatePlaylistRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: CreatePlaylistRequest | PlainMessage<CreatePlaylistRequest> | undefined, b: CreatePlaylistRequest | PlainMessage<CreatePlaylistRequest> | undefined): boolean {
+    return proto3.util.equals(CreatePlaylistRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message users.PlaylistReply
+ */
+export class PlaylistReply extends Message<PlaylistReply> {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id = "";
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name = "";
+
+  /**
+   * @generated from field: int32 track_count = 3;
+   */
+  trackCount = 0;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 4;
+   */
+  createdAt?: Timestamp;
+
+  constructor(data?: PartialMessage<PlaylistReply>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.PlaylistReply";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "track_count", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 4, name: "created_at", kind: "message", T: Timestamp },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PlaylistReply {
+    return new PlaylistReply().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PlaylistReply {
+    return new PlaylistReply().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PlaylistReply {
+    return new PlaylistReply().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: PlaylistReply | PlainMessage<PlaylistReply> | undefined, b: PlaylistReply | PlainMessage<PlaylistReply> | undefined): boolean {
+    return proto3.util.equals(PlaylistReply, a, b);
+  }
+}
+
+/**
+ * @generated from message users.PlaylistsListReply
+ */
+export class PlaylistsListReply extends Message<PlaylistsListReply> {
+  /**
+   * @generated from field: repeated users.PlaylistReply playlists = 1;
+   */
+  playlists: PlaylistReply[] = [];
+
+  constructor(data?: PartialMessage<PlaylistsListReply>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.PlaylistsListReply";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "playlists", kind: "message", T: PlaylistReply, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PlaylistsListReply {
+    return new PlaylistsListReply().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PlaylistsListReply {
+    return new PlaylistsListReply().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PlaylistsListReply {
+    return new PlaylistsListReply().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: PlaylistsListReply | PlainMessage<PlaylistsListReply> | undefined, b: PlaylistsListReply | PlainMessage<PlaylistsListReply> | undefined): boolean {
+    return proto3.util.equals(PlaylistsListReply, a, b);
+  }
+}
+
+/**
+ * @generated from message users.DeletePlaylistRequest
+ */
+export class DeletePlaylistRequest extends Message<DeletePlaylistRequest> {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id = "";
+
+  constructor(data?: PartialMessage<DeletePlaylistRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.DeletePlaylistRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): DeletePlaylistRequest {
+    return new DeletePlaylistRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): DeletePlaylistRequest {
+    return new DeletePlaylistRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): DeletePlaylistRequest {
+    return new DeletePlaylistRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: DeletePlaylistRequest | PlainMessage<DeletePlaylistRequest> | undefined, b: DeletePlaylistRequest | PlainMessage<DeletePlaylistRequest> | undefined): boolean {
+    return proto3.util.equals(DeletePlaylistRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message users.PlaylistTrack
+ */
+export class PlaylistTrack extends Message<PlaylistTrack> {
+  /**
+   * @generated from field: int64 deezer_track_id = 1;
+   */
+  deezerTrackId = protoInt64.zero;
+
+  /**
+   * @generated from field: string title = 2;
+   */
+  title = "";
+
+  /**
+   * @generated from field: string isrc = 3;
+   */
+  isrc = "";
+
+  /**
+   * @generated from field: int64 artist_id = 4;
+   */
+  artistId = protoInt64.zero;
+
+  /**
+   * @generated from field: string artist_name = 5;
+   */
+  artistName = "";
+
+  /**
+   * @generated from field: string album_cover = 6;
+   */
+  albumCover = "";
+
+  /**
+   * @generated from field: google.protobuf.Timestamp added_at = 7;
+   */
+  addedAt?: Timestamp;
+
+  constructor(data?: PartialMessage<PlaylistTrack>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.PlaylistTrack";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "deezer_track_id", kind: "scalar", T: 3 /* ScalarType.INT64 */ },
+    { no: 2, name: "title", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "isrc", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "artist_id", kind: "scalar", T: 3 /* ScalarType.INT64 */ },
+    { no: 5, name: "artist_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 6, name: "album_cover", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 7, name: "added_at", kind: "message", T: Timestamp },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PlaylistTrack {
+    return new PlaylistTrack().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PlaylistTrack {
+    return new PlaylistTrack().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PlaylistTrack {
+    return new PlaylistTrack().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: PlaylistTrack | PlainMessage<PlaylistTrack> | undefined, b: PlaylistTrack | PlainMessage<PlaylistTrack> | undefined): boolean {
+    return proto3.util.equals(PlaylistTrack, a, b);
+  }
+}
+
+/**
+ * @generated from message users.AddTrackToPlaylistRequest
+ */
+export class AddTrackToPlaylistRequest extends Message<AddTrackToPlaylistRequest> {
+  /**
+   * @generated from field: string playlist_id = 1;
+   */
+  playlistId = "";
+
+  /**
+   * @generated from field: int64 deezer_track_id = 2;
+   */
+  deezerTrackId = protoInt64.zero;
+
+  /**
+   * @generated from field: string title = 3;
+   */
+  title = "";
+
+  /**
+   * @generated from field: string isrc = 4;
+   */
+  isrc = "";
+
+  /**
+   * @generated from field: int64 artist_id = 5;
+   */
+  artistId = protoInt64.zero;
+
+  /**
+   * @generated from field: string artist_name = 6;
+   */
+  artistName = "";
+
+  /**
+   * @generated from field: string album_cover = 7;
+   */
+  albumCover = "";
+
+  constructor(data?: PartialMessage<AddTrackToPlaylistRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.AddTrackToPlaylistRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "playlist_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "deezer_track_id", kind: "scalar", T: 3 /* ScalarType.INT64 */ },
+    { no: 3, name: "title", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "isrc", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: "artist_id", kind: "scalar", T: 3 /* ScalarType.INT64 */ },
+    { no: 6, name: "artist_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 7, name: "album_cover", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): AddTrackToPlaylistRequest {
+    return new AddTrackToPlaylistRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): AddTrackToPlaylistRequest {
+    return new AddTrackToPlaylistRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): AddTrackToPlaylistRequest {
+    return new AddTrackToPlaylistRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: AddTrackToPlaylistRequest | PlainMessage<AddTrackToPlaylistRequest> | undefined, b: AddTrackToPlaylistRequest | PlainMessage<AddTrackToPlaylistRequest> | undefined): boolean {
+    return proto3.util.equals(AddTrackToPlaylistRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message users.PlaylistTrackReply
+ */
+export class PlaylistTrackReply extends Message<PlaylistTrackReply> {
+  /**
+   * @generated from field: bool success = 1;
+   */
+  success = false;
+
+  /**
+   * @generated from field: users.PlaylistTrack track = 2;
+   */
+  track?: PlaylistTrack;
+
+  constructor(data?: PartialMessage<PlaylistTrackReply>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.PlaylistTrackReply";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "success", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 2, name: "track", kind: "message", T: PlaylistTrack },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PlaylistTrackReply {
+    return new PlaylistTrackReply().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PlaylistTrackReply {
+    return new PlaylistTrackReply().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PlaylistTrackReply {
+    return new PlaylistTrackReply().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: PlaylistTrackReply | PlainMessage<PlaylistTrackReply> | undefined, b: PlaylistTrackReply | PlainMessage<PlaylistTrackReply> | undefined): boolean {
+    return proto3.util.equals(PlaylistTrackReply, a, b);
+  }
+}
+
+/**
+ * @generated from message users.RemoveTrackFromPlaylistRequest
+ */
+export class RemoveTrackFromPlaylistRequest extends Message<RemoveTrackFromPlaylistRequest> {
+  /**
+   * @generated from field: string playlist_id = 1;
+   */
+  playlistId = "";
+
+  /**
+   * @generated from field: int64 deezer_track_id = 2;
+   */
+  deezerTrackId = protoInt64.zero;
+
+  constructor(data?: PartialMessage<RemoveTrackFromPlaylistRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.RemoveTrackFromPlaylistRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "playlist_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "deezer_track_id", kind: "scalar", T: 3 /* ScalarType.INT64 */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): RemoveTrackFromPlaylistRequest {
+    return new RemoveTrackFromPlaylistRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): RemoveTrackFromPlaylistRequest {
+    return new RemoveTrackFromPlaylistRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): RemoveTrackFromPlaylistRequest {
+    return new RemoveTrackFromPlaylistRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: RemoveTrackFromPlaylistRequest | PlainMessage<RemoveTrackFromPlaylistRequest> | undefined, b: RemoveTrackFromPlaylistRequest | PlainMessage<RemoveTrackFromPlaylistRequest> | undefined): boolean {
+    return proto3.util.equals(RemoveTrackFromPlaylistRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message users.GetPlaylistTracksRequest
+ */
+export class GetPlaylistTracksRequest extends Message<GetPlaylistTracksRequest> {
+  /**
+   * @generated from field: string playlist_id = 1;
+   */
+  playlistId = "";
+
+  constructor(data?: PartialMessage<GetPlaylistTracksRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.GetPlaylistTracksRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "playlist_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetPlaylistTracksRequest {
+    return new GetPlaylistTracksRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetPlaylistTracksRequest {
+    return new GetPlaylistTracksRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetPlaylistTracksRequest {
+    return new GetPlaylistTracksRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetPlaylistTracksRequest | PlainMessage<GetPlaylistTracksRequest> | undefined, b: GetPlaylistTracksRequest | PlainMessage<GetPlaylistTracksRequest> | undefined): boolean {
+    return proto3.util.equals(GetPlaylistTracksRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message users.PlaylistTracksListReply
+ */
+export class PlaylistTracksListReply extends Message<PlaylistTracksListReply> {
+  /**
+   * @generated from field: repeated users.PlaylistTrack tracks = 1;
+   */
+  tracks: PlaylistTrack[] = [];
+
+  constructor(data?: PartialMessage<PlaylistTracksListReply>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.PlaylistTracksListReply";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "tracks", kind: "message", T: PlaylistTrack, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PlaylistTracksListReply {
+    return new PlaylistTracksListReply().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PlaylistTracksListReply {
+    return new PlaylistTracksListReply().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PlaylistTracksListReply {
+    return new PlaylistTracksListReply().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: PlaylistTracksListReply | PlainMessage<PlaylistTracksListReply> | undefined, b: PlaylistTracksListReply | PlainMessage<PlaylistTracksListReply> | undefined): boolean {
+    return proto3.util.equals(PlaylistTracksListReply, a, b);
   }
 }
 

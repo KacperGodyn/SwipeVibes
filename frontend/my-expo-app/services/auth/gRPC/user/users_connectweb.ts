@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { CreateUserRequest, DeleteReply, Empty, LoginReply, LoginRequest, LogoutReply, LogoutRequest, RefreshReply, RefreshRequest, UpdateUserRequest, UserReply, UserRequest, UsersReply } from "./users_pb";
+import { AddTrackToPlaylistRequest, CreatePlaylistRequest, CreateUserRequest, DeletePlaylistRequest, DeleteReply, Empty, GetPlaylistTracksRequest, LoginReply, LoginRequest, LogoutReply, LogoutRequest, PlaylistReply, PlaylistsListReply, PlaylistTrackReply, PlaylistTracksListReply, RefreshReply, RefreshRequest, RemoveTrackFromPlaylistRequest, UpdateUserRequest, UserInteractionsReply, UserInteractionsRequest, UserReply, UserRequest, UsersReply } from "./users_pb";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -82,6 +82,69 @@ export const UserService = {
       name: "Login",
       I: LoginRequest,
       O: LoginReply,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc users.UserService.GetUserInteractions
+     */
+    getUserInteractions: {
+      name: "GetUserInteractions",
+      I: UserInteractionsRequest,
+      O: UserInteractionsReply,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc users.UserService.CreatePlaylist
+     */
+    createPlaylist: {
+      name: "CreatePlaylist",
+      I: CreatePlaylistRequest,
+      O: PlaylistReply,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc users.UserService.GetMyPlaylists
+     */
+    getMyPlaylists: {
+      name: "GetMyPlaylists",
+      I: Empty,
+      O: PlaylistsListReply,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc users.UserService.DeletePlaylist
+     */
+    deletePlaylist: {
+      name: "DeletePlaylist",
+      I: DeletePlaylistRequest,
+      O: DeleteReply,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc users.UserService.AddTrackToPlaylist
+     */
+    addTrackToPlaylist: {
+      name: "AddTrackToPlaylist",
+      I: AddTrackToPlaylistRequest,
+      O: PlaylistTrackReply,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc users.UserService.RemoveTrackFromPlaylist
+     */
+    removeTrackFromPlaylist: {
+      name: "RemoveTrackFromPlaylist",
+      I: RemoveTrackFromPlaylistRequest,
+      O: DeleteReply,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc users.UserService.GetPlaylistTracks
+     */
+    getPlaylistTracks: {
+      name: "GetPlaylistTracks",
+      I: GetPlaylistTracksRequest,
+      O: PlaylistTracksListReply,
       kind: MethodKind.Unary,
     },
   }

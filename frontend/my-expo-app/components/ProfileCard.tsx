@@ -109,6 +109,7 @@ export default function ProfileCard() {
       </Pressable>
 
       <Pressable
+        onPress={() => router.replace('/playlists')}
         disabled={working}
         className="rounded-3xl border border-white/20 bg-white bg-white/30 shadow-md backdrop-blur-xl"
         style={styles.Text}>

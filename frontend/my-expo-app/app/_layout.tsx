@@ -24,6 +24,8 @@ export default function RootLayout() {
           <Stack.Screen name="home" />
           <Stack.Screen name="profile" />
           <Stack.Screen name="settings" />
+          <Stack.Screen name="playlists" />
+          <Stack.Screen name="playlist/[id]" />
         </Stack>
       </GestureHandlerRootView>
     );

@@ -2,6 +2,8 @@
 
 option csharp_namespace = "SwipeVibesAPI.Grpc";
 
+import "google/protobuf/timestamp.proto";
+
 package users;
 
 message RefreshRequest {
@@ -28,6 +30,12 @@ service UserService {
   rpc GetUsers (Empty) returns (UsersReply);
   rpc Login (LoginRequest) returns (LoginReply);
   rpc GetUserInteractions (UserInteractionsRequest) returns (UserInteractionsReply);
+  rpc CreatePlaylist (CreatePlaylistRequest) returns (PlaylistReply);
+  rpc GetMyPlaylists (Empty) returns (PlaylistsListReply);
+  rpc DeletePlaylist (DeletePlaylistRequest) returns (DeleteReply);
+  rpc AddTrackToPlaylist (AddTrackToPlaylistRequest) returns (PlaylistTrackReply);
+  rpc RemoveTrackFromPlaylist (RemoveTrackFromPlaylistRequest) returns (DeleteReply);
+  rpc GetPlaylistTracks (GetPlaylistTracksRequest) returns (PlaylistTracksListReply);
 }
 
 message Empty {}
@@ -94,4 +102,61 @@ message InteractionReply {
   string source = 6;
   string artist = 7;
   string title = 8;
+}
+
+message CreatePlaylistRequest {
+  string name = 1;
+}
+
+message PlaylistReply {
+  string id = 1;
+  string name = 2;
+  int32 track_count = 3;
+  google.protobuf.Timestamp created_at = 4;
+}
+
+message PlaylistsListReply {
+  repeated PlaylistReply playlists = 1;
+}
+
+message DeletePlaylistRequest {
+  string id = 1;
+}
+
+message PlaylistTrack {
+  int64 deezer_track_id = 1;
+  string title = 2;
+  string isrc = 3;
+  int64 artist_id = 4;
+  string artist_name = 5;
+  string album_cover = 6;
+  google.protobuf.Timestamp added_at = 7;
+}
+
+message AddTrackToPlaylistRequest {
+  string playlist_id = 1;
+  int64 deezer_track_id = 2;
+  string title = 3;
+  string isrc = 4;
+  int64 artist_id = 5;
+  string artist_name = 6;
+  string album_cover = 7;
+}
+
+message PlaylistTrackReply {
+  bool success = 1;
+  PlaylistTrack track = 2;
+}
+
+message RemoveTrackFromPlaylistRequest {
+  string playlist_id = 1;
+  int64 deezer_track_id = 2;
+}
+
+message GetPlaylistTracksRequest {
+  string playlist_id = 1;
+}
+
+message PlaylistTracksListReply {
+  repeated PlaylistTrack tracks = 1;
 }

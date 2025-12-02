@@ -5,6 +5,17 @@ import type {
   RefreshRequest,
   LoginReply,
   RefreshReply,
+  CreatePlaylistRequest,
+  DeletePlaylistRequest,
+  PlaylistReply,
+  PlaylistsListReply,
+  DeleteReply,
+  GetPlaylistTracksRequest,
+  PlaylistTracksListReply,
+  PlaylistTrack,
+  AddTrackToPlaylistRequest,
+  RemoveTrackFromPlaylistRequest,
+  PlaylistTrackReply
 } from "./gRPC/user/users_pb";
 import { setAccessToken } from "./token";
 import { Platform } from "react-native";
@@ -55,4 +66,60 @@ export async function logout(): Promise<void> {
     clearSavedUser();
     setAccessToken(null);
   }
+}
+
+export async function getMyPlaylists(): Promise<PlaylistReply[]> {
+  const res: PlaylistsListReply = await userClient.getMyPlaylists({});
+  return res.playlists;
+}
+
+export async function createPlaylist(name: string): Promise<PlaylistReply> {
+  const req: PartialMessage<CreatePlaylistRequest> = { name };
+  const res: PlaylistReply = await userClient.createPlaylist(req);
+  return res;
+}
+
+export async function deletePlaylist(id: string): Promise<boolean> {
+  const req: PartialMessage<DeletePlaylistRequest> = { id };
+  const res: DeleteReply = await userClient.deletePlaylist(req);
+  return res.success;
+}
+
+export async function getPlaylistTracks(playlistId: string): Promise<PlaylistTrack[]> {
+  const req: PartialMessage<GetPlaylistTracksRequest> = { playlistId };
+  const res: PlaylistTracksListReply = await userClient.getPlaylistTracks(req);
+  return res.tracks;
+}
+
+export async function addTrackToPlaylist(
+  playlistId: string,
+  track: {
+    id: number;
+    title: string;
+    isrc: string;
+    artistId: number;
+    artistName: string;
+    albumCover: string;
+  }
+): Promise<boolean> {
+  const req: PartialMessage<AddTrackToPlaylistRequest> = {
+    playlistId,
+    deezerTrackId: BigInt(track.id),
+    title: track.title,
+    isrc: track.isrc,
+    artistId: BigInt(track.artistId),
+    artistName: track.artistName,
+    albumCover: track.albumCover
+  };
+  const res: PlaylistTrackReply = await userClient.addTrackToPlaylist(req);
+  return res.success;
+}
+
+export async function removeTrackFromPlaylist(playlistId: string, deezerTrackId: number): Promise<boolean> {
+  const req: PartialMessage<RemoveTrackFromPlaylistRequest> = {
+    playlistId,
+    deezerTrackId: BigInt(deezerTrackId)
+  };
+  const res: DeleteReply = await userClient.removeTrackFromPlaylist(req);
+  return res.success;
 }

@@ -15,6 +15,9 @@ using Google.Cloud.Firestore.V1;
 
 namespace SwipeVibesAPI.Services
 {
+    using FirestoreTimestamp = Google.Cloud.Firestore.Timestamp;
+    using ProtoTimestamp = Google.Protobuf.WellKnownTypes.Timestamp;
+
     public class UserGrpcService : SwipeVibesAPI.Grpc.UserService.UserServiceBase
     {
         private readonly FirestoreDb _firestoreDb;
@@ -172,6 +175,14 @@ namespace SwipeVibesAPI.Services
                 Role = u.Role
             }));
             return reply;
+        }
+        private string GetCurrentUserId(ServerCallContext context)
+        {
+            var http = context.GetHttpContext();
+            var userId = http?.User?.Identity?.Name;
+            if (string.IsNullOrWhiteSpace(userId))
+                throw new RpcException(new Status(StatusCode.Unauthenticated, "User not authenticated"));
+            return userId;
         }
 
         public override async Task<LoginReply> Login(LoginRequest request, ServerCallContext context)
@@ -356,6 +367,152 @@ namespace SwipeVibesAPI.Services
                 Console.WriteLine($"GetUserInteractions error: {ex.Message}");
                 throw new RpcException(new Status(StatusCode.Internal, $"GetUserInteractions error: {ex.Message}"));
             }
+        }
+        public override async Task<PlaylistReply> CreatePlaylist(CreatePlaylistRequest request, ServerCallContext context)
+        {
+            var userId = GetCurrentUserId(context);
+
+            if (string.IsNullOrWhiteSpace(request.Name))
+                throw new RpcException(new Status(StatusCode.InvalidArgument, "Playlist name is required"));
+
+            var doc = await _firestoreDb.Collection("playlists").AddAsync(new PlaylistDoc
+            {
+                UserId = userId,
+                Name = request.Name,
+                CreatedAt = Google.Cloud.Firestore.Timestamp.FromDateTime(DateTime.UtcNow)
+            });
+
+            return new PlaylistReply
+            {
+                Id = doc.Id,
+                Name = request.Name,
+                CreatedAt = ProtoTimestamp.FromDateTime(DateTime.UtcNow)
+            };
+        }
+
+        public override async Task<PlaylistsListReply> GetMyPlaylists(Empty request, ServerCallContext context)
+        {
+            var userId = GetCurrentUserId(context);
+            // Assuming you added the method to FirestoreService, or accessing DB directly here for brevity:
+            // Ideally, use the _firestoreService wrapper. I will use the wrapper I defined above.
+            // Note: You need to inject FirestoreService into UserGrpcService if not already there.
+            // Based on previous context, you injected FirestoreDb directly, but let's assume you use the wrapper logic.
+
+            // Direct implementation using the _firestoreDb injected in previous snippet:
+            var snapshot = await _firestoreDb.Collection("playlists")
+                .WhereEqualTo("UserId", userId)
+                .OrderByDescending("CreatedAt")
+                .GetSnapshotAsync();
+
+            var reply = new PlaylistsListReply();
+            foreach (var doc in snapshot.Documents)
+            {
+                var data = doc.ConvertTo<PlaylistDoc>();
+                reply.Playlists.Add(new PlaylistReply
+                {
+                    Id = doc.Id,
+                    Name = data.Name,
+                    CreatedAt = ProtoTimestamp.FromDateTime(DateTime.UtcNow)
+                });
+            }
+            return reply;
+        }
+
+        public override async Task<DeleteReply> DeletePlaylist(DeletePlaylistRequest request, ServerCallContext context)
+        {
+            var userId = GetCurrentUserId(context);
+            var docRef = _firestoreDb.Collection("playlists").Document(request.Id);
+            var snap = await docRef.GetSnapshotAsync();
+
+            if (!snap.Exists) throw new RpcException(new Status(StatusCode.NotFound, "Playlist not found"));
+
+            var data = snap.ConvertTo<PlaylistDoc>();
+            if (data.UserId != userId) throw new RpcException(new Status(StatusCode.PermissionDenied, "Not your playlist"));
+
+            await docRef.DeleteAsync();
+            return new DeleteReply { Success = true };
+        }
+
+        public override async Task<PlaylistTrackReply> AddTrackToPlaylist(AddTrackToPlaylistRequest request, ServerCallContext context)
+        {
+            var userId = GetCurrentUserId(context);
+            var playlistRef = _firestoreDb.Collection("playlists").Document(request.PlaylistId);
+            var snap = await playlistRef.GetSnapshotAsync();
+
+            if (!snap.Exists) throw new RpcException(new Status(StatusCode.NotFound, "Playlist not found"));
+            if (snap.GetValue<string>("UserId") != userId) throw new RpcException(new Status(StatusCode.PermissionDenied, "Not your playlist"));
+
+            var trackDoc = new PlaylistTrackDoc
+            {
+                DeezerTrackId = request.DeezerTrackId,
+                Title = request.Title,
+                Isrc = request.Isrc,
+                ArtistId = request.ArtistId,
+                ArtistName = request.ArtistName,
+                AlbumCover = request.AlbumCover,
+                AddedAt = Google.Cloud.Firestore.Timestamp.FromDateTime(DateTime.UtcNow)
+            };
+
+            await playlistRef.Collection("tracks").Document(request.DeezerTrackId.ToString()).SetAsync(trackDoc);
+
+            return new PlaylistTrackReply
+            {
+                Success = true,
+                Track = new PlaylistTrack
+                {
+                    DeezerTrackId = trackDoc.DeezerTrackId,
+                    Title = trackDoc.Title,
+                    Isrc = trackDoc.Isrc,
+                    ArtistId = trackDoc.ArtistId,
+                    ArtistName = trackDoc.ArtistName,
+                    AlbumCover = trackDoc.AlbumCover,
+                    AddedAt = ProtoTimestamp.FromDateTime(DateTime.UtcNow)
+                }
+            };
+        }
+
+        public override async Task<DeleteReply> RemoveTrackFromPlaylist(RemoveTrackFromPlaylistRequest request, ServerCallContext context)
+        {
+            var userId = GetCurrentUserId(context);
+            var playlistRef = _firestoreDb.Collection("playlists").Document(request.PlaylistId);
+            var snap = await playlistRef.GetSnapshotAsync();
+
+            if (!snap.Exists) throw new RpcException(new Status(StatusCode.NotFound, "Playlist not found"));
+            if (snap.GetValue<string>("UserId") != userId) throw new RpcException(new Status(StatusCode.PermissionDenied, "Not your playlist"));
+
+            await playlistRef.Collection("tracks").Document(request.DeezerTrackId.ToString()).DeleteAsync();
+
+            return new DeleteReply { Success = true };
+        }
+
+        public override async Task<PlaylistTracksListReply> GetPlaylistTracks(GetPlaylistTracksRequest request, ServerCallContext context)
+        {
+            var userId = GetCurrentUserId(context);
+            var playlistRef = _firestoreDb.Collection("playlists").Document(request.PlaylistId);
+            var snap = await playlistRef.GetSnapshotAsync();
+
+            if (!snap.Exists) throw new RpcException(new Status(StatusCode.NotFound, "Playlist not found"));
+            // Check ownership (remove if you want shared playlists)
+            if (snap.GetValue<string>("UserId") != userId) throw new RpcException(new Status(StatusCode.PermissionDenied, "Not your playlist"));
+
+            var tracksSnap = await playlistRef.Collection("tracks").OrderByDescending("AddedAt").GetSnapshotAsync();
+
+            var reply = new PlaylistTracksListReply();
+            foreach (var doc in tracksSnap.Documents)
+            {
+                var t = doc.ConvertTo<PlaylistTrackDoc>();
+                reply.Tracks.Add(new PlaylistTrack
+                {
+                    DeezerTrackId = t.DeezerTrackId,
+                    Title = t.Title,
+                    Isrc = t.Isrc,
+                    ArtistId = t.ArtistId,
+                    ArtistName = t.ArtistName,
+                    AlbumCover = t.AlbumCover,
+                    AddedAt = ProtoTimestamp.FromDateTime(DateTime.UtcNow)
+                });
+            }
+            return reply;
         }
     }
 }

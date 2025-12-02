@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, Text, useWindowDimensions, Platform, ActivityIndicator, StyleSheet } from 'react-native';
 import ContainerFlexColumn from 'components/containers/ContainerFlexColumn';
 import SubContainerFlexRow from 'components/containers/SubContainerFlexRow';
@@ -16,10 +16,8 @@ import Animated, {
   withTiming,
   runOnJS,
   interpolate,
-  interpolateColor,
   Extrapolate,
   withRepeat,
-  withSequence,
   Easing,
 } from 'react-native-reanimated';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
@@ -165,7 +163,7 @@ export default function HomeScreen() {
     <View style={{ flex: 1, backgroundColor: '#ffffffff' }}>
       <View style={{ flex: 8, justifyContent: 'center', alignItems: 'center' }}>
         
-        {error && <Text style={{ color: 'white' }}>Error: {String(error)}</Text>}
+        {error && <Text style={{ color: 'black' }}>Error: {String(error)}</Text>}
         
         {(!track || !ready || loading) && !error && (
           <Animated.View style={loaderTranslateStyle}>

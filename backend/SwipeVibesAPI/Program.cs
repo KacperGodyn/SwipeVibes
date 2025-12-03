@@ -56,20 +56,38 @@ if (!string.IsNullOrWhiteSpace(saPath))
 }
 else
 {
-    Console.WriteLine("WARNING: Firebase Admin not initialized. Set Firebase:ServiceAccountPath or FIREBASE_CREDENTIALS_JSON_PATH.");
+    Console.WriteLine("Initializing Firebase with Default Credentials (Cloud Run)");
+
+    if (FirebaseAdmin.FirebaseApp.DefaultInstance == null)
+    {
+        FirebaseAdmin.FirebaseApp.Create(new FirebaseAdmin.AppOptions
+        {
+            Credential = GoogleCredential.GetApplicationDefault(),
+            ProjectId = projectId
+        });
+    }
+}
+
+GoogleCredential GetGoogleCredential(string? path, IEnumerable<string>? scopes = null)
+{
+    if (!string.IsNullOrWhiteSpace(path))
+    {
+        // Local development: Service Account file
+        var creds = GoogleCredential.FromFile(path);
+        return scopes != null ? creds.CreateScoped(scopes) : creds;
+    }
+    else
+    {
+        // Cloud Run: Application Default Credentials
+        Console.WriteLine("Using Application Default Credentials (Cloud Run)");
+        var creds = GoogleCredential.GetApplicationDefault();
+        return scopes != null ? creds.CreateScoped(scopes) : creds;
+    }
 }
 
 builder.Services.AddSingleton(provider =>
 {
-    if (string.IsNullOrWhiteSpace(saPath))
-    {
-        throw new InvalidOperationException(
-            "Missing Service Account path. Set Firebase:ServiceAccountPath or FIREBASE_CREDENTIALS_JSON_PATH/GOOGLE_APPLICATION_CREDENTIALS.");
-    }
-
-    var credential = GoogleCredential
-        .FromFile(saPath)
-        .CreateScoped(Google.Cloud.Firestore.V1.FirestoreClient.DefaultScopes);
+    var credential = GetGoogleCredential(saPath, Google.Cloud.Firestore.V1.FirestoreClient.DefaultScopes);
 
     return new FirestoreDbBuilder
     {
@@ -80,14 +98,8 @@ builder.Services.AddSingleton(provider =>
 
 builder.Services.AddSingleton(provider =>
 {
-    if (string.IsNullOrWhiteSpace(saPath))
-    {
-        throw new InvalidOperationException(
-            "Missing Service Account path. Set Firebase:ServiceAccountPath or GOOGLE_APPLICATION_CREDENTIALS.");
-    }
-
-    var credential = GoogleCredential.FromFile(saPath)
-        .CreateScoped(PredictionServiceClient.DefaultScopes);
+    // Tutaj też hybrydowo
+    var credential = GetGoogleCredential(saPath, PredictionServiceClient.DefaultScopes);
 
     var location = builder.Configuration["GCP:Location"] ?? "us-central1";
     var endpoint = $"{location}-aiplatform.googleapis.com";
@@ -123,19 +135,16 @@ builder.Services
   {
     var validationKey = builder.Configuration["Jwt:Key"];
 
-    // <<< DODAJ TE LINIE >>>
     var validationIssuer = builder.Configuration["Jwt:Issuer"];
     var validationAudience = builder.Configuration["Jwt:Audience"];
-    Console.WriteLine($"[Program.cs] Walidator: Key='{validationKey?.Substring(0, 4)}...', Issuer='{validationIssuer}', Audience='{validationAudience}'");
-    // <<< KONIEC >>>
 
 
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
-        ValidIssuer = validationIssuer, // Użyj zmiennej
+        ValidIssuer = validationIssuer,
         ValidateAudience = true,
-        ValidAudience = validationAudience, // Użyj zmiennej
+        ValidAudience = validationAudience,
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(validationKey)),
         ValidateLifetime = true,
@@ -145,26 +154,29 @@ builder.Services
     };
   });
 
-builder.WebHost.ConfigureKestrel(options =>
+if (builder.Environment.IsDevelopment())
 {
-    //// gRPC HTTP/2 endpoint
-    //// #TODO: might add TLS later
-    //options.ListenLocalhost(5000, o => o.Protocols = HttpProtocols.Http2);
-
-    //// REST HTTP/1.1 endpoint
-    ////options.ListenLocalhost(5001, o => o.Protocols = HttpProtocols.Http1);
-    //options.ListenLocalhost(5001, o =>
-    //{
-    //    o.Protocols = HttpProtocols.Http1;
-    //    o.UseHttps();
-    //});
-
-    options.ListenLocalhost(5001, o =>
+    builder.WebHost.ConfigureKestrel(options =>
     {
-        o.Protocols = HttpProtocols.Http1AndHttp2;
-        o.UseHttps();
+        //// gRPC HTTP/2 endpoint
+        //// #TODO: might add TLS later
+        //options.ListenLocalhost(5000, o => o.Protocols = HttpProtocols.Http2);
+
+        //// REST HTTP/1.1 endpoint
+        ////options.ListenLocalhost(5001, o => o.Protocols = HttpProtocols.Http1);
+        //options.ListenLocalhost(5001, o =>
+        //{
+        //    o.Protocols = HttpProtocols.Http1;
+        //    o.UseHttps();
+        //});
+
+        options.ListenLocalhost(5001, o =>
+        {
+            o.Protocols = HttpProtocols.Http1AndHttp2;
+            o.UseHttps();
+        });
     });
-});
+};
 
 builder.Services.AddCors(o => o.AddPolicy("WebCors", p =>
 {
@@ -191,7 +203,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseGrpcWeb(new GrpcWebOptions { DefaultEnabled = true });
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseRouting();
 app.UseCors("WebCors");
 

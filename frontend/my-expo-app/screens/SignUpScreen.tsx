@@ -25,7 +25,6 @@ export default function SignUpScreen() {
 
   console.log(config?.appEnv); // 'development' or 'production'
 
-
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
 

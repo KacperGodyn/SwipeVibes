@@ -4,7 +4,11 @@ import Constants from "expo-constants";
 import { UserService } from "./users_connectweb";
 import { getAccessToken } from "../../token";
 
-const apiUrl = (Constants.expoConfig?.extra as any)?.apiUrl || "https://localhost:5001";
+const extra = Constants.expoConfig?.extra as any;
+console.log("[DEBUG] Expo Config Extra:", extra);
+console.log("[DEBUG] Loaded API URL:", extra?.apiUrl);
+
+const apiUrl = extra?.apiUrl || "https://localhost:5001";
 
 const authInterceptor: Interceptor = (next) => async (req) => {
   const token = getAccessToken();

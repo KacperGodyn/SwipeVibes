@@ -1,15 +1,21 @@
-import 'dotenv/config';
+import * as dotenv from 'dotenv';
+import path from 'path';
 
 export default ({ config }) => {
   const appEnv = process.env.APP_ENV || 'development';
   const isProduction = appEnv === 'production';
 
+  const envFile = appEnv === 'production' ? '.env.production' : '.env';
+
+  dotenv.config({ path: path.resolve(__dirname, envFile) });
+
+  console.log(`Loading config from: ${envFile} (ENV: ${appEnv})`);
+  
   const ANDROID_WEB_CLIENT_ID = process.env.GOOGLE_ANDROID_CLIENT_ID;
 
-  const ANDROID_REVERSED_SCHEME = `com.googleusercontent.apps.${ANDROID_WEB_CLIENT_ID?.replace(
-    '.apps.googleusercontent.com',
-    ''
-  )}`;
+  const ANDROID_REVERSED_SCHEME = ANDROID_WEB_CLIENT_ID
+    ? `com.googleusercontent.apps.${ANDROID_WEB_CLIENT_ID.replace('.apps.googleusercontent.com', '')}`
+    : 'com.googleusercontent.apps.placeholder';
 
   return {
     ...config,
@@ -26,7 +32,6 @@ export default ({ config }) => {
       },
       experiments: {
         tsconfigPaths: true,
-        baseUrl: '/SwipeVibes',
       },
       scheme: [ANDROID_REVERSED_SCHEME, 'swipevibes'],
       extra: {
@@ -49,7 +54,7 @@ export default ({ config }) => {
         },
       },
 
-      plugins: [['expo-router', { origin: 'https://kacpergodyn.github.io' }]],
+      plugins: [['expo-router', { origin: 'https://swipevibes-31667.web.app' }]],
       orientation: 'portrait',
       icon: './assets/icon.png',
       userInterfaceStyle: 'light',

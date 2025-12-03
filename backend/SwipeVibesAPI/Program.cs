@@ -185,7 +185,8 @@ builder.Services.AddCors(o => o.AddPolicy("WebCors", p =>
         "http://127.0.0.1:8081",
         "https://localhost:8081",
         "https://127.0.0.1:8081",
-        "https://kacpergodyn.github.io"
+        "https://swipevibes-31667.web.app",
+        "https://swipevibes-31667.firebaseapp.com"
     )
     .AllowAnyHeader()
     .AllowAnyMethod()

@@ -3,17 +3,16 @@
   "version": "1.0.0",
   "private": true,
   "main": "expo-router/entry",
-  "homepage": "https://kacpergodyn.github.io/SwipeVibes",
   "scripts": {
-    "android": "expo run:android",
-    "ios": "expo run:ios",
-    "start": "npx expo start",
+    "android": "cross-env APP_ENV=development expo start --android",
+    "ios": "cross-env APP_ENV=development expo start --ios",
+    "start": "cross-env APP_ENV=development expo start",
     "prebuild": "expo prebuild",
     "lint": "eslint \"**/*.{js,jsx,ts,tsx}\" && prettier -c \"**/*.{js,jsx,ts,tsx,json}\"",
     "format": "eslint \"**/*.{js,jsx,ts,tsx}\" --fix && prettier \"**/*.{js,jsx,ts,tsx,json}\" --write",
-    "web": "expo start --web",
-    "build:web": "expo export --platform web --clear && node scripts/fix-paths.js",
-    "deploy": "gh-pages -d dist"
+    "web": "cross-env APP_ENV=development expo start --web",
+    "build:web": "cross-env APP_ENV=production expo export --platform web --clear",
+    "deploy": "yarn build:web && firebase deploy"
   },
   "dependencies": {
     "@bufbuild/protobuf": "^1.10.0",
@@ -36,6 +35,7 @@
     "expo-status-bar": "3.0.8",
     "expo-web-browser": "^15.0.8",
     "firebase": "^12.4.0",
+    "firebase-tools": "^14.26.0",
     "minimatch": "^10.0.3",
     "nativewind": "4.1.21",
     "react": "19.1.0",

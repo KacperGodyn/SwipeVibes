@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import http from "../api/http";
 import axios from 'axios';
 import { useBootstrapAuth } from "../auth/useBootstrapAuth";
+import { getAccessToken } from "../auth/token"; 
 
 export type ArtistDto = {
   id: number; name: string; link: string; picture: string;
@@ -48,12 +49,21 @@ export default function provideRecommendation() {
         setHistory((h) => [...h, prev]);
       }
 
-      const { data } = await http.get<RandomTrackResponse>("/api/deezer/recommendation", { signal });
+      const token = getAccessToken();
+
+      const { data } = await http.get<RandomTrackResponse>("/api/deezer/recommendation", { 
+        signal,
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+      });
       
       setTrack(data);
     } catch (err: any) {
       if (err?.code === "ERR_CANCELED") return;
       if (axios.isAxiosError(err)) {
+        console.error("API Error:", err.response?.status, err.response?.data);
+
         const serverMsg =
           (err.response?.data as any)?.message ??
           (typeof err.response?.data === "string" ? err.response?.data : null);
@@ -79,12 +89,12 @@ export default function provideRecommendation() {
   useEffect(() => {
     const controller = new AbortController();
     
-    if (ready) {
+    if (ready && isAuthenticated) {
       fetchRecommendation(controller.signal);
     }
     
     return () => controller.abort();
-  }, [fetchRecommendation, ready]);
+  }, [fetchRecommendation, ready, isAuthenticated]);
 
   return {
     track,

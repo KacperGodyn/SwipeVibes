@@ -20,10 +20,15 @@ namespace SwipeVibesAPI.Services
             _predictionServiceClient = predictionServiceClient;
 
             var projectId = configuration["GCP:ProjectId"]
-                ?? throw new InvalidOperationException("GCP:ProjectId is not set in the cfg file");
+                            ?? configuration["GCP__ProjectId"]
+                            ?? Environment.GetEnvironmentVariable("GCLOUD_PROJECT");
 
-            var location = configuration["GCP:Location"]
-                ?? "us-central1";
+            if (string.IsNullOrEmpty(projectId))
+            {
+                throw new InvalidOperationException("GCP Project ID is missing. Set GCP:ProjectId in config or run in Google Cloud environment.");
+            }
+
+            var location = configuration["GCP:Location"] ?? "us-central1";
 
             _vertexAiEndpoint = $"projects/{projectId}/locations/{location}/publishers/google/models/{_modelId}";
         }

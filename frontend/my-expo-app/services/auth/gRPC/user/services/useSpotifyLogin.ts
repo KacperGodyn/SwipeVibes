@@ -28,7 +28,7 @@ export function useSpotifyLogin({ onSuccess, onError }: UseSpotifyLoginOptions =
   const redirectUri = makeRedirectUri({
     scheme: 'swipevibes',
     path: 'oauth2redirect/spotify',
-    ...(Platform.OS === 'web' ? { useProxy: true } : {}),
+    preferLocalhost: true,
   });
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
@@ -75,12 +75,11 @@ export function useSpotifyLogin({ onSuccess, onError }: UseSpotifyLoginOptions =
       }
     })();
   }, [response]);
-  
+
   return {
     ready: !!request,
     loading,
     error: lastError,
-    promptAsync: (opts?: AuthSession.AuthRequestPromptOptions) =>
-      promptAsync({ ...(opts ?? {}), ...(isWeb ? { useProxy: true } : {}) } as any),
+    promptAsync: (opts?: AuthSession.AuthRequestPromptOptions) => promptAsync(opts),
   };
 }

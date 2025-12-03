@@ -59,7 +59,7 @@ jobs:
         run: yarn build:web
         working-directory: ./frontend/my-expo-app
         env:
-          APP_ENV: development
+          APP_ENV: production
           SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
           SPOTIFY_SCOPES: ${{ secrets.SPOTIFY_SCOPES }}
           GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}

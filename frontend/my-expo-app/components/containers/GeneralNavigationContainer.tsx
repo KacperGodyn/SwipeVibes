@@ -105,7 +105,7 @@ export default function GeneralNavigationContainer() {
           className="rounded-full p-2 active:bg-white/40"
           onPress={() => {
             setSelected(!isSelectedVibe);
-            router.replace("/home")
+            router.push("/home")
           }}>
           <Vibe width={40} height={40} color={iconColor} />
         </Pressable>
@@ -113,14 +113,14 @@ export default function GeneralNavigationContainer() {
         <Pressable
           className="rounded-full p-2 active:bg-white/40"
           onPress={() => {
-            router.replace('/profile');
+            router.push('/profile');
           }}>
           <ProfileIcon width={40} height={40} color={iconColor} />
         </Pressable>
         <Pressable
           className="rounded-full p-2 active:bg-white/40"
           onPress={() => {
-            router.replace('/settings');
+            router.push('/settings');
           }}>
           <SettingsIcon width={40} height={40} color={iconColor} />
         </Pressable>

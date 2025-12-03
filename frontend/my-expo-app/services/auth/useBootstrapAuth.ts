@@ -8,20 +8,15 @@ export function useBootstrapAuth() {
 
   useEffect(() => {
     (async () => {
-      console.log("[AuthBootstrap] Uruchamiam hook...");
       try {
-        console.log("[AuthBootstrap] Próba odświeżenia tokenu...");
         const { token } = await refreshAccess();
 
-        console.log("[AuthBootstrap] SUKCES. Pobrany token:", token ? token.substring(0, 10) + "..." : "PUSTY");
         setAccessToken(token);
         setIsAuthenticated(true);
       } catch (e: any) {
-        console.error("[AuthBootstrap] BŁĄD. Odświeżenie nie powiodło się.", e.message || e);
         setAccessToken(null);
         setIsAuthenticated(false);
       } finally {
-        console.log("[AuthBootstrap] Gotowy (ready = true).");
         setReady(true);
       }
     })();

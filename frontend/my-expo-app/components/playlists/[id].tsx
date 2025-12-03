@@ -147,7 +147,7 @@ export default function PlaylistDetailsScreen() {
 
       <View style={{ flex: 0.15, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
         <Pressable
-          onPress={() => router.replace('/playlists')}
+          onPress={() => router.push('/playlists')}
           className="h-20 w-20 items-center justify-center rounded-full border border-white/20 bg-white/30 shadow-md backdrop-blur-xl active:bg-white/40">
           <ReturnIcon width={40} height={40} />
         </Pressable>

@@ -2,7 +2,7 @@ import 'dotenv/config';
 
 export default ({ config }) => {
   const appEnv = process.env.APP_ENV || 'development';
-  const isDev = appEnv === 'development';
+  const isProduction = appEnv === 'production';
 
   const ANDROID_WEB_CLIENT_ID = process.env.GOOGLE_ANDROID_CLIENT_ID;
 
@@ -31,7 +31,7 @@ export default ({ config }) => {
       scheme: [ANDROID_REVERSED_SCHEME, 'swipevibes'],
       extra: {
         appEnv,
-        apiUrl: isDev ? process.env.DEV_API_URL : process.env.PROD_API_URL,
+        apiUrl: isProduction ? process.env.PROD_API_URL : process.env.DEV_API_URL,
         spotify: {
           clientId: process.env.SPOTIFY_CLIENT_ID,
           scopes: (process.env.SPOTIFY_SCOPES || 'user-read-email user-read-private').split(' '),

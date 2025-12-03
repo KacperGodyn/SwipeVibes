@@ -76,7 +76,7 @@ export default function ProfileCard() {
     setWorking(true);
     try {
       await logout();
-      router.replace('/');
+      router.push('/');
     } finally {
       setWorking(false);
     }
@@ -102,6 +102,7 @@ export default function ProfileCard() {
       </Text>
 
       <Pressable
+        onPress={() => router.push('/statistics')}
         disabled={working}
         className="rounded-3xl border border-white/20 bg-white bg-white/30 shadow-md backdrop-blur-xl"
         style={styles.Text}>
@@ -109,7 +110,7 @@ export default function ProfileCard() {
       </Pressable>
 
       <Pressable
-        onPress={() => router.replace('/playlists')}
+        onPress={() => router.push('/playlists')}
         disabled={working}
         className="rounded-3xl border border-white/20 bg-white bg-white/30 shadow-md backdrop-blur-xl"
         style={styles.Text}>

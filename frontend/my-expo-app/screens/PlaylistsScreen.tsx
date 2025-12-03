@@ -115,7 +115,7 @@ export default function PlaylistsScreen() {
 
       <SubContainerFlexRow style={{ position: 'relative', flex: 0.15 }}>
         <Pressable
-          onPress={() => router.replace('/profile')}
+          onPress={() => router.push('/profile')}
           className="h-20 w-20 items-center justify-center rounded-full border border-white/20 bg-white/30 shadow-md backdrop-blur-xl active:bg-white/40">
           <ReturnIcon width={40} height={40} />
         </Pressable>

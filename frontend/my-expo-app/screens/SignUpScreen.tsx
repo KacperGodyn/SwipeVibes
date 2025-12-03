@@ -16,7 +16,16 @@ import { loginWithGoogle } from '../services/auth/api';
 import { auth } from '../firebase';
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 
+// delete me later
+import Constants from 'expo-constants';
+
+const config = Constants.expoConfig?.extra;
+
 export default function SignUpScreen() {
+
+  console.log(config?.appEnv); // 'development' or 'production'
+
+
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
 
@@ -42,7 +51,7 @@ export default function SignUpScreen() {
       }
 
       console.log('Logged in as:', res.username);
-      router.replace('/home');
+      router.push('/home');
     },
     onError: (err) => {
       console.error(err);
@@ -62,7 +71,7 @@ export default function SignUpScreen() {
       const photo = userCred.user?.photoURL ?? null;
       setSavedAvatar(photo);
       console.log('Logged in as:', res.username);
-      router.replace('/home');
+      router.push('/home');
     },
     onError: (err) => {
       console.error(err);

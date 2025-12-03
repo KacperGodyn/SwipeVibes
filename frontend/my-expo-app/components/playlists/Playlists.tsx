@@ -46,7 +46,7 @@ export default function Playlists({ refreshTrigger = 0, onSelect }: Props) {
     if (onSelect) {
       onSelect(item.id);
     } else {
-      router.replace({ pathname: `/playlist/${item.id}`, params: { name: item.name } });
+      router.push({ pathname: `/playlist/${item.id}`, params: { name: item.name } });
     }
   };
 

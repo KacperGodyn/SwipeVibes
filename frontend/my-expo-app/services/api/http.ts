@@ -14,14 +14,10 @@ const http = axios.create({
 
 http.interceptors.request.use((config) => {
   const token = getAccessToken() ?? loadAccessToken();
-  
-  console.log(`[HTTP Request] ${config.method?.toUpperCase()} ${config.url}`);
-  
+    
   if (token) {
-    console.log("[HTTP Request] Dołączam token:", token.substring(0, 10) + "...");
     config.headers.Authorization = `Bearer ${token}`;
   } else {
-    console.log("[HTTP Request] Brak tokenu.");
   }
   
   return config;

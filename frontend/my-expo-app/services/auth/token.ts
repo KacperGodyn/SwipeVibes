@@ -34,3 +34,20 @@ export const loadAccessToken = (): string | null => {
     return null;
   }
 };
+
+export function setRefreshToken(token: string | null) {
+  if (Platform.OS === 'web') {
+    if (token) {
+      localStorage.setItem('sv_refresh_token', token);
+    } else {
+      localStorage.removeItem('sv_refresh_token');
+    }
+  }
+}
+
+export function getRefreshToken(): string | null {
+  if (Platform.OS === 'web') {
+    return localStorage.getItem('sv_refresh_token');
+  }
+  return null;
+}

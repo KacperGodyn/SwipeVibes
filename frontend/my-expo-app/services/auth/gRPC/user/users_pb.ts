@@ -525,6 +525,11 @@ export class LoginReply extends Message<LoginReply> {
    */
   role = "";
 
+  /**
+   * @generated from field: string refresh_token = 4;
+   */
+  refreshToken = "";
+
   constructor(data?: PartialMessage<LoginReply>) {
     super();
     proto3.util.initPartial(data, this);
@@ -536,6 +541,7 @@ export class LoginReply extends Message<LoginReply> {
     { no: 1, name: "token", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "username", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 3, name: "role", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "refresh_token", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): LoginReply {

@@ -17,9 +17,17 @@ import type {
   RemoveTrackFromPlaylistRequest,
   PlaylistTrackReply
 } from "./gRPC/user/users_pb";
-import { setAccessToken } from "./token";
+import { setAccessToken, setRefreshToken, getRefreshToken } from "./token"; 
 import { Platform } from "react-native";
 import { clearSavedUser } from "./userInfo";
+
+const handleLoginResponse = (res: LoginReply) => {
+  setAccessToken(res.token);
+  if (res.refreshToken) {
+    setRefreshToken(res.refreshToken);
+  }
+  return res;
+};
 
 export async function loginWithSpotify(idTokenSpotify: string) {
   const req: PartialMessage<LoginRequest> = {
@@ -27,8 +35,7 @@ export async function loginWithSpotify(idTokenSpotify: string) {
     token: idTokenSpotify,
   };
   const res: LoginReply = await userClient.login(req);
-  setAccessToken(res.token);
-  return res;
+  return handleLoginResponse(res);
 }
 
 export async function loginWithGoogle(idTokenGoogle: string) {
@@ -37,8 +44,7 @@ export async function loginWithGoogle(idTokenGoogle: string) {
     token: idTokenGoogle,
   };
   const res: LoginReply = await userClient.login(req);
-  setAccessToken(res.token);
-  return res;
+  return handleLoginResponse(res);
 }
 
 export async function loginWithPassword(username: string, password: string) {
@@ -47,14 +53,20 @@ export async function loginWithPassword(username: string, password: string) {
     password,
   };
   const res: LoginReply = await userClient.login(req);
-  setAccessToken(res.token);
-  return res;
+  return handleLoginResponse(res);
 }
 
 export async function refreshAccess(): Promise<{ token: string }> {
-  const req: PartialMessage<RefreshRequest> = { refreshToken: "" };
+  const refreshToken = getRefreshToken() || "";
+  
+  const req: PartialMessage<RefreshRequest> = { 
+    refreshToken: refreshToken 
+  };
+  
   const res: RefreshReply = await userClient.refresh(req);
+  
   setAccessToken(res.token);
+  
   return { token: res.token };
 }
 
@@ -65,6 +77,7 @@ export async function logout(): Promise<void> {
   } finally {
     clearSavedUser();
     setAccessToken(null);
+    setRefreshToken(null);
   }
 }
 

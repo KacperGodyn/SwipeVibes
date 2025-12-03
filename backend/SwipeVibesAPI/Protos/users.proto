@@ -83,6 +83,7 @@ message LoginReply {
   string token = 1;
   string username = 2;
   string role = 3;
+  string refresh_token = 4;
 }
 
 message UserInteractionsRequest {

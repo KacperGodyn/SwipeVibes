@@ -263,6 +263,7 @@ namespace SwipeVibesAPI.Services
             return new LoginReply
             {
                 Token = access,
+                RefreshToken = refresh,
                 Username = user.Username,
                 Role = user.Role
             };
@@ -272,9 +273,12 @@ namespace SwipeVibesAPI.Services
         {
             var http = context.GetHttpContext();
 
-            string? refresh = http.Request.Cookies.TryGetValue("sv_refresh", out var c) ? c : null;
-            if (string.IsNullOrWhiteSpace(refresh) && !string.IsNullOrWhiteSpace(request.RefreshToken))
-                refresh = request.RefreshToken;
+            string? refresh = request.RefreshToken;
+
+            if (string.IsNullOrWhiteSpace(refresh))
+            {
+                refresh = http.Request.Cookies.TryGetValue("sv_refresh", out var c) ? c : null;
+            }
 
             if (string.IsNullOrWhiteSpace(refresh))
                 throw new RpcException(new Status(StatusCode.Unauthenticated, "Missing refresh token"));
@@ -287,6 +291,7 @@ namespace SwipeVibesAPI.Services
             var role = principal.Claims.FirstOrDefault(x => x.Type == "role")?.Value ?? "User";
 
             var newAccess = _jwtService.GenerateAccess(username, role, TimeSpan.FromMinutes(15));
+
             return Task.FromResult(new RefreshReply { Token = newAccess });
         }
 

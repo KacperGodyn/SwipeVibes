@@ -1,29 +1,50 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import http from "../api/http";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import http from '../api/http';
 import axios from 'axios';
-import { useBootstrapAuth } from "../auth/useBootstrapAuth";
-import { getAccessToken } from "../auth/token"; 
+import { useBootstrapAuth } from '../auth/useBootstrapAuth';
+import { getAccessToken } from '../auth/token';
 
 export type ArtistDto = {
-  id: number; name: string; link: string; picture: string;
-  pictureSmall?: string; pictureMedium?: string; pictureBig?: string; pictureXl?: string;
+  id: number;
+  name: string;
+  link: string;
+  picture: string;
+  pictureSmall?: string;
+  pictureMedium?: string;
+  pictureBig?: string;
+  pictureXl?: string;
   tracklist: string;
 };
 export type AlbumDto = {
-  id: number; title: string; cover: string;
-  coverSmall?: string; coverMedium?: string; coverBig?: string; coverXl?: string;
+  id: number;
+  title: string;
+  cover: string;
+  coverSmall?: string;
+  coverMedium?: string;
+  coverBig?: string;
+  coverXl?: string;
   tracklist: string;
 };
 export type RandomTrackResponse = {
-  id: number; title: string; titleShort?: string | null; isrc?: string | null;
-  link?: string | null; share?: string | null;
-  trackPosition: number; diskNumber: number; rank: number;
+  id: number;
+  title: string;
+  titleShort?: string | null;
+  isrc?: string | null;
+  link?: string | null;
+  share?: string | null;
+  trackPosition: number;
+  diskNumber: number;
+  rank: number;
   releaseDate?: string | null;
   explicitLyrics: boolean;
-  explicitContentLyrics: "Unspecified" | "Clean" | "Explicit";
-  explicitCover: "Unspecified" | "Clean" | "Explicit";
-  preview?: string | null; bpm?: number | null; gain?: number | null;
-  countryCodes: string[]; artists: ArtistDto[]; album: AlbumDto;
+  explicitContentLyrics: 'Unspecified' | 'Clean' | 'Explicit';
+  explicitCover: 'Unspecified' | 'Clean' | 'Explicit';
+  preview?: string | null;
+  bpm?: number | null;
+  gain?: number | null;
+  countryCodes: string[];
+  artists: ArtistDto[];
+  album: AlbumDto;
 };
 
 export default function provideRecommendation() {
@@ -39,18 +60,33 @@ export default function provideRecommendation() {
 
   const firstLoad = useRef(true);
 
-  const fetchRecommendation = useCallback(async (signal?: AbortSignal) => {
+  const fetchRecommendation = useCallback(async (signal?: AbortSignal, retryCount = 0) => {
     try {
-      setLoading(true);
-      setError(null);
+      if (retryCount === 0) {
+          setLoading(true);
+          setError(null);
+      }
 
       const prev = currentRef.current;
-      if (prev && !firstLoad.current) {
+      if (prev && !firstLoad.current && retryCount === 0) {
         setHistory((h) => [...h, prev]);
       }
 
       const token = getAccessToken();
 
+      if (!token) {
+          
+          if (retryCount < 5) {
+              setTimeout(() => {
+                  fetchRecommendation(signal, retryCount + 1);
+              }, 500);
+              return;
+          } else {
+              throw new Error("Timed out waiting for access token.");
+          }
+      }
+
+      
       const { data } = await http.get<RandomTrackResponse>("/api/deezer/recommendation", { 
         signal,
         headers: {
@@ -61,21 +97,25 @@ export default function provideRecommendation() {
       setTrack(data);
     } catch (err: any) {
       if (err?.code === "ERR_CANCELED") return;
-      if (axios.isAxiosError(err)) {
-        console.error("API Error:", err.response?.status, err.response?.data);
+      
+      console.error("[Fetch Error]", err);
 
+      if (axios.isAxiosError(err)) {
         const serverMsg =
           (err.response?.data as any)?.message ??
           (typeof err.response?.data === "string" ? err.response?.data : null);
         setError(serverMsg ?? err.message);
       } else {
-        setError("Unknown error occurred");
+        setError(err.message || "Unknown error occurred");
       }
     } finally {
-      firstLoad.current = false;
-      setLoading(false);
+      const token = getAccessToken();
+      if (token || retryCount >= 5) {
+          firstLoad.current = false;
+          setLoading(false);
+      }
     }
-  }, []);
+  }, [isAuthenticated]);
 
   const undo = useCallback(() => {
     setHistory((prev) => {
@@ -89,8 +129,13 @@ export default function provideRecommendation() {
   useEffect(() => {
     const controller = new AbortController();
     
-    if (ready && isAuthenticated) {
-      fetchRecommendation(controller.signal);
+    if (ready) {
+        if (isAuthenticated) {
+            fetchRecommendation(controller.signal);
+        } else {
+            console.log("User not authenticated, stopping.");
+            setLoading(false);
+        }
     }
     
     return () => controller.abort();
@@ -100,7 +145,7 @@ export default function provideRecommendation() {
     track,
     loading,
     error,
-    refetch: () => fetchRecommendation(),
+    refetch: () => fetchRecommendation(undefined, 0),
     undo,
     canUndo: history.length > 0,
   };

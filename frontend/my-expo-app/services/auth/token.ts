@@ -1,6 +1,8 @@
 import { Platform } from "react-native";
 import { mmkv } from "../storage/mmkv";
-const KEY = "sv:access";
+
+const ACCESS_KEY = "sv:access";
+const REFRESH_KEY = "sv:refresh";
 
 let ACCESS: string | null = null;
 
@@ -10,11 +12,11 @@ export const setAccessToken = (t: string | null) => {
   ACCESS = t;
   try {
     if (Platform.OS === "web") {
-      if (t) localStorage.setItem(KEY, t);
-      else localStorage.removeItem(KEY);
+      if (t) localStorage.setItem(ACCESS_KEY, t);
+      else localStorage.removeItem(ACCESS_KEY);
     } else {
-      if (t) mmkv.set(KEY, t);
-      else mmkv.delete(KEY);
+      if (t) mmkv.set(ACCESS_KEY, t);
+      else mmkv.delete(ACCESS_KEY);
     }
   } catch {}
 };
@@ -24,9 +26,9 @@ export const loadAccessToken = (): string | null => {
   try {
     const t =
       Platform.OS === "web"
-        ? localStorage.getItem(KEY)
-        : mmkv.contains(KEY)
-        ? mmkv.getString(KEY) ?? null
+        ? localStorage.getItem(ACCESS_KEY)
+        : mmkv.contains(ACCESS_KEY)
+        ? mmkv.getString(ACCESS_KEY) ?? null
         : null;
     ACCESS = t;
     return t;
@@ -35,19 +37,31 @@ export const loadAccessToken = (): string | null => {
   }
 };
 
+
 export function setRefreshToken(token: string | null) {
-  if (Platform.OS === 'web') {
-    if (token) {
-      localStorage.setItem('sv_refresh_token', token);
+  try {
+    if (Platform.OS === 'web') {
+      if (token) localStorage.setItem(REFRESH_KEY, token);
+      else localStorage.removeItem(REFRESH_KEY);
     } else {
-      localStorage.removeItem('sv_refresh_token');
+      if (token) mmkv.set(REFRESH_KEY, token);
+      else mmkv.delete(REFRESH_KEY);
     }
+  } catch (e) {
+    console.error("Błąd zapisu refresh tokena", e);
   }
 }
 
 export function getRefreshToken(): string | null {
-  if (Platform.OS === 'web') {
-    return localStorage.getItem('sv_refresh_token');
+  try {
+    if (Platform.OS === 'web') {
+      return localStorage.getItem(REFRESH_KEY);
+    }
+    if (mmkv.contains(REFRESH_KEY)) {
+        return mmkv.getString(REFRESH_KEY) ?? null;
+    }
+    return null;
+  } catch {
+    return null;
   }
-  return null;
 }

@@ -25,11 +25,15 @@ export function useSpotifyLogin({ onSuccess, onError }: UseSpotifyLoginOptions =
 
   const isWeb = Platform.OS === 'web';
 
-  const redirectUri = makeRedirectUri({
+  let redirectUri = makeRedirectUri({
     scheme: 'swipevibes',
     path: 'oauth2redirect/spotify',
     preferLocalhost: true,
   });
+
+  if (isWeb && __DEV__) {
+    redirectUri = "http://127.0.0.1:8081/oauth2redirect/spotify";
+  }
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {

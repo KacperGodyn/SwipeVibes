@@ -1,36 +1,34 @@
 import React from 'react';
-import { router } from 'expo-router';
 import ButtonLogInVia from '../components/buttons/ButtonLogInVia';
 import ButtonSignUpClassic from '../components/buttons/ButtonSignUpClassic';
 import ContainerFlexColumn from '../components/containers/ContainerFlexColumn';
 import SubContainerFlexRow from '../components/containers/SubContainerFlexRow';
 
-import { useSpotifyLogin } from 'services/auth/gRPC/user/services/useSpotifyLogin';
-import { loginWithSpotify } from '../services/auth/api';
-import { setSavedUser } from '../services/auth/userInfo';
-import { setSavedAvatar } from '../services/auth/userInfo';
+import { useSpotifyLogin } from '../services/auth/gRPC/user/services/useSpotifyLogin';
+import { loginWithSpotify, loginWithGoogle } from '../services/auth/api';
+import { setSavedUser, setSavedAvatar } from '../services/auth/userInfo';
+import { loadAccessToken } from '../services/auth/token';
 
 import { useGoogleLogin } from '../services/auth/gRPC/user/services/useGoogleLogin';
-import { loginWithGoogle } from '../services/auth/api';
 
 import { auth } from '../firebase';
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 
-// delete me later
+import { useSession } from '../services/auth/ctx';
+
 import Constants from 'expo-constants';
 
 const config = Constants.expoConfig?.extra;
 
 export default function SignUpScreen() {
-
-  console.log(config?.appEnv); // 'development' or 'production'
+  const { signIn } = useSession();
 
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
 
   const spotify = useSpotifyLogin({
     onSuccess: async (spotifyIdToken) => {
-      const res = await loginWithSpotify(spotifyIdToken); // sets access token internally
+      const res = await loginWithSpotify(spotifyIdToken);
       setSavedUser(res.username, (res as any).role);
 
       try {
@@ -49,8 +47,10 @@ export default function SignUpScreen() {
         setSavedAvatar(null);
       }
 
-      console.log('Logged in as:', res.username);
-      router.push('/home');
+      const token = loadAccessToken();
+      if (token) {
+        signIn(token);
+      }
     },
     onError: (err) => {
       console.error(err);
@@ -65,22 +65,21 @@ export default function SignUpScreen() {
 
       const firebaseIdToken = await userCred.user.getIdToken();
 
-      const res = await loginWithGoogle(firebaseIdToken); // sets access token internally
+      const res = await loginWithGoogle(firebaseIdToken);
       setSavedUser(res.username, (res as any).role);
       const photo = userCred.user?.photoURL ?? null;
       setSavedAvatar(photo);
-      console.log('Logged in as:', res.username);
-      router.push('/home');
+
+      const token = loadAccessToken();
+      if (token) {
+        signIn(token);
+      }
     },
     onError: (err) => {
       console.error(err);
       alert('Google sign-in failed');
     },
   });
-
-  const doSoundCloud = React.useCallback(() => alert('SoundCloud login TBD'), []);
-  const doSteam = React.useCallback(() => alert('Steam login TBD'), []);
-  const doGitHub = React.useCallback(() => alert('GitHub login TBD'), []);
 
   return (
     <ContainerFlexColumn style={{ width: '85%', height: '90%' }}>
@@ -97,11 +96,6 @@ export default function SignUpScreen() {
           disabled={!spotify.ready}
           loading={spotify.loading}
         />
-        <ButtonLogInVia provider="soundcloud" onPress={doSoundCloud} />
-        <ButtonLogInVia provider="steam" onPress={doSteam} />
-      </SubContainerFlexRow>
-
-      <SubContainerFlexRow>
         <ButtonLogInVia
           provider="google"
           onPress={() => {
@@ -110,7 +104,6 @@ export default function SignUpScreen() {
           disabled={!google.ready}
           loading={google.loading}
         />
-        <ButtonLogInVia provider="github" onPress={doGitHub} />
       </SubContainerFlexRow>
     </ContainerFlexColumn>
   );

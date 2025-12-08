@@ -36,12 +36,13 @@ service UserService {
   rpc AddTrackToPlaylist (AddTrackToPlaylistRequest) returns (PlaylistTrackReply);
   rpc RemoveTrackFromPlaylist (RemoveTrackFromPlaylistRequest) returns (DeleteReply);
   rpc GetPlaylistTracks (GetPlaylistTracksRequest) returns (PlaylistTracksListReply);
+  rpc GetUserStats (UserStatsRequest) returns (UserStatsReply);
 }
 
 message Empty {}
 
 message UserRequest {
-  int32 id = 1;
+  string id = 1;
 }
 
 message CreateUserRequest {
@@ -51,7 +52,7 @@ message CreateUserRequest {
 }
 
 message UpdateUserRequest {
-  int32 id = 1;
+  string id = 1;
   string username = 2;
   string email = 3;
   string password = 4;
@@ -65,7 +66,7 @@ message LoginRequest {
 }
 
 message UserReply {
-  int32 id = 1;
+  string id = 1;
   string username = 2;
   string email = 3;
   string role = 4;
@@ -84,6 +85,7 @@ message LoginReply {
   string username = 2;
   string role = 3;
   string refresh_token = 4;
+  string id = 5;
 }
 
 message UserInteractionsRequest {
@@ -160,4 +162,16 @@ message GetPlaylistTracksRequest {
 
 message PlaylistTracksListReply {
   repeated PlaylistTrack tracks = 1;
+}
+
+message UserStatsRequest {
+  string user_id = 1;
+}
+
+message UserStatsReply {
+  string favorite_artist = 1;
+  string favorite_genre = 2;
+  double average_bpm = 3;
+  int32 likes = 4;
+  int32 dislikes = 5;
 }

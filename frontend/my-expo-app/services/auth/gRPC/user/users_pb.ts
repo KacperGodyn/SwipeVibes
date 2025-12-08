@@ -382,9 +382,9 @@ export class LoginRequest extends Message<LoginRequest> {
  */
 export class UserReply extends Message<UserReply> {
   /**
-   * @generated from field: int32 id = 1;
+   * @generated from field: string id = 1;
    */
-  id = 0;
+  id = "";
 
   /**
    * @generated from field: string username = 2;
@@ -409,7 +409,7 @@ export class UserReply extends Message<UserReply> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "users.UserReply";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 1, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "username", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 3, name: "email", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 4, name: "role", kind: "scalar", T: 9 /* ScalarType.STRING */ },

@@ -57,17 +57,25 @@ export async function loginWithPassword(username: string, password: string) {
 }
 
 export async function refreshAccess(): Promise<{ token: string }> {
-  const refreshToken = getRefreshToken() || "";
+  const refreshToken = getRefreshToken();
+
+  if (!refreshToken) {
+      console.warn("Brak refresh tokena w storage. Wymuszone wylogowanie.");
+      await logout();
+      throw new Error("No refresh token available"); 
+  }
   
-  const req: PartialMessage<RefreshRequest> = { 
-    refreshToken: refreshToken 
-  };
-  
-  const res: RefreshReply = await userClient.refresh(req);
-  
-  setAccessToken(res.token);
-  
-  return { token: res.token };
+  try {
+      const req: PartialMessage<RefreshRequest> = { refreshToken: refreshToken };
+      const res: RefreshReply = await userClient.refresh(req);
+      
+      setAccessToken(res.token);
+      return { token: res.token };
+  } catch (err) {
+      console.error("Refresh failed:", err);
+      await logout();
+      throw err;
+  }
 }
 
 export async function logout(): Promise<void> {

@@ -2,8 +2,9 @@ import React, { useMemo, useState } from 'react';
 import { router } from 'expo-router';
 import { refreshAccess, logout } from '../services/auth/api';
 import { loadAccessToken, setAccessToken } from '../services/auth/token';
-import { Text, View, Pressable, StyleSheet, Platform, Image } from 'react-native'; // ⬅️ dodano Image
+import { Text, View, Pressable, StyleSheet, Platform, Image } from 'react-native';
 import { getSavedUsername, getSavedAvatar } from '../services/auth/userInfo';
+import { useSession } from '../services/auth/ctx';
 
 type JwtPayload = {
   name?: string;
@@ -45,6 +46,7 @@ function decodeJwt(token: string | null): JwtPayload | null {
 }
 
 export default function ProfileCard() {
+  const { signOut } = useSession();
   const [working, setWorking] = useState(false);
   const token = loadAccessToken();
   const payload = useMemo(() => decodeJwt(token), [token]);
@@ -72,11 +74,10 @@ export default function ProfileCard() {
     }
   };
 
-  const onLogout = async () => {
+const onLogout = async () => {
     setWorking(true);
     try {
-      await logout();
-      router.push('/');
+      await signOut(); 
     } finally {
       setWorking(false);
     }

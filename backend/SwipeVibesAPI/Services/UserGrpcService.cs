@@ -11,7 +11,6 @@ using System.Net;
 using System.Text.Json;
 using System.Collections.Generic;
 using Google.Cloud.Firestore;
-using Google.Cloud.Firestore.V1;
 
 namespace SwipeVibesAPI.Services
 {
@@ -21,31 +20,49 @@ namespace SwipeVibesAPI.Services
     public class UserGrpcService : SwipeVibesAPI.Grpc.UserService.UserServiceBase
     {
         private readonly FirestoreDb _firestoreDb;
-        private readonly UserService _userService;
         private readonly JwtService _jwtService;
-        private readonly IWebHostEnvironment _env;
         private readonly IHttpClientFactory _httpClientFactory;
 
-        public UserGrpcService(FirestoreDb firestoreDb, UserService userService, JwtService jwtService, IWebHostEnvironment env, IHttpClientFactory httpClientFactory)
+        public UserGrpcService(FirestoreDb firestoreDb, JwtService jwtService, IHttpClientFactory httpClientFactory)
         {
             _firestoreDb = firestoreDb;
-            _userService = userService;
             _jwtService = jwtService;
-            _env = env;
             _httpClientFactory = httpClientFactory;
+        }
+
+        private async Task<UserDoc?> FindUserByEmail(string email)
+        {
+            var snapshot = await _firestoreDb.Collection("users")
+                .WhereEqualTo("Email", email)
+                .Limit(1)
+                .GetSnapshotAsync();
+            
+            var doc = snapshot.Documents.FirstOrDefault();
+            return doc?.ConvertTo<UserDoc>();
+        }
+
+        private async Task<UserDoc?> FindUserByUsername(string username)
+        {
+            var snapshot = await _firestoreDb.Collection("users")
+                .WhereEqualTo("Username", username)
+                .Limit(1)
+                .GetSnapshotAsync();
+
+            var doc = snapshot.Documents.FirstOrDefault();
+            return doc?.ConvertTo<UserDoc>();
+        }
+
+        private async Task<UserDoc?> GetUserById(string id)
+        {
+            var docRef = _firestoreDb.Collection("users").Document(id);
+            var snapshot = await docRef.GetSnapshotAsync();
+            return snapshot.Exists ? snapshot.ConvertTo<UserDoc>() : null;
         }
 
         private async Task<FirebaseToken> VerifyToken(string token)
         {
-            try
-            {
-                var decoded = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(token);
-                return decoded;
-            }
-            catch
-            {
-                throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
-            }
+            try { return await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(token); }
+            catch { throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token")); }
         }
 
         private static bool IsProvider(string? p, string expected) =>
@@ -87,16 +104,13 @@ namespace SwipeVibesAPI.Services
 
         public override async Task<UserReply> CreateUser(CreateUserRequest request, ServerCallContext context)
         {
-            var authHeader = context.RequestHeaders.FirstOrDefault(h => h.Key == "authorization")?.Value;
-            if (authHeader == null || !authHeader.StartsWith("Bearer "))
-                throw new RpcException(new Status(StatusCode.Unauthenticated, "Missing token"));
-
-            string token = authHeader.Substring("Bearer ".Length);
-            _ = await VerifyToken(token);
+            var existing = await FindUserByUsername(request.Username) ?? await FindUserByEmail(request.Email);
+            if (existing != null)
+                throw new RpcException(new Status(StatusCode.AlreadyExists, "User already exists"));
 
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
-            var user = new User
+            var newUser = new UserDoc
             {
                 Username = request.Username,
                 Email = request.Email,
@@ -104,105 +118,137 @@ namespace SwipeVibesAPI.Services
                 Role = "User"
             };
 
-            var created = await _userService.RegisterUserAsync(user);
+            var docRef = await _firestoreDb.Collection("users").AddAsync(newUser);
+            newUser.Id = docRef.Id;
 
-            return new UserReply
-            {
-                Id = created.Id,
-                Username = created.Username,
-                Email = created.Email,
-                Role = created.Role
+            return new UserReply 
+            { 
+                Id = newUser.Id, 
+                Username = newUser.Username, 
+                Email = newUser.Email, 
+                Role = newUser.Role 
             };
         }
 
         public override async Task<UserReply> UpdateUser(UpdateUserRequest request, ServerCallContext context)
         {
-            var authHeader = context.RequestHeaders.FirstOrDefault(h => h.Key == "authorization")?.Value;
-            if (authHeader == null || !authHeader.StartsWith("Bearer "))
-                throw new RpcException(new Status(StatusCode.Unauthenticated, "Missing token"));
+            var currentUserId = GetCurrentUserId(context);
+            if (currentUserId != request.Id)
+                throw new RpcException(new Status(StatusCode.PermissionDenied, "You can only update your own profile"));
 
-            string token = authHeader.Substring("Bearer ".Length);
-            _ = await VerifyToken(token);
+            var docRef = _firestoreDb.Collection("users").Document(request.Id);
+            var snapshot = await docRef.GetSnapshotAsync();
 
-            var user = await _userService.GetUserByIdAsync(request.Id)
-                      ?? throw new RpcException(new Status(StatusCode.NotFound, "User not found"));
+            if (!snapshot.Exists) 
+                throw new RpcException(new Status(StatusCode.NotFound, "User not found"));
 
-            user.Username = request.Username;
-            user.Email = request.Email;
+            var updates = new Dictionary<string, object>
+            {
+                { "Username", request.Username },
+                { "Email", request.Email }
+            };
+
             if (!string.IsNullOrEmpty(request.Password))
-                user.Password = BCrypt.Net.BCrypt.HashPassword(request.Password);
+            {
+                updates.Add("Password", BCrypt.Net.BCrypt.HashPassword(request.Password));
+            }
 
-            await _userService.UpdateUserAsync(user.Id, user);
+            await docRef.UpdateAsync(updates);
 
+            var user = snapshot.ConvertTo<UserDoc>();
             return new UserReply
             {
                 Id = user.Id,
-                Username = user.Username,
-                Email = user.Email,
+                Username = request.Username,
+                Email = request.Email,
                 Role = user.Role
             };
         }
 
         public override async Task<DeleteReply> DeleteUser(UserRequest request, ServerCallContext context)
         {
-            bool success = await _userService.DeleteUserAsync(request.Id);
-            return new DeleteReply { Success = success };
+            var currentUserId = GetCurrentUserId(context);
+            
+            var docRef = _firestoreDb.Collection("users").Document(request.Id);
+            await docRef.DeleteAsync();
+            return new DeleteReply { Success = true };
         }
 
         public override async Task<UserReply> GetUser(UserRequest request, ServerCallContext context)
         {
-            var user = await _userService.GetUserByIdAsync(request.Id)
-                      ?? throw new RpcException(new Status(StatusCode.NotFound, "User not found"));
+            var user = await GetUserById(request.Id);
+            if (user == null) throw new RpcException(new Status(StatusCode.NotFound, "User not found"));
 
             return new UserReply
             {
                 Id = user.Id,
                 Username = user.Username,
-                Email = user.Email,
+                Email = user.Email ?? "",
                 Role = user.Role
             };
         }
 
         public override async Task<UsersReply> GetUsers(Empty request, ServerCallContext context)
         {
-            var users = await _userService.GetUsersAsync();
+            var snapshot = await _firestoreDb.Collection("users").Limit(50).GetSnapshotAsync();
             var reply = new UsersReply();
-            reply.Users.AddRange(users.Select(u => new UserReply
+            foreach (var doc in snapshot.Documents)
             {
-                Id = u.Id,
-                Username = u.Username,
-                Email = u.Email,
-                Role = u.Role
-            }));
+                var u = doc.ConvertTo<UserDoc>();
+                reply.Users.Add(new UserReply
+                {
+                    Id = u.Id,
+                    Username = u.Username,
+                    Email = u.Email ?? "",
+                    Role = u.Role
+                });
+            }
             return reply;
         }
-        private string GetCurrentUserId(ServerCallContext context)
+
+
+        public override async Task<UserStatsReply> GetUserStats(UserStatsRequest request, ServerCallContext context)
         {
-            var http = context.GetHttpContext();
-            var userId = http?.User?.Identity?.Name;
-            if (string.IsNullOrWhiteSpace(userId))
-                throw new RpcException(new Status(StatusCode.Unauthenticated, "User not authenticated"));
-            return userId;
+            var targetUserId = request.UserId;
+            if (string.IsNullOrWhiteSpace(targetUserId))
+            {
+                targetUserId = context.GetHttpContext()?.User?.Identity?.Name;
+            }
+
+            if (string.IsNullOrWhiteSpace(targetUserId))
+                throw new RpcException(new Status(StatusCode.InvalidArgument, "UserId required"));
+
+            var user = await GetUserById(targetUserId);
+            if (user == null)
+                throw new RpcException(new Status(StatusCode.NotFound, "User not found"));
+
+            return new UserStatsReply
+            {
+                FavoriteArtist = user.FavoriteArtist ?? "Unknown",
+                FavoriteGenre = user.FavoriteGenre ?? "Unknown",
+                AverageBpm = user.AverageBpm ?? 0.0,
+                Likes = user.Likes ?? 0,
+                Dislikes = user.Dislikes ?? 0
+            };
         }
 
         public override async Task<LoginReply> Login(LoginRequest request, ServerCallContext context)
         {
-            Entities.User user;
+            UserDoc user = null;
 
             if (!string.IsNullOrWhiteSpace(request.Provider))
             {
                 if (IsProvider(request.Provider, "google"))
                 {
                     var email = await VerifyGoogleAndGetEmailAsync(request.Token);
+                    user = await FindUserByEmail(email);
 
-                    user = await _userService.GetUserByEmailAsync(email)
-                           ?? await _userService.RegisterUserAsync(new User
-                           {
-                               Username = email.Split('@')[0],
-                               Email = email,
-                               Password = string.Empty,
-                               Role = "User"
-                           });
+                    if (user == null)
+                    {
+                        user = new UserDoc { Username = email.Split('@')[0], Email = email, Role = "User" };
+                        var refDoc = await _firestoreDb.Collection("users").AddAsync(user);
+                        user.Id = refDoc.Id;
+                    }
                 }
                 else if (IsProvider(request.Provider, "spotify"))
                 {
@@ -210,26 +256,24 @@ namespace SwipeVibesAPI.Services
 
                     if (!string.IsNullOrWhiteSpace(email))
                     {
-                        user = await _userService.GetUserByEmailAsync(email)
-                               ?? await _userService.RegisterUserAsync(new User
-                               {
-                                   Username = email.Split('@')[0],
-                                   Email = email,
-                                   Password = string.Empty,
-                                   Role = "User"
-                               });
+                        user = await FindUserByEmail(email);
+                        if (user == null)
+                        {
+                            user = new UserDoc { Username = email.Split('@')[0], Email = email, Role = "User" };
+                            var refDoc = await _firestoreDb.Collection("users").AddAsync(user);
+                            user.Id = refDoc.Id;
+                        }
                     }
                     else
                     {
                         var uname = $"spotify:{spotifyId}";
-                        user = await _userService.GetUserByUsernameAsync(uname)
-                               ?? await _userService.RegisterUserAsync(new User
-                               {
-                                   Username = uname,
-                                   Email = $"user+{spotifyId}@spotify.local",
-                                   Password = string.Empty,
-                                   Role = "User"
-                               });
+                        user = await FindUserByUsername(uname);
+                        if (user == null)
+                        {
+                            user = new UserDoc { Username = uname, Email = $"user+{spotifyId}@spotify.local", Role = "User" };
+                            var refDoc = await _firestoreDb.Collection("users").AddAsync(user);
+                            user.Id = refDoc.Id;
+                        }
                     }
                 }
                 else
@@ -239,19 +283,16 @@ namespace SwipeVibesAPI.Services
             }
             else
             {
-                user = await _userService.GetUserByUsernameAsync(request.Username)
-                       ?? throw new RpcException(new Status(StatusCode.NotFound, "User not found"));
-
+                user = await FindUserByUsername(request.Username);
+                if (user == null) throw new RpcException(new Status(StatusCode.NotFound, "User not found"));
                 if (!BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
                     throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid password"));
             }
 
-            // Issue tokns
-            var access = _jwtService.GenerateAccess(user.Username, user.Role, TimeSpan.FromMinutes(15));
-            var refresh = _jwtService.GenerateRefresh(user.Username, TimeSpan.FromDays(14));
+            var access = _jwtService.GenerateAccess(user.Id, user.Role, TimeSpan.FromMinutes(15));
+            var refresh = _jwtService.GenerateRefresh(user.Id, TimeSpan.FromDays(14));
 
-            var http = context.GetHttpContext();
-            http.Response.Cookies.Append("sv_refresh", refresh, new CookieOptions
+            context.GetHttpContext().Response.Cookies.Append("sv_refresh", refresh, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
@@ -265,7 +306,8 @@ namespace SwipeVibesAPI.Services
                 Token = access,
                 RefreshToken = refresh,
                 Username = user.Username,
-                Role = user.Role
+                Role = user.Role,
+                Id = user.Id
             };
         }
 
@@ -276,9 +318,7 @@ namespace SwipeVibesAPI.Services
             string? refresh = request.RefreshToken;
 
             if (string.IsNullOrWhiteSpace(refresh))
-            {
-                refresh = http.Request.Cookies.TryGetValue("sv_refresh", out var c) ? c : null;
-            }
+                refresh = http.Request.Cookies["sv_refresh"];
 
             if (string.IsNullOrWhiteSpace(refresh))
                 throw new RpcException(new Status(StatusCode.Unauthenticated, "Missing refresh token"));
@@ -287,18 +327,16 @@ namespace SwipeVibesAPI.Services
             if (principal is null)
                 throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid refresh token"));
 
-            var username = principal.Identity!.Name!;
+            var userId = principal.Identity!.Name!;
             var role = principal.Claims.FirstOrDefault(x => x.Type == "role")?.Value ?? "User";
-
-            var newAccess = _jwtService.GenerateAccess(username, role, TimeSpan.FromMinutes(15));
+            var newAccess = _jwtService.GenerateAccess(userId, role, TimeSpan.FromMinutes(15));
 
             return Task.FromResult(new RefreshReply { Token = newAccess });
         }
 
         public override Task<LogoutReply> Logout(LogoutRequest request, ServerCallContext context)
         {
-            var http = context.GetHttpContext();
-            http.Response.Cookies.Append("sv_refresh", "", new CookieOptions
+            context.GetHttpContext().Response.Cookies.Append("sv_refresh", "", new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
@@ -308,77 +346,19 @@ namespace SwipeVibesAPI.Services
             });
             return Task.FromResult(new LogoutReply { Success = true });
         }
-        public override async Task<UserInteractionsReply> GetUserInteractions(UserInteractionsRequest request, ServerCallContext context)
+
+        private string GetCurrentUserId(ServerCallContext context)
         {
-            if (string.IsNullOrWhiteSpace(request.UserId))
-            {
-                throw new RpcException(new Status(StatusCode.InvalidArgument, "UserId is required"));
-            }
-            const int InteractionLimit = 200;
-
-            try
-            {
-                var db = _firestoreDb;
-
-                var collectionRef = db.Collection("interactions");
-
-                var query = collectionRef
-                    .WhereEqualTo("UserId", request.UserId)
-                    .OrderByDescending("Ts")
-                    .Limit(InteractionLimit);
-
-                var snapshot = await query.GetSnapshotAsync();
-
-                var interactionsList = new List<InteractionReply>();
-
-                foreach (var doc in snapshot.Documents)
-                {
-                    var interaction = new InteractionReply
-                    {
-                        Id = doc.Id
-                    };
-
-                    if (doc.TryGetValue<string>("UserId", out var userId))
-                        interaction.UserId = userId;
-
-                    if (doc.TryGetValue<string>("ISRC", out var isrc))
-                        interaction.Isrc = isrc;
-
-                    if (doc.TryGetValue<string>("Decision", out var decision))
-                        interaction.Decision = decision;
-
-                    if (doc.TryGetValue<long>("DeezerTrackId", out var deezerTrackId))
-                        interaction.DeezerTrackId = deezerTrackId;
-
-                    if (doc.TryGetValue<string>("Source", out var source))
-                        interaction.Source = source;
-
-                    if (doc.TryGetValue<string>("Artist", out var artist))
-                        interaction.Artist = artist;
-
-                    if (doc.TryGetValue<string>("Title", out var title))
-                        interaction.Title = title;
-
-                    interactionsList.Add(interaction);
-                }
-
-                var reply = new UserInteractionsReply();
-                reply.Interactions.AddRange(interactionsList);
-
-                return reply;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"GetUserInteractions error: {ex.Message}");
-                throw new RpcException(new Status(StatusCode.Internal, $"GetUserInteractions error: {ex.Message}"));
-            }
+            var userId = context.GetHttpContext()?.User?.Identity?.Name;
+            if (string.IsNullOrWhiteSpace(userId)) 
+                throw new RpcException(new Status(StatusCode.Unauthenticated, "User not authenticated"));
+            return userId;
         }
+
         public override async Task<PlaylistReply> CreatePlaylist(CreatePlaylistRequest request, ServerCallContext context)
         {
             var userId = GetCurrentUserId(context);
-
-            if (string.IsNullOrWhiteSpace(request.Name))
-                throw new RpcException(new Status(StatusCode.InvalidArgument, "Playlist name is required"));
+            if (string.IsNullOrWhiteSpace(request.Name)) throw new RpcException(new Status(StatusCode.InvalidArgument, "Name required"));
 
             var doc = await _firestoreDb.Collection("playlists").AddAsync(new PlaylistDoc
             {
@@ -387,23 +367,12 @@ namespace SwipeVibesAPI.Services
                 CreatedAt = Google.Cloud.Firestore.Timestamp.FromDateTime(DateTime.UtcNow)
             });
 
-            return new PlaylistReply
-            {
-                Id = doc.Id,
-                Name = request.Name,
-                CreatedAt = ProtoTimestamp.FromDateTime(DateTime.UtcNow)
-            };
+            return new PlaylistReply { Id = doc.Id, Name = request.Name, CreatedAt = ProtoTimestamp.FromDateTime(DateTime.UtcNow) };
         }
 
         public override async Task<PlaylistsListReply> GetMyPlaylists(Empty request, ServerCallContext context)
         {
             var userId = GetCurrentUserId(context);
-            // Assuming you added the method to FirestoreService, or accessing DB directly here for brevity:
-            // Ideally, use the _firestoreService wrapper. I will use the wrapper I defined above.
-            // Note: You need to inject FirestoreService into UserGrpcService if not already there.
-            // Based on previous context, you injected FirestoreDb directly, but let's assume you use the wrapper logic.
-
-            // Direct implementation using the _firestoreDb injected in previous snippet:
             var snapshot = await _firestoreDb.Collection("playlists")
                 .WhereEqualTo("UserId", userId)
                 .OrderByDescending("CreatedAt")
@@ -417,7 +386,7 @@ namespace SwipeVibesAPI.Services
                 {
                     Id = doc.Id,
                     Name = data.Name,
-                    CreatedAt = ProtoTimestamp.FromDateTime(DateTime.UtcNow)
+                    CreatedAt = ProtoTimestamp.FromDateTime(data.CreatedAt.ToDateTime())
                 });
             }
             return reply;
@@ -430,7 +399,6 @@ namespace SwipeVibesAPI.Services
             var snap = await docRef.GetSnapshotAsync();
 
             if (!snap.Exists) throw new RpcException(new Status(StatusCode.NotFound, "Playlist not found"));
-
             var data = snap.ConvertTo<PlaylistDoc>();
             if (data.UserId != userId) throw new RpcException(new Status(StatusCode.PermissionDenied, "Not your playlist"));
 
@@ -486,7 +454,6 @@ namespace SwipeVibesAPI.Services
             if (snap.GetValue<string>("UserId") != userId) throw new RpcException(new Status(StatusCode.PermissionDenied, "Not your playlist"));
 
             await playlistRef.Collection("tracks").Document(request.DeezerTrackId.ToString()).DeleteAsync();
-
             return new DeleteReply { Success = true };
         }
 
@@ -497,7 +464,6 @@ namespace SwipeVibesAPI.Services
             var snap = await playlistRef.GetSnapshotAsync();
 
             if (!snap.Exists) throw new RpcException(new Status(StatusCode.NotFound, "Playlist not found"));
-            // Check ownership (remove if you want shared playlists)
             if (snap.GetValue<string>("UserId") != userId) throw new RpcException(new Status(StatusCode.PermissionDenied, "Not your playlist"));
 
             var tracksSnap = await playlistRef.Collection("tracks").OrderByDescending("AddedAt").GetSnapshotAsync();
@@ -514,10 +480,40 @@ namespace SwipeVibesAPI.Services
                     ArtistId = t.ArtistId,
                     ArtistName = t.ArtistName,
                     AlbumCover = t.AlbumCover,
-                    AddedAt = ProtoTimestamp.FromDateTime(DateTime.UtcNow)
+                    AddedAt = ProtoTimestamp.FromDateTime(t.AddedAt.ToDateTime())
                 });
             }
             return reply;
+        }
+
+        public override async Task<UserInteractionsReply> GetUserInteractions(UserInteractionsRequest request, ServerCallContext context)
+        {
+             if (string.IsNullOrWhiteSpace(request.UserId)) throw new RpcException(new Status(StatusCode.InvalidArgument, "UserId required"));
+             
+             var query = _firestoreDb.Collection("interactions")
+                .WhereEqualTo("UserId", request.UserId)
+                .OrderByDescending("Ts")
+                .Limit(200);
+
+             var snapshot = await query.GetSnapshotAsync();
+             var reply = new UserInteractionsReply();
+             
+             foreach(var doc in snapshot.Documents)
+             {
+                 var i = doc.ConvertTo<InteractionDoc>();
+                 reply.Interactions.Add(new InteractionReply
+                 {
+                     Id = doc.Id,
+                     UserId = i.UserId,
+                     Isrc = i.Isrc ?? "",
+                     Decision = i.Decision ?? "",
+                     DeezerTrackId = i.DeezerTrackId ?? 0,
+                     Source = i.Source ?? "",
+                     Artist = i.Artist ?? "",
+                     Title = i.Title ?? ""
+                 });
+             }
+             return reply;
         }
     }
 }

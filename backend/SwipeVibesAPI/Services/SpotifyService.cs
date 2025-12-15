@@ -16,6 +16,8 @@ namespace SwipeVibesAPI.Services
         Task<string?> SearchTrackByIsrcAsync(string isrc, string accessToken);
         Task<bool> AddTracksToPlaylistAsync(string playlistId, List<string> trackUris, string accessToken);
         Task<bool> RemoveTrackFromPlaylistAsync(string playlistId, string trackUri, string accessToken);
+
+        Task<bool> ReplacePlaylistTracksAsync(string playlistId, List<string> trackUris, string accessToken);
     }
 
     public class SpotifyService : ISpotifyService
@@ -199,6 +201,32 @@ namespace SwipeVibesAPI.Services
 
             var response = await _httpClient.SendAsync(request);
             return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> ReplacePlaylistTracksAsync(string playlistId, List<string> trackUris, string accessToken)
+        {
+            var firstBatch = trackUris.Take(100).ToList();
+            var remainingBatches = trackUris.Skip(100).ToList();
+
+            var request = new HttpRequestMessage(HttpMethod.Put, $"https://api.spotify.com/v1/playlists/{playlistId}/tracks");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            var body = new { uris = firstBatch };
+            request.Content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode) return false;
+
+            if (remainingBatches.Any())
+            {
+                for (int i = 0; i < remainingBatches.Count; i += 100)
+                {
+                    var batch = remainingBatches.Skip(i).Take(100).ToList();
+                    await AddTracksToPlaylistAsync(playlistId, batch, accessToken);
+                }
+            }
+
+            return true;
         }
     }
 

@@ -39,6 +39,7 @@ service UserService {
   rpc GetUserStats (UserStatsRequest) returns (UserStatsReply);
   rpc GetSpotifyAuthUrl (Empty) returns (SpotifyAuthUrlReply);
   rpc HandleSpotifyCallback (SpotifyCallbackRequest) returns (SpotifyCallbackReply);
+  rpc ExportPlaylist (ExportPlaylistRequest) returns (ExportPlaylistReply);
 }
 
 message Empty {}
@@ -192,4 +193,14 @@ message SpotifyCallbackRequest {
 message SpotifyCallbackReply {
   bool success = 1;
   string message = 2;
+}
+
+message ExportPlaylistRequest {
+  string playlist_id = 1;
+}
+
+message ExportPlaylistReply {
+  bool success = 1;
+  string message = 2;
+  string spotify_playlist_url = 3;
 }

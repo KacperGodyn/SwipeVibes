@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { AddTrackToPlaylistRequest, CreatePlaylistRequest, CreateUserRequest, DeletePlaylistRequest, DeleteReply, Empty, GetPlaylistTracksRequest, LoginReply, LoginRequest, LogoutReply, LogoutRequest, PlaylistReply, PlaylistsListReply, PlaylistTrackReply, PlaylistTracksListReply, RefreshReply, RefreshRequest, RemoveTrackFromPlaylistRequest, SpotifyAuthUrlReply, SpotifyCallbackReply, SpotifyCallbackRequest, UpdateUserRequest, UserInteractionsReply, UserInteractionsRequest, UserReply, UserRequest, UsersReply, UserStatsReply, UserStatsRequest } from "./users_pb";
+import { AddTrackToPlaylistRequest, CreatePlaylistRequest, CreateUserRequest, DeletePlaylistRequest, DeleteReply, Empty, ExportPlaylistReply, ExportPlaylistRequest, GetPlaylistTracksRequest, LoginReply, LoginRequest, LogoutReply, LogoutRequest, PlaylistReply, PlaylistsListReply, PlaylistTrackReply, PlaylistTracksListReply, RefreshReply, RefreshRequest, RemoveTrackFromPlaylistRequest, SpotifyAuthUrlReply, SpotifyCallbackReply, SpotifyCallbackRequest, UpdateUserRequest, UserInteractionsReply, UserInteractionsRequest, UserReply, UserRequest, UsersReply, UserStatsReply, UserStatsRequest } from "./users_pb";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -172,6 +172,15 @@ export const UserService = {
       name: "HandleSpotifyCallback",
       I: SpotifyCallbackRequest,
       O: SpotifyCallbackReply,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc users.UserService.ExportPlaylist
+     */
+    exportPlaylist: {
+      name: "ExportPlaylist",
+      I: ExportPlaylistRequest,
+      O: ExportPlaylistReply,
       kind: MethodKind.Unary,
     },
   }

@@ -1425,3 +1425,89 @@ export class SpotifyCallbackReply extends Message<SpotifyCallbackReply> {
   }
 }
 
+/**
+ * @generated from message users.ExportPlaylistRequest
+ */
+export class ExportPlaylistRequest extends Message<ExportPlaylistRequest> {
+  /**
+   * @generated from field: string playlist_id = 1;
+   */
+  playlistId = "";
+
+  constructor(data?: PartialMessage<ExportPlaylistRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.ExportPlaylistRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "playlist_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ExportPlaylistRequest {
+    return new ExportPlaylistRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ExportPlaylistRequest {
+    return new ExportPlaylistRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ExportPlaylistRequest {
+    return new ExportPlaylistRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ExportPlaylistRequest | PlainMessage<ExportPlaylistRequest> | undefined, b: ExportPlaylistRequest | PlainMessage<ExportPlaylistRequest> | undefined): boolean {
+    return proto3.util.equals(ExportPlaylistRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message users.ExportPlaylistReply
+ */
+export class ExportPlaylistReply extends Message<ExportPlaylistReply> {
+  /**
+   * @generated from field: bool success = 1;
+   */
+  success = false;
+
+  /**
+   * @generated from field: string message = 2;
+   */
+  message = "";
+
+  /**
+   * @generated from field: string spotify_playlist_url = 3;
+   */
+  spotifyPlaylistUrl = "";
+
+  constructor(data?: PartialMessage<ExportPlaylistReply>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.ExportPlaylistReply";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "success", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 2, name: "message", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "spotify_playlist_url", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ExportPlaylistReply {
+    return new ExportPlaylistReply().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ExportPlaylistReply {
+    return new ExportPlaylistReply().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ExportPlaylistReply {
+    return new ExportPlaylistReply().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ExportPlaylistReply | PlainMessage<ExportPlaylistReply> | undefined, b: ExportPlaylistReply | PlainMessage<ExportPlaylistReply> | undefined): boolean {
+    return proto3.util.equals(ExportPlaylistReply, a, b);
+  }
+}
+

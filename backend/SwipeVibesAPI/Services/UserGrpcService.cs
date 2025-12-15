@@ -660,5 +660,88 @@ namespace SwipeVibesAPI.Services
 
             return new SpotifyCallbackReply { Success = true, Message = "Spotify connected successfully" };
         }
+
+        public override async Task<ExportPlaylistReply> ExportPlaylist(ExportPlaylistRequest request, ServerCallContext context)
+        {
+            var userId = GetCurrentUserId(context);
+
+            var playlistRef = _firestoreDb.Collection("playlists").Document(request.PlaylistId);
+            var playlistSnap = await playlistRef.GetSnapshotAsync();
+
+            if (!playlistSnap.Exists)
+                return new ExportPlaylistReply { Success = false, Message = "Playlist not found" };
+
+            var playlistData = playlistSnap.ConvertTo<PlaylistDoc>();
+            if (playlistData.UserId != userId)
+                return new ExportPlaylistReply { Success = false, Message = "Unauthorized" };
+
+            var accessToken = await GetSpotifyAccessTokenForUser(userId);
+            if (string.IsNullOrEmpty(accessToken))
+                return new ExportPlaylistReply { Success = false, Message = "Spotify not connected. Please connect in settings." };
+
+            var spotifyUserId = await _spotifyService.GetSpotifyUserIdAsync(accessToken);
+
+            string spotifyPlaylistId = playlistData.SpotifyPlaylistId;
+
+            if (string.IsNullOrEmpty(spotifyPlaylistId))
+            {
+                spotifyPlaylistId = await _spotifyService.CreatePlaylistAsync(spotifyUserId, playlistData.Name, accessToken);
+                if (string.IsNullOrEmpty(spotifyPlaylistId))
+                    return new ExportPlaylistReply { Success = false, Message = "Failed to create Spotify playlist" };
+
+                await playlistRef.UpdateAsync("SpotifyPlaylistId", spotifyPlaylistId);
+            }
+
+            var tracksSnap = await playlistRef.Collection("tracks").GetSnapshotAsync();
+            var tracks = tracksSnap.Documents.Select(d => d.ConvertTo<PlaylistTrackDoc>()).ToList();
+
+            if (!tracks.Any())
+                return new ExportPlaylistReply { Success = true, Message = "Playlist is empty, nothing to export." };
+
+            var spotifyUris = new List<string>();
+            var tracksToUpdateInDb = new List<(DocumentReference Ref, string Uri)>();
+
+            foreach (var track in tracks)
+            {
+                string uri = track.SpotifyUri;
+
+                if (string.IsNullOrEmpty(uri) && !string.IsNullOrEmpty(track.Isrc))
+                {
+                    uri = await _spotifyService.SearchTrackByIsrcAsync(track.Isrc, accessToken);
+                    if (!string.IsNullOrEmpty(uri))
+                    {
+                        var trackRef = playlistRef.Collection("tracks").Document(track.DeezerTrackId.ToString());
+                        tracksToUpdateInDb.Add((trackRef, uri));
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(uri))
+                {
+                    spotifyUris.Add(uri);
+                }
+            }
+
+            if (spotifyUris.Any())
+            {
+                var success = await _spotifyService.ReplacePlaylistTracksAsync(spotifyPlaylistId, spotifyUris, accessToken);
+                if (!success)
+                    return new ExportPlaylistReply { Success = false, Message = "Failed to update tracks on Spotify" };
+
+                _ = Task.Run(async () =>
+                {
+                    foreach (var item in tracksToUpdateInDb)
+                    {
+                        await item.Ref.UpdateAsync("SpotifyUri", item.Uri);
+                    }
+                });
+            }
+
+            return new ExportPlaylistReply
+            {
+                Success = true,
+                Message = "Playlist exported successfully!",
+                SpotifyPlaylistUrl = $"https://open.spotify.com/playlist/{spotifyPlaylistId}"
+            };
+        }
     }
 }

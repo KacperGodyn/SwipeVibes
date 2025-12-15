@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, use } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,20 +8,23 @@ import {
   Pressable,
   Alert,
   Platform,
+  Linking,
 } from 'react-native';
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
 import ContainerFlexColumn from '../../components/containers/ContainerFlexColumn';
 import { getPlaylistTracks, removeTrackFromPlaylist } from '../../services/auth/api';
-import type { PlaylistTrack } from '../../services/auth/gRPC/user/users_pb';
+import { userClient } from '../../services/auth/gRPC/user/connectClient';
+import { ExportPlaylistRequest, type PlaylistTrack } from '../../services/auth/gRPC/user/users_pb';
 import SubContainerFlexRow from '../../components/containers/SubContainerFlexRow';
 import ReturnIcon from '../../assets/HomeCard/undo.svg';
-import ExportIcon from '../../assets/PlaylistsCard/export.svg'
+import ExportIcon from '../../assets/PlaylistsCard/export.svg';
 
 export default function PlaylistDetailsScreen() {
   const { id, name } = useLocalSearchParams();
   const router = useRouter();
   const [tracks, setTracks] = useState<PlaylistTrack[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchTracks = useCallback(async () => {
@@ -43,9 +46,46 @@ export default function PlaylistDetailsScreen() {
     fetchTracks();
   }, [fetchTracks]);
 
-  const exportPlaylist = () => {
-    console.log('Not implemented yet...');
-  }
+  const exportPlaylist = async () => {
+    if (!id) return;
+    if (tracks.length === 0) {
+      Alert.alert("Empty Playlist", "Add some tracks before exporting.");
+      return;
+    }
+
+    setExporting(true);
+    try {
+      const request = new ExportPlaylistRequest({ playlistId: id.toString() });
+      
+      const response = await userClient.exportPlaylist(request, {});
+
+      if (response.success) {
+        Alert.alert(
+          "Success", 
+          "Playlist exported to Spotify!",
+          [
+            { text: "OK" },
+            { 
+              text: "Open Spotify", 
+              onPress: () => {
+                if (response.spotifyPlaylistUrl) {
+                  Linking.openURL(response.spotifyPlaylistUrl);
+                }
+              }
+            }
+          ]
+        );
+      } else {
+        Alert.alert("Export Failed", response.message);
+      }
+    } catch (err) {
+      console.error("Export error:", err);
+      Alert.alert("Error", "Failed to connect to server.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const handleRemoveTrack = async (trackId: bigint) => {
     const trackIdNum = Number(trackId);
 
@@ -152,9 +192,14 @@ export default function PlaylistDetailsScreen() {
           <ReturnIcon width={40} height={40} />
         </Pressable>
         <Pressable
-          onPress={() => exportPlaylist()}
-          className="h-20 w-20 items-center justify-center rounded-full border border-white/20 bg-white/30 shadow-md backdrop-blur-xl active:bg-white/40">
-          <ExportIcon width={40} height={40} />
+          onPress={exportPlaylist}
+          disabled={exporting || loading}
+          className={`h-20 w-20 items-center justify-center rounded-full border border-white/20 bg-white/30 shadow-md backdrop-blur-xl active:bg-white/40 ${exporting ? 'opacity-50' : ''}`}>
+          {exporting ? (
+             <ActivityIndicator color="#1DB954" />
+          ) : (
+             <ExportIcon width={40} height={40} />
+          )}
         </Pressable>
       </View>
     </ContainerFlexColumn>

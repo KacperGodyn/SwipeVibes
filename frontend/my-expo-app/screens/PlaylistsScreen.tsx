@@ -39,8 +39,8 @@ export default function PlaylistsScreen() {
       setNewPlaylistName('');
       triggerRefresh();
     } catch (error: any) {
-      console.error('Błąd tworzenia playlisty:', error);
-      Alert.alert('Błąd', 'Nie udało się utworzyć playlisty.');
+      console.error('Couldnt create a playlist due to error:', error);
+      Alert.alert('Error', 'Couldnt create a playlist');
     } finally {
       setCreating(false);
     }

@@ -5,6 +5,7 @@ import { loadAccessToken, setAccessToken } from '../services/auth/token';
 import { Text, View, Pressable, StyleSheet, Platform, Image } from 'react-native';
 import { getSavedUsername, getSavedAvatar } from '../services/auth/userInfo';
 import { useSession } from '../services/auth/ctx';
+import { SpotifyConnectButton } from './buttons/SpotifyConnectButton';
 
 type JwtPayload = {
   name?: string;
@@ -74,10 +75,10 @@ export default function ProfileCard() {
     }
   };
 
-const onLogout = async () => {
+  const onLogout = async () => {
     setWorking(true);
     try {
-      await signOut(); 
+      await signOut();
     } finally {
       setWorking(false);
     }
@@ -101,6 +102,9 @@ const onLogout = async () => {
         style={styles.Text}>
         {username}
       </Text>
+
+        <Text className="mb-2 text-center text-lg font-bold text-white">Link with Spotify</Text>
+        <SpotifyConnectButton />
 
       <Pressable
         onPress={() => router.push('/statistics')}

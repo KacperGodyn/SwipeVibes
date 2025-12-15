@@ -24,18 +24,20 @@ namespace SwipeVibesAPI.Entities
         public string? DeezerToken { get; set; }
 
         [FirestoreProperty]
+        public string? SpotifyRefreshToken { get; set; }
+
+        [FirestoreProperty]
         public string? AvatarUrl { get; set; }
 
         [FirestoreProperty]
         public string? FavoriteArtist { get; set; }
 
         [FirestoreProperty]
-        public string? FavoriteGenre { get; set; }
+        public double? AverageBpm { get; set; }
 
         [FirestoreProperty]
-        public double? AverageBpm { get; set; }
-        [FirestoreProperty]
         public int? Likes { get; set; }
+
         [FirestoreProperty]
         public int? Dislikes { get; set; }
     }

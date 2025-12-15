@@ -11,6 +11,8 @@ using System.Net;
 using System.Text.Json;
 using System.Collections.Generic;
 using Google.Cloud.Firestore;
+using SwipeVibesAPI.Services;
+using Microsoft.Extensions.Configuration;
 
 namespace SwipeVibesAPI.Services
 {
@@ -22,12 +24,21 @@ namespace SwipeVibesAPI.Services
         private readonly FirestoreDb _firestoreDb;
         private readonly JwtService _jwtService;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly ISpotifyService _spotifyService;
+        private readonly IConfiguration _configuration;
 
-        public UserGrpcService(FirestoreDb firestoreDb, JwtService jwtService, IHttpClientFactory httpClientFactory)
+        public UserGrpcService(
+            FirestoreDb firestoreDb,
+            JwtService jwtService,
+            IHttpClientFactory httpClientFactory,
+            ISpotifyService spotifyService,
+            IConfiguration configuration)
         {
             _firestoreDb = firestoreDb;
             _jwtService = jwtService;
             _httpClientFactory = httpClientFactory;
+            _spotifyService = spotifyService;
+            _configuration = configuration;
         }
 
         private async Task<UserDoc?> FindUserByEmail(string email)
@@ -36,7 +47,7 @@ namespace SwipeVibesAPI.Services
                 .WhereEqualTo("Email", email)
                 .Limit(1)
                 .GetSnapshotAsync();
-            
+
             var doc = snapshot.Documents.FirstOrDefault();
             return doc?.ConvertTo<UserDoc>();
         }
@@ -57,6 +68,15 @@ namespace SwipeVibesAPI.Services
             var docRef = _firestoreDb.Collection("users").Document(id);
             var snapshot = await docRef.GetSnapshotAsync();
             return snapshot.Exists ? snapshot.ConvertTo<UserDoc>() : null;
+        }
+
+        private async Task<string?> GetSpotifyAccessTokenForUser(string userId)
+        {
+            var user = await GetUserById(userId);
+            if (user == null || string.IsNullOrEmpty(user.SpotifyRefreshToken)) return null;
+
+            var tokenResponse = await _spotifyService.RefreshAccessTokenAsync(user.SpotifyRefreshToken);
+            return tokenResponse?.AccessToken;
         }
 
         private async Task<FirebaseToken> VerifyToken(string token)
@@ -121,12 +141,13 @@ namespace SwipeVibesAPI.Services
             var docRef = await _firestoreDb.Collection("users").AddAsync(newUser);
             newUser.Id = docRef.Id;
 
-            return new UserReply 
-            { 
-                Id = newUser.Id, 
-                Username = newUser.Username, 
-                Email = newUser.Email, 
-                Role = newUser.Role 
+            return new UserReply
+            {
+                Id = newUser.Id,
+                Username = newUser.Username,
+                Email = newUser.Email,
+                Role = newUser.Role,
+                IsSpotifyConnected = false
             };
         }
 
@@ -139,7 +160,7 @@ namespace SwipeVibesAPI.Services
             var docRef = _firestoreDb.Collection("users").Document(request.Id);
             var snapshot = await docRef.GetSnapshotAsync();
 
-            if (!snapshot.Exists) 
+            if (!snapshot.Exists)
                 throw new RpcException(new Status(StatusCode.NotFound, "User not found"));
 
             var updates = new Dictionary<string, object>
@@ -156,19 +177,21 @@ namespace SwipeVibesAPI.Services
             await docRef.UpdateAsync(updates);
 
             var user = snapshot.ConvertTo<UserDoc>();
+
             return new UserReply
             {
                 Id = user.Id,
                 Username = request.Username,
                 Email = request.Email,
-                Role = user.Role
+                Role = user.Role,
+                IsSpotifyConnected = !string.IsNullOrEmpty(user.SpotifyRefreshToken)
             };
         }
 
         public override async Task<DeleteReply> DeleteUser(UserRequest request, ServerCallContext context)
         {
             var currentUserId = GetCurrentUserId(context);
-            
+
             var docRef = _firestoreDb.Collection("users").Document(request.Id);
             await docRef.DeleteAsync();
             return new DeleteReply { Success = true };
@@ -184,7 +207,8 @@ namespace SwipeVibesAPI.Services
                 Id = user.Id,
                 Username = user.Username,
                 Email = user.Email ?? "",
-                Role = user.Role
+                Role = user.Role,
+                IsSpotifyConnected = !string.IsNullOrEmpty(user.SpotifyRefreshToken)
             };
         }
 
@@ -200,7 +224,8 @@ namespace SwipeVibesAPI.Services
                     Id = u.Id,
                     Username = u.Username,
                     Email = u.Email ?? "",
-                    Role = u.Role
+                    Role = u.Role,
+                    IsSpotifyConnected = !string.IsNullOrEmpty(u.SpotifyRefreshToken)
                 });
             }
             return reply;
@@ -225,7 +250,6 @@ namespace SwipeVibesAPI.Services
             return new UserStatsReply
             {
                 FavoriteArtist = user.FavoriteArtist ?? "Unknown",
-                FavoriteGenre = user.FavoriteGenre ?? "Unknown",
                 AverageBpm = user.AverageBpm ?? 0.0,
                 Likes = user.Likes ?? 0,
                 Dislikes = user.Dislikes ?? 0
@@ -307,7 +331,8 @@ namespace SwipeVibesAPI.Services
                 RefreshToken = refresh,
                 Username = user.Username,
                 Role = user.Role,
-                Id = user.Id
+                Id = user.Id,
+                IsSpotifyConnected = !string.IsNullOrEmpty(user.SpotifyRefreshToken)
             };
         }
 
@@ -350,7 +375,7 @@ namespace SwipeVibesAPI.Services
         private string GetCurrentUserId(ServerCallContext context)
         {
             var userId = context.GetHttpContext()?.User?.Identity?.Name;
-            if (string.IsNullOrWhiteSpace(userId)) 
+            if (string.IsNullOrWhiteSpace(userId))
                 throw new RpcException(new Status(StatusCode.Unauthenticated, "User not authenticated"));
             return userId;
         }
@@ -360,14 +385,37 @@ namespace SwipeVibesAPI.Services
             var userId = GetCurrentUserId(context);
             if (string.IsNullOrWhiteSpace(request.Name)) throw new RpcException(new Status(StatusCode.InvalidArgument, "Name required"));
 
-            var doc = await _firestoreDb.Collection("playlists").AddAsync(new PlaylistDoc
+            var playlistDoc = new PlaylistDoc
             {
                 UserId = userId,
                 Name = request.Name,
                 CreatedAt = Google.Cloud.Firestore.Timestamp.FromDateTime(DateTime.UtcNow)
-            });
+            };
 
-            return new PlaylistReply { Id = doc.Id, Name = request.Name, CreatedAt = ProtoTimestamp.FromDateTime(DateTime.UtcNow) };
+            var docRef = await _firestoreDb.Collection("playlists").AddAsync(playlistDoc);
+
+            try
+            {
+                var spotifyAccessToken = await GetSpotifyAccessTokenForUser(userId);
+                if (!string.IsNullOrEmpty(spotifyAccessToken))
+                {
+                    var spotifyUserId = await _spotifyService.GetSpotifyUserIdAsync(spotifyAccessToken);
+                    if (!string.IsNullOrEmpty(spotifyUserId))
+                    {
+                        var spotifyPlaylistId = await _spotifyService.CreatePlaylistAsync(spotifyUserId, request.Name, spotifyAccessToken);
+                        if (!string.IsNullOrEmpty(spotifyPlaylistId))
+                        {
+                            await docRef.UpdateAsync("SpotifyPlaylistId", spotifyPlaylistId);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to create Spotify playlist: {ex.Message}");
+            }
+
+            return new PlaylistReply { Id = docRef.Id, Name = request.Name, CreatedAt = ProtoTimestamp.FromDateTime(DateTime.UtcNow) };
         }
 
         public override async Task<PlaylistsListReply> GetMyPlaylists(Empty request, ServerCallContext context)
@@ -413,7 +461,9 @@ namespace SwipeVibesAPI.Services
             var snap = await playlistRef.GetSnapshotAsync();
 
             if (!snap.Exists) throw new RpcException(new Status(StatusCode.NotFound, "Playlist not found"));
-            if (snap.GetValue<string>("UserId") != userId) throw new RpcException(new Status(StatusCode.PermissionDenied, "Not your playlist"));
+
+            var playlistData = snap.ConvertTo<PlaylistDoc>();
+            if (playlistData.UserId != userId) throw new RpcException(new Status(StatusCode.PermissionDenied, "Not your playlist"));
 
             var trackDoc = new PlaylistTrackDoc
             {
@@ -426,7 +476,33 @@ namespace SwipeVibesAPI.Services
                 AddedAt = Google.Cloud.Firestore.Timestamp.FromDateTime(DateTime.UtcNow)
             };
 
-            await playlistRef.Collection("tracks").Document(request.DeezerTrackId.ToString()).SetAsync(trackDoc);
+            var trackRef = playlistRef.Collection("tracks").Document(request.DeezerTrackId.ToString());
+            await trackRef.SetAsync(trackDoc);
+
+            if (!string.IsNullOrEmpty(playlistData.SpotifyPlaylistId))
+            {
+                try
+                {
+                    var spotifyAccessToken = await GetSpotifyAccessTokenForUser(userId);
+                    if (!string.IsNullOrEmpty(spotifyAccessToken))
+                    {
+                        var trackUri = await _spotifyService.SearchTrackByIsrcAsync(request.Isrc, spotifyAccessToken);
+                        if (!string.IsNullOrEmpty(trackUri))
+                        {
+                            var added = await _spotifyService.AddTracksToPlaylistAsync(playlistData.SpotifyPlaylistId, new List<string> { trackUri }, spotifyAccessToken);
+                            if (added)
+                            {
+                                await trackRef.UpdateAsync("SpotifyUri", trackUri);
+                                trackDoc.SpotifyUri = trackUri;
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to add track to Spotify: {ex.Message}");
+                }
+            }
 
             return new PlaylistTrackReply
             {
@@ -451,9 +527,35 @@ namespace SwipeVibesAPI.Services
             var snap = await playlistRef.GetSnapshotAsync();
 
             if (!snap.Exists) throw new RpcException(new Status(StatusCode.NotFound, "Playlist not found"));
-            if (snap.GetValue<string>("UserId") != userId) throw new RpcException(new Status(StatusCode.PermissionDenied, "Not your playlist"));
+            var playlistData = snap.ConvertTo<PlaylistDoc>();
 
-            await playlistRef.Collection("tracks").Document(request.DeezerTrackId.ToString()).DeleteAsync();
+            if (playlistData.UserId != userId) throw new RpcException(new Status(StatusCode.PermissionDenied, "Not your playlist"));
+
+            var trackRef = playlistRef.Collection("tracks").Document(request.DeezerTrackId.ToString());
+            var trackSnap = await trackRef.GetSnapshotAsync();
+
+            if (trackSnap.Exists)
+            {
+                var trackData = trackSnap.ConvertTo<PlaylistTrackDoc>();
+                if (!string.IsNullOrEmpty(playlistData.SpotifyPlaylistId) && !string.IsNullOrEmpty(trackData.SpotifyUri))
+                {
+                    try
+                    {
+                        var spotifyAccessToken = await GetSpotifyAccessTokenForUser(userId);
+                        if (!string.IsNullOrEmpty(spotifyAccessToken))
+                        {
+                            await _spotifyService.RemoveTrackFromPlaylistAsync(playlistData.SpotifyPlaylistId, trackData.SpotifyUri, spotifyAccessToken);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to remove track from Spotify: {ex.Message}");
+                    }
+                }
+
+                await trackRef.DeleteAsync();
+            }
+
             return new DeleteReply { Success = true };
         }
 
@@ -488,32 +590,75 @@ namespace SwipeVibesAPI.Services
 
         public override async Task<UserInteractionsReply> GetUserInteractions(UserInteractionsRequest request, ServerCallContext context)
         {
-             if (string.IsNullOrWhiteSpace(request.UserId)) throw new RpcException(new Status(StatusCode.InvalidArgument, "UserId required"));
-             
-             var query = _firestoreDb.Collection("interactions")
-                .WhereEqualTo("UserId", request.UserId)
-                .OrderByDescending("Ts")
-                .Limit(200);
+            if (string.IsNullOrWhiteSpace(request.UserId)) throw new RpcException(new Status(StatusCode.InvalidArgument, "UserId required"));
 
-             var snapshot = await query.GetSnapshotAsync();
-             var reply = new UserInteractionsReply();
-             
-             foreach(var doc in snapshot.Documents)
-             {
-                 var i = doc.ConvertTo<InteractionDoc>();
-                 reply.Interactions.Add(new InteractionReply
-                 {
-                     Id = doc.Id,
-                     UserId = i.UserId,
-                     Isrc = i.Isrc ?? "",
-                     Decision = i.Decision ?? "",
-                     DeezerTrackId = i.DeezerTrackId ?? 0,
-                     Source = i.Source ?? "",
-                     Artist = i.Artist ?? "",
-                     Title = i.Title ?? ""
-                 });
-             }
-             return reply;
+            var query = _firestoreDb.Collection("interactions")
+               .WhereEqualTo("UserId", request.UserId)
+               .OrderByDescending("Ts")
+               .Limit(200);
+
+            var snapshot = await query.GetSnapshotAsync();
+            var reply = new UserInteractionsReply();
+
+            foreach (var doc in snapshot.Documents)
+            {
+                var i = doc.ConvertTo<InteractionDoc>();
+                reply.Interactions.Add(new InteractionReply
+                {
+                    Id = doc.Id,
+                    UserId = i.UserId,
+                    Isrc = i.Isrc ?? "",
+                    Decision = i.Decision ?? "",
+                    DeezerTrackId = i.DeezerTrackId ?? 0,
+                    Source = i.Source ?? "",
+                    Artist = i.Artist ?? "",
+                    Title = i.Title ?? ""
+                });
+            }
+            return reply;
+        }
+
+        public override Task<SpotifyAuthUrlReply> GetSpotifyAuthUrl(Empty request, ServerCallContext context)
+        {
+            var redirectUri = _configuration["Spotify:RedirectUri"] ?? "http://127.0.0.1:8081/oauth2redirect/spotify";
+            var url = _spotifyService.GetAuthorizationUrl(redirectUri);
+            return Task.FromResult(new SpotifyAuthUrlReply { Url = url });
+        }
+
+        public override async Task<SpotifyCallbackReply> HandleSpotifyCallback(SpotifyCallbackRequest request, ServerCallContext context)
+        {
+            var redirectUri = request.RedirectUri;
+
+            if (string.IsNullOrEmpty(redirectUri))
+            {
+                redirectUri = _configuration["Spotify:RedirectUri"] ?? "http://127.0.0.1:8081/oauth2redirect/spotify";
+            }
+
+            var tokenResponse = await _spotifyService.ExchangeCodeForTokenAsync(request.Code, redirectUri);
+
+            if (tokenResponse == null || string.IsNullOrEmpty(tokenResponse.RefreshToken))
+            {
+                return new SpotifyCallbackReply { Success = false, Message = "Failed to exchange code for token" };
+            }
+
+            var userId = request.UserId;
+
+            var docRef = _firestoreDb.Collection("users").Document(userId);
+            var snapshot = await docRef.GetSnapshotAsync();
+
+            if (!snapshot.Exists)
+            {
+                return new SpotifyCallbackReply { Success = false, Message = "User not found" };
+            }
+
+            var updates = new Dictionary<string, object>
+    {
+        { "SpotifyRefreshToken", tokenResponse.RefreshToken }
+    };
+
+            await docRef.UpdateAsync(updates);
+
+            return new SpotifyCallbackReply { Success = true, Message = "Spotify connected successfully" };
         }
     }
 }

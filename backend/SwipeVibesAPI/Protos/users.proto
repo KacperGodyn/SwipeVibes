@@ -37,6 +37,8 @@ service UserService {
   rpc RemoveTrackFromPlaylist (RemoveTrackFromPlaylistRequest) returns (DeleteReply);
   rpc GetPlaylistTracks (GetPlaylistTracksRequest) returns (PlaylistTracksListReply);
   rpc GetUserStats (UserStatsRequest) returns (UserStatsReply);
+  rpc GetSpotifyAuthUrl (Empty) returns (SpotifyAuthUrlReply);
+  rpc HandleSpotifyCallback (SpotifyCallbackRequest) returns (SpotifyCallbackReply);
 }
 
 message Empty {}
@@ -70,6 +72,7 @@ message UserReply {
   string username = 2;
   string email = 3;
   string role = 4;
+  bool is_spotify_connected = 5;
 }
 
 message UsersReply {
@@ -86,6 +89,7 @@ message LoginReply {
   string role = 3;
   string refresh_token = 4;
   string id = 5;
+  bool is_spotify_connected = 6;
 }
 
 message UserInteractionsRequest {
@@ -170,8 +174,22 @@ message UserStatsRequest {
 
 message UserStatsReply {
   string favorite_artist = 1;
-  string favorite_genre = 2;
   double average_bpm = 3;
   int32 likes = 4;
   int32 dislikes = 5;
+}
+
+message SpotifyAuthUrlReply {
+  string url = 1;
+}
+
+message SpotifyCallbackRequest {
+  string code = 1;
+  string user_id = 2;
+  string redirect_uri = 3;
+}
+
+message SpotifyCallbackReply {
+  bool success = 1;
+  string message = 2;
 }

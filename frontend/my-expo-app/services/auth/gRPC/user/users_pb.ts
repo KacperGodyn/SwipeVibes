@@ -186,9 +186,9 @@ export class Empty extends Message<Empty> {
  */
 export class UserRequest extends Message<UserRequest> {
   /**
-   * @generated from field: int32 id = 1;
+   * @generated from field: string id = 1;
    */
-  id = 0;
+  id = "";
 
   constructor(data?: PartialMessage<UserRequest>) {
     super();
@@ -198,7 +198,7 @@ export class UserRequest extends Message<UserRequest> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "users.UserRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 1, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UserRequest {
@@ -272,9 +272,9 @@ export class CreateUserRequest extends Message<CreateUserRequest> {
  */
 export class UpdateUserRequest extends Message<UpdateUserRequest> {
   /**
-   * @generated from field: int32 id = 1;
+   * @generated from field: string id = 1;
    */
-  id = 0;
+  id = "";
 
   /**
    * @generated from field: string username = 2;
@@ -299,7 +299,7 @@ export class UpdateUserRequest extends Message<UpdateUserRequest> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "users.UpdateUserRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "id", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 1, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "username", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 3, name: "email", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 4, name: "password", kind: "scalar", T: 9 /* ScalarType.STRING */ },
@@ -401,6 +401,11 @@ export class UserReply extends Message<UserReply> {
    */
   role = "";
 
+  /**
+   * @generated from field: bool is_spotify_connected = 5;
+   */
+  isSpotifyConnected = false;
+
   constructor(data?: PartialMessage<UserReply>) {
     super();
     proto3.util.initPartial(data, this);
@@ -413,6 +418,7 @@ export class UserReply extends Message<UserReply> {
     { no: 2, name: "username", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 3, name: "email", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 4, name: "role", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: "is_spotify_connected", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UserReply {
@@ -530,6 +536,16 @@ export class LoginReply extends Message<LoginReply> {
    */
   refreshToken = "";
 
+  /**
+   * @generated from field: string id = 5;
+   */
+  id = "";
+
+  /**
+   * @generated from field: bool is_spotify_connected = 6;
+   */
+  isSpotifyConnected = false;
+
   constructor(data?: PartialMessage<LoginReply>) {
     super();
     proto3.util.initPartial(data, this);
@@ -542,6 +558,8 @@ export class LoginReply extends Message<LoginReply> {
     { no: 2, name: "username", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 3, name: "role", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 4, name: "refresh_token", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 6, name: "is_spotify_connected", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): LoginReply {
@@ -1183,6 +1201,227 @@ export class PlaylistTracksListReply extends Message<PlaylistTracksListReply> {
 
   static equals(a: PlaylistTracksListReply | PlainMessage<PlaylistTracksListReply> | undefined, b: PlaylistTracksListReply | PlainMessage<PlaylistTracksListReply> | undefined): boolean {
     return proto3.util.equals(PlaylistTracksListReply, a, b);
+  }
+}
+
+/**
+ * @generated from message users.UserStatsRequest
+ */
+export class UserStatsRequest extends Message<UserStatsRequest> {
+  /**
+   * @generated from field: string user_id = 1;
+   */
+  userId = "";
+
+  constructor(data?: PartialMessage<UserStatsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.UserStatsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "user_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UserStatsRequest {
+    return new UserStatsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): UserStatsRequest {
+    return new UserStatsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): UserStatsRequest {
+    return new UserStatsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: UserStatsRequest | PlainMessage<UserStatsRequest> | undefined, b: UserStatsRequest | PlainMessage<UserStatsRequest> | undefined): boolean {
+    return proto3.util.equals(UserStatsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message users.UserStatsReply
+ */
+export class UserStatsReply extends Message<UserStatsReply> {
+  /**
+   * @generated from field: string favorite_artist = 1;
+   */
+  favoriteArtist = "";
+
+  /**
+   * @generated from field: double average_bpm = 3;
+   */
+  averageBpm = 0;
+
+  /**
+   * @generated from field: int32 likes = 4;
+   */
+  likes = 0;
+
+  /**
+   * @generated from field: int32 dislikes = 5;
+   */
+  dislikes = 0;
+
+  constructor(data?: PartialMessage<UserStatsReply>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.UserStatsReply";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "favorite_artist", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "average_bpm", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
+    { no: 4, name: "likes", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 5, name: "dislikes", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UserStatsReply {
+    return new UserStatsReply().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): UserStatsReply {
+    return new UserStatsReply().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): UserStatsReply {
+    return new UserStatsReply().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: UserStatsReply | PlainMessage<UserStatsReply> | undefined, b: UserStatsReply | PlainMessage<UserStatsReply> | undefined): boolean {
+    return proto3.util.equals(UserStatsReply, a, b);
+  }
+}
+
+/**
+ * @generated from message users.SpotifyAuthUrlReply
+ */
+export class SpotifyAuthUrlReply extends Message<SpotifyAuthUrlReply> {
+  /**
+   * @generated from field: string url = 1;
+   */
+  url = "";
+
+  constructor(data?: PartialMessage<SpotifyAuthUrlReply>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.SpotifyAuthUrlReply";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "url", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SpotifyAuthUrlReply {
+    return new SpotifyAuthUrlReply().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SpotifyAuthUrlReply {
+    return new SpotifyAuthUrlReply().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SpotifyAuthUrlReply {
+    return new SpotifyAuthUrlReply().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: SpotifyAuthUrlReply | PlainMessage<SpotifyAuthUrlReply> | undefined, b: SpotifyAuthUrlReply | PlainMessage<SpotifyAuthUrlReply> | undefined): boolean {
+    return proto3.util.equals(SpotifyAuthUrlReply, a, b);
+  }
+}
+
+/**
+ * @generated from message users.SpotifyCallbackRequest
+ */
+export class SpotifyCallbackRequest extends Message<SpotifyCallbackRequest> {
+  /**
+   * @generated from field: string code = 1;
+   */
+  code = "";
+
+  /**
+   * @generated from field: string user_id = 2;
+   */
+  userId = "";
+
+  /**
+   * @generated from field: string redirect_uri = 3;
+   */
+  redirectUri = "";
+
+  constructor(data?: PartialMessage<SpotifyCallbackRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.SpotifyCallbackRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "code", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "user_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "redirect_uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SpotifyCallbackRequest {
+    return new SpotifyCallbackRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SpotifyCallbackRequest {
+    return new SpotifyCallbackRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SpotifyCallbackRequest {
+    return new SpotifyCallbackRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: SpotifyCallbackRequest | PlainMessage<SpotifyCallbackRequest> | undefined, b: SpotifyCallbackRequest | PlainMessage<SpotifyCallbackRequest> | undefined): boolean {
+    return proto3.util.equals(SpotifyCallbackRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message users.SpotifyCallbackReply
+ */
+export class SpotifyCallbackReply extends Message<SpotifyCallbackReply> {
+  /**
+   * @generated from field: bool success = 1;
+   */
+  success = false;
+
+  /**
+   * @generated from field: string message = 2;
+   */
+  message = "";
+
+  constructor(data?: PartialMessage<SpotifyCallbackReply>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.SpotifyCallbackReply";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "success", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 2, name: "message", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SpotifyCallbackReply {
+    return new SpotifyCallbackReply().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SpotifyCallbackReply {
+    return new SpotifyCallbackReply().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SpotifyCallbackReply {
+    return new SpotifyCallbackReply().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: SpotifyCallbackReply | PlainMessage<SpotifyCallbackReply> | undefined, b: SpotifyCallbackReply | PlainMessage<SpotifyCallbackReply> | undefined): boolean {
+    return proto3.util.equals(SpotifyCallbackReply, a, b);
   }
 }
 

@@ -1,4 +1,5 @@
 ﻿using Google.Cloud.Firestore;
+using SwipeVibesAPI.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,25 @@ namespace SwipeVibesAPI.Services
     public class FirestoreService
     {
         private readonly FirestoreDb _db;
-        public FirestoreService(FirestoreDb db) => _db = db;
+        private readonly ISpotifyService _spotifyService;
+
+        public FirestoreService(FirestoreDb db, ISpotifyService spotifyService)
+        {
+            _db = db;
+            _spotifyService = spotifyService;
+        }
+
+        private async Task<string?> GetSpotifyAccessTokenForUser(string userId)
+        {
+            var snap = await _db.Collection("users").Document(userId).GetSnapshotAsync();
+            if (!snap.Exists) return null;
+
+            var user = snap.ConvertTo<UserDoc>();
+            if (string.IsNullOrEmpty(user.SpotifyRefreshToken)) return null;
+
+            var tokenResponse = await _spotifyService.RefreshAccessTokenAsync(user.SpotifyRefreshToken);
+            return tokenResponse?.AccessToken;
+        }
 
         public Task<DocumentReference> AddInteractionAsync(InteractionDoc doc)
         {
@@ -34,6 +53,7 @@ namespace SwipeVibesAPI.Services
             };
             return _db.Collection("user_prefs").Document(userId).SetAsync(doc, SetOptions.MergeAll);
         }
+
         public async Task<PlaylistDoc> CreatePlaylistAsync(string userId, string name)
         {
             var doc = new PlaylistDoc
@@ -44,9 +64,31 @@ namespace SwipeVibesAPI.Services
             };
 
             var refDoc = await _db.Collection("playlists").AddAsync(doc);
+            doc.Id = refDoc.Id;
+
+            try
+            {
+                var accessToken = await GetSpotifyAccessTokenForUser(userId);
+                if (!string.IsNullOrEmpty(accessToken))
+                {
+                    var spotifyUserId = await _spotifyService.GetSpotifyUserIdAsync(accessToken);
+                    if (!string.IsNullOrEmpty(spotifyUserId))
+                    {
+                        var spotifyPlaylistId = await _spotifyService.CreatePlaylistAsync(spotifyUserId, name, accessToken);
+                        if (!string.IsNullOrEmpty(spotifyPlaylistId))
+                        {
+                            await refDoc.UpdateAsync("SpotifyPlaylistId", spotifyPlaylistId);
+                            doc.SpotifyPlaylistId = spotifyPlaylistId;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creating Spotify playlist: {ex.Message}");
+            }
+
             return doc;
-            // Note: In a real app, you might want to return the ID separately or set it on the object, 
-            // but AddAsync returns a DocumentReference which has the Id.
         }
 
         public async Task<List<(string Id, PlaylistDoc Doc)>> GetUserPlaylistsAsync(string userId)
@@ -57,7 +99,12 @@ namespace SwipeVibesAPI.Services
                 .GetSnapshotAsync();
 
             return snapshot.Documents
-                .Select(d => (d.Id, d.ConvertTo<PlaylistDoc>()))
+                .Select(d =>
+                {
+                    var p = d.ConvertTo<PlaylistDoc>();
+                    p.Id = d.Id;
+                    return (d.Id, p);
+                })
                 .ToList();
         }
 
@@ -71,9 +118,6 @@ namespace SwipeVibesAPI.Services
 
             if (playlist.UserId != userId) return false;
 
-            // Delete the main document (Firestore doesn't auto-delete subcollections, 
-            // but for this scope, we will just delete the parent reference. 
-            // In production, you should recursively delete the 'tracks' subcollection).
             await docRef.DeleteAsync();
             return true;
         }
@@ -83,13 +127,38 @@ namespace SwipeVibesAPI.Services
             var playlistRef = _db.Collection("playlists").Document(playlistId);
             var playlistSnap = await playlistRef.GetSnapshotAsync();
             if (!playlistSnap.Exists) throw new Exception("Playlist not found");
-            if (playlistSnap.GetValue<string>("UserId") != userId) throw new Exception("Unauthorized");
+
+            var playlistData = playlistSnap.ConvertTo<PlaylistDoc>();
+            if (playlistData.UserId != userId) throw new Exception("Unauthorized");
 
             track.AddedAt = FSTimestamp.FromDateTime(DateTime.UtcNow);
 
-            await playlistRef.Collection("tracks")
-                .Document(track.DeezerTrackId.ToString())
-                .SetAsync(track);
+            var trackRef = playlistRef.Collection("tracks").Document(track.DeezerTrackId.ToString());
+            await trackRef.SetAsync(track);
+
+            if (!string.IsNullOrEmpty(playlistData.SpotifyPlaylistId))
+            {
+                try
+                {
+                    var accessToken = await GetSpotifyAccessTokenForUser(userId);
+                    if (!string.IsNullOrEmpty(accessToken))
+                    {
+                        var spotifyUri = await _spotifyService.SearchTrackByIsrcAsync(track.Isrc, accessToken);
+                        if (!string.IsNullOrEmpty(spotifyUri))
+                        {
+                            var success = await _spotifyService.AddTracksToPlaylistAsync(playlistData.SpotifyPlaylistId, new List<string> { spotifyUri }, accessToken);
+                            if (success)
+                            {
+                                await trackRef.UpdateAsync("SpotifyUri", spotifyUri);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error adding track to Spotify: {ex.Message}");
+                }
+            }
         }
 
         public async Task RemoveTrackFromPlaylistAsync(string userId, string playlistId, long deezerTrackId)
@@ -97,9 +166,34 @@ namespace SwipeVibesAPI.Services
             var playlistRef = _db.Collection("playlists").Document(playlistId);
             var playlistSnap = await playlistRef.GetSnapshotAsync();
             if (!playlistSnap.Exists) return;
-            if (playlistSnap.GetValue<string>("UserId") != userId) throw new Exception("Unauthorized");
 
-            await playlistRef.Collection("tracks").Document(deezerTrackId.ToString()).DeleteAsync();
+            var playlistData = playlistSnap.ConvertTo<PlaylistDoc>();
+            if (playlistData.UserId != userId) throw new Exception("Unauthorized");
+
+            var trackRef = playlistRef.Collection("tracks").Document(deezerTrackId.ToString());
+            var trackSnap = await trackRef.GetSnapshotAsync();
+
+            if (trackSnap.Exists)
+            {
+                var trackData = trackSnap.ConvertTo<PlaylistTrackDoc>();
+                if (!string.IsNullOrEmpty(playlistData.SpotifyPlaylistId) && !string.IsNullOrEmpty(trackData.SpotifyUri))
+                {
+                    try
+                    {
+                        var accessToken = await GetSpotifyAccessTokenForUser(userId);
+                        if (!string.IsNullOrEmpty(accessToken))
+                        {
+                            await _spotifyService.RemoveTrackFromPlaylistAsync(playlistData.SpotifyPlaylistId, trackData.SpotifyUri, accessToken);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error removing track from Spotify: {ex.Message}");
+                    }
+                }
+
+                await trackRef.DeleteAsync();
+            }
         }
 
         public async Task<List<PlaylistTrackDoc>> GetPlaylistTracksAsync(string userId, string playlistId)
@@ -111,45 +205,49 @@ namespace SwipeVibesAPI.Services
             var snapshot = await playlistRef.Collection("tracks").OrderByDescending("AddedAt").GetSnapshotAsync();
             return snapshot.Documents.Select(d => d.ConvertTo<PlaylistTrackDoc>()).ToList();
         }
-    }
-    [FirestoreData]
-    public class UserPrefsDoc
-    {
-        [FirestoreProperty] public bool AudioMuted { get; set; }
-        [FirestoreProperty] public FSTimestamp UpdatedAt { get; set; }
-    }
 
-    [FirestoreData]
-    public class InteractionDoc
-    {
-        [FirestoreProperty] public string UserId { get; set; } = default!;
-        [FirestoreProperty] public string Isrc { get; set; } = default!;
-        [FirestoreProperty] public string Decision { get; set; } = default!;
-        [FirestoreProperty] public long? DeezerTrackId { get; set; }
-        [FirestoreProperty] public string? Source { get; set; }
-        [FirestoreProperty] public string? PreviewUrl { get; set; }
-        [FirestoreProperty] public string? Artist { get; set; }
-        [FirestoreProperty] public string? Title { get; set; }
-        [FirestoreProperty] public FSTimestamp Ts { get; set; }
-    }
+        public async Task UpdateUserStatsAsync(string userId, string decision, double? bpm, string? artist)
+        {
+            var userRef = _db.Collection("users").Document(userId);
 
-    [FirestoreData]
-    public class PlaylistDoc
-    {
-        [FirestoreProperty] public string UserId { get; set; } = default!;
-        [FirestoreProperty] public string Name { get; set; } = default!;
-        [FirestoreProperty] public FSTimestamp CreatedAt { get; set; }
-    }
+            await _db.RunTransactionAsync(async transaction =>
+            {
+                var snapshot = await transaction.GetSnapshotAsync(userRef);
 
-    [FirestoreData]
-    public class PlaylistTrackDoc
-    {
-        [FirestoreProperty] public long DeezerTrackId { get; set; }
-        [FirestoreProperty] public string Title { get; set; } = default!;
-        [FirestoreProperty] public string Isrc { get; set; } = default!;
-        [FirestoreProperty] public long ArtistId { get; set; }
-        [FirestoreProperty] public string ArtistName { get; set; } = default!;
-        [FirestoreProperty] public string? AlbumCover { get; set; }
-        [FirestoreProperty] public FSTimestamp AddedAt { get; set; }
+                long currentLikes = snapshot.Exists && snapshot.ContainsField("Likes") ? snapshot.GetValue<long?>("Likes") ?? 0 : 0;
+                double currentAvgBpm = snapshot.Exists && snapshot.ContainsField("AverageBpm") ? snapshot.GetValue<double?>("AverageBpm") ?? 0 : 0;
+
+                var updates = new Dictionary<string, object>();
+
+                if (decision == "like")
+                {
+                    updates["Likes"] = FieldValue.Increment(1);
+
+                    if (bpm.HasValue && bpm.Value > 0)
+                    {
+                        double newAvg = currentLikes == 0 ? bpm.Value : ((currentAvgBpm * currentLikes) + bpm.Value) / (currentLikes + 1);
+                        updates["AverageBpm"] = newAvg;
+                    }
+
+                    if (!string.IsNullOrEmpty(artist))
+                    {
+                        updates["FavoriteArtist"] = artist;
+                    }
+                }
+                else if (decision == "dislike")
+                {
+                    updates["Dislikes"] = FieldValue.Increment(1);
+                }
+
+                if (snapshot.Exists)
+                {
+                    transaction.Update(userRef, updates);
+                }
+                else
+                {
+                    transaction.Set(userRef, updates, SetOptions.MergeAll);
+                }
+            });
+        }
     }
 }

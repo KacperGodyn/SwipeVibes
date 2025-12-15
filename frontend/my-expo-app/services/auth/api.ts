@@ -15,19 +15,36 @@ import type {
   PlaylistTrack,
   AddTrackToPlaylistRequest,
   RemoveTrackFromPlaylistRequest,
-  PlaylistTrackReply
+  PlaylistTrackReply,
+  CreateUserRequest,
+  UserReply,
+  UserStatsRequest,
+  UserStatsReply
 } from "./gRPC/user/users_pb";
 import { setAccessToken, setRefreshToken, getRefreshToken } from "./token"; 
 import { Platform } from "react-native";
-import { clearSavedUser } from "./userInfo";
+import { setSavedUser, clearSavedUser } from "./userInfo";
 
 const handleLoginResponse = (res: LoginReply) => {
   setAccessToken(res.token);
   if (res.refreshToken) {
     setRefreshToken(res.refreshToken);
   }
+
+  setSavedUser(res.username, res.role, res.id);
+
   return res;
 };
+
+export async function registerUser(username: string, password: string, email?: string) {
+  const req: PartialMessage<CreateUserRequest> = {
+    username,
+    password,
+    email
+  };
+  const res: UserReply = await userClient.createUser(req);
+  return res;
+}
 
 export async function loginWithSpotify(idTokenSpotify: string) {
   const req: PartialMessage<LoginRequest> = {
@@ -56,26 +73,26 @@ export async function loginWithPassword(username: string, password: string) {
   return handleLoginResponse(res);
 }
 
-export async function refreshAccess(): Promise<{ token: string }> {
-  const refreshToken = getRefreshToken();
+export async function getUserStatistics(userId: string): Promise<UserStatsReply> {
+  const req: PartialMessage<UserStatsRequest> = {
+    userId: userId 
+  };
+  const res: UserStatsReply = await userClient.getUserStats(req);
+  return res;
+}
 
-  if (!refreshToken) {
-      console.warn("Brak refresh tokena w storage. Wymuszone wylogowanie.");
-      await logout();
-      throw new Error("No refresh token available"); 
-  }
+export async function refreshAccess(): Promise<{ token: string }> {
+  const refreshToken = getRefreshToken() || "";
   
-  try {
-      const req: PartialMessage<RefreshRequest> = { refreshToken: refreshToken };
-      const res: RefreshReply = await userClient.refresh(req);
-      
-      setAccessToken(res.token);
-      return { token: res.token };
-  } catch (err) {
-      console.error("Refresh failed:", err);
-      await logout();
-      throw err;
-  }
+  const req: PartialMessage<RefreshRequest> = { 
+    refreshToken: refreshToken 
+  };
+  
+  const res: RefreshReply = await userClient.refresh(req);
+  
+  setAccessToken(res.token);
+  
+  return { token: res.token };
 }
 
 export async function logout(): Promise<void> {

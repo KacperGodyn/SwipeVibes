@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { AddTrackToPlaylistRequest, CreatePlaylistRequest, CreateUserRequest, DeletePlaylistRequest, DeleteReply, Empty, GetPlaylistTracksRequest, LoginReply, LoginRequest, LogoutReply, LogoutRequest, PlaylistReply, PlaylistsListReply, PlaylistTrackReply, PlaylistTracksListReply, RefreshReply, RefreshRequest, RemoveTrackFromPlaylistRequest, UpdateUserRequest, UserInteractionsReply, UserInteractionsRequest, UserReply, UserRequest, UsersReply } from "./users_pb";
+import { AddTrackToPlaylistRequest, CreatePlaylistRequest, CreateUserRequest, DeletePlaylistRequest, DeleteReply, Empty, GetPlaylistTracksRequest, LoginReply, LoginRequest, LogoutReply, LogoutRequest, PlaylistReply, PlaylistsListReply, PlaylistTrackReply, PlaylistTracksListReply, RefreshReply, RefreshRequest, RemoveTrackFromPlaylistRequest, SpotifyAuthUrlReply, SpotifyCallbackReply, SpotifyCallbackRequest, UpdateUserRequest, UserInteractionsReply, UserInteractionsRequest, UserReply, UserRequest, UsersReply, UserStatsReply, UserStatsRequest } from "./users_pb";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -145,6 +145,33 @@ export const UserService = {
       name: "GetPlaylistTracks",
       I: GetPlaylistTracksRequest,
       O: PlaylistTracksListReply,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc users.UserService.GetUserStats
+     */
+    getUserStats: {
+      name: "GetUserStats",
+      I: UserStatsRequest,
+      O: UserStatsReply,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc users.UserService.GetSpotifyAuthUrl
+     */
+    getSpotifyAuthUrl: {
+      name: "GetSpotifyAuthUrl",
+      I: Empty,
+      O: SpotifyAuthUrlReply,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc users.UserService.HandleSpotifyCallback
+     */
+    handleSpotifyCallback: {
+      name: "HandleSpotifyCallback",
+      I: SpotifyCallbackRequest,
+      O: SpotifyCallbackReply,
       kind: MethodKind.Unary,
     },
   }

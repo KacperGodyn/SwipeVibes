@@ -7,10 +7,10 @@ export default ({ config }) => {
 
   const envFile = appEnv === 'production' ? '.env.production' : '.env';
 
-  dotenv.config({ path: path.resolve(__dirname, envFile) });
+  dotenv.config({ path: path.resolve(process.cwd(), envFile) });
 
   console.log(`Loading config from: ${envFile} (ENV: ${appEnv})`);
-  
+
   const ANDROID_WEB_CLIENT_ID = process.env.GOOGLE_ANDROID_CLIENT_ID;
 
   const ANDROID_REVERSED_SCHEME = ANDROID_WEB_CLIENT_ID
@@ -42,18 +42,16 @@ export default ({ config }) => {
           scopes: (process.env.SPOTIFY_SCOPES || 'user-read-email user-read-private').split(' '),
         },
         google: {
-          expoClientId: process.env.GOOGLE_WEB_CLIENT_ID, // web only
-          webClientId: process.env.GOOGLE_WEB_CLIENT_ID, // web only
-          androidClientId: ANDROID_WEB_CLIENT_ID, // full id (WITH domain)
-          androidReversedClientScheme: ANDROID_REVERSED_SCHEME, // WITHOUT domain (for redirect)
-          // iosClientId: process.env.GOOGLE_IOS_CLIENT_ID,      // optional (later)
+          expoClientId: process.env.GOOGLE_WEB_CLIENT_ID,
+          webClientId: process.env.GOOGLE_WEB_CLIENT_ID,
+          androidClientId: ANDROID_WEB_CLIENT_ID,
+          androidReversedClientScheme: ANDROID_REVERSED_SCHEME,
         },
         deezerApiUrl: process.env.EXPO_PUBLIC_DEEZER_API_URL,
         eas: {
           projectId: '745c3276-782e-4cb5-8395-17e19efc5299',
         },
       },
-
       plugins: [['expo-router', { origin: 'https://swipevibes-31667.web.app' }]],
       orientation: 'portrait',
       icon: './assets/icon.png',

@@ -1,6 +1,9 @@
 ﻿using Grpc.Core;
 using SwipeVibesAPI.Grpc;
 using SwipeVibesAPI.Services;
+using SwipeVibesAPI.Entities;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 public class InteractionGrpcService : InteractionService.InteractionServiceBase
 {
@@ -22,6 +25,7 @@ public class InteractionGrpcService : InteractionService.InteractionServiceBase
         }
 
         var userId = http!.User!.Identity!.Name!;
+
         var doc = new InteractionDoc
         {
             UserId = userId,
@@ -31,10 +35,16 @@ public class InteractionGrpcService : InteractionService.InteractionServiceBase
             Source = request.Source,
             PreviewUrl = request.PreviewUrl,
             Artist = request.Artist,
-            Title = request.Title
+            Title = request.Title,
+            Album = request.Album,
+            Bpm = request.Bpm,
+            Gain = request.Gain,
         };
 
         var added = await _fs.AddInteractionAsync(doc);
+
+        await _fs.UpdateUserStatsAsync(userId, request.Decision.ToLowerInvariant(), request.Bpm, request.Artist);
+
         return new LogReply { Ok = true, Id = added.Id };
     }
 }

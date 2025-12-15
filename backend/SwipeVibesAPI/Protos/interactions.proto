@@ -16,6 +16,9 @@ message LogRequest {
   string preview_url = 5;
   string artist = 6;
   string title = 7;
+  string album = 8;
+  double bpm = 9;
+  double gain = 10;
 }
 
 message LogReply { bool ok = 1; string id = 2; }

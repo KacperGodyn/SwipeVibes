@@ -33,6 +33,8 @@ builder.Services.AddSingleton<FirestoreService>();
 builder.Services.AddSingleton<UserGrpcService>();
 builder.Services.AddSingleton<GeminiGrpcService>();
 
+builder.Services.AddHttpClient<ISpotifyService, SpotifyService>();
+
 builder.Services.AddHttpClient("deezer", c =>
 {
     c.BaseAddress = new Uri("https://api.deezer.com/");
@@ -132,25 +134,25 @@ builder.Services
   })
   .AddJwtBearer("AppJwt", options =>
   {
-    var validationKey = builder.Configuration["Jwt:Key"];
+      var validationKey = builder.Configuration["Jwt:Key"];
 
-    var validationIssuer = builder.Configuration["Jwt:Issuer"];
-    var validationAudience = builder.Configuration["Jwt:Audience"];
+      var validationIssuer = builder.Configuration["Jwt:Issuer"];
+      var validationAudience = builder.Configuration["Jwt:Audience"];
 
 
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidIssuer = validationIssuer,
-        ValidateAudience = true,
-        ValidAudience = validationAudience,
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(validationKey)),
-        ValidateLifetime = true,
-        ClockSkew = TimeSpan.FromSeconds(30),
-        NameClaimType = ClaimTypes.Name,
-        RoleClaimType = ClaimTypes.Role
-    };
+      options.TokenValidationParameters = new TokenValidationParameters
+      {
+          ValidateIssuer = true,
+          ValidIssuer = validationIssuer,
+          ValidateAudience = true,
+          ValidAudience = validationAudience,
+          ValidateIssuerSigningKey = true,
+          IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(validationKey)),
+          ValidateLifetime = true,
+          ClockSkew = TimeSpan.FromSeconds(30),
+          NameClaimType = ClaimTypes.Name,
+          RoleClaimType = ClaimTypes.Role
+      };
   });
 
 if (builder.Environment.IsDevelopment())

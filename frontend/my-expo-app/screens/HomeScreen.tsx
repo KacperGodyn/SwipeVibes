@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
-import { View, Text, useWindowDimensions, Platform, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, useWindowDimensions, StyleSheet } from 'react-native';
 import ContainerFlexColumn from 'components/containers/ContainerFlexColumn';
 import SubContainerFlexRow from 'components/containers/SubContainerFlexRow';
-import CardNavigationContainer from 'components/containers/CardNavigationContainer';
 import GeneralNavigationContainer from 'components/containers/GeneralNavigationContainer';
 import MainCardDisplayedContent from 'components/MainCardDisplayedContent';
 import provideRecommendation, {
@@ -35,7 +34,6 @@ export default function HomeScreen() {
 
   const translateX = useSharedValue(0);
   const rotation = useSharedValue(0);
-
   const loaderAnim = useSharedValue(0);
 
   useEffect(() => {
@@ -80,6 +78,8 @@ export default function HomeScreen() {
 
   const send = async (t: RandomTrackResponse, decision: 'like' | 'dislike' | 'skip') => {
     if (!t.isrc) return;
+    console.log(`Sending interaction: ${decision} for ${t.title}`);
+    
     await logInteraction({
       isrc: t.isrc,
       decision,
@@ -99,9 +99,11 @@ export default function HomeScreen() {
     try {
       player.pause();
     } catch {}
+    
     await send(track, decision);
     await refetch();
   };
+
 
   const animatedStyle = useAnimatedStyle(() => {
     const rotateZ = interpolate(
@@ -123,9 +125,10 @@ export default function HomeScreen() {
     const targetX = (decision === 'like' ? 1 : -1) * screenWidth * 1.5;
 
     translateX.value = withTiming(targetX, { duration: swipeOutDuration });
-    rotation.value = withTiming(targetX / 20, { duration: swipeOutDuration });
+    rotation.value = withTiming(targetX / 20, { duration: swipeOutDuration }, () => {
+    });
 
-    runOnJS(nextAndPause)(decision);
+    nextAndPause(decision);
   };
 
   const panGesture = Gesture.Pan()
@@ -145,11 +148,9 @@ export default function HomeScreen() {
         Math.abs(translationX) > SWIPE_THRESHOLD ||
         Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD
       ) {
-        if (translationX > 0 || velocityX > 0) {
-          handleSwipeAction('like');
-        } else {
-          handleSwipeAction('dislike');
-        }
+        const decision = translationX > 0 ? 'like' : 'dislike';
+        
+        runOnJS(handleSwipeAction)(decision);
       } else {
         translateX.value = withSpring(0);
         rotation.value = withSpring(0);

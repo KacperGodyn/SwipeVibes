@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Google.Protobuf.WellKnownTypes;
 using Proto = SwipeVibesAPI.Grpc;
 using SwipeVibesAPI.Services;
+using SwipeVibesAPI.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Grpc.Core;
 

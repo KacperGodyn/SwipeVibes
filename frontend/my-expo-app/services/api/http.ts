@@ -38,7 +38,7 @@ http.interceptors.response.use(
         return http.request(config);
       } catch (refreshError: any) {
         console.error("[HTTP Response 401] Ponowne odświeżenie NIE powiodło się. Wylogowywanie.", refreshError.message || refreshError);
-        setAccessToken(null); // Wyloguj
+        setAccessToken(null);
       }
     }
     

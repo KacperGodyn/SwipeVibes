@@ -7,6 +7,32 @@ import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialM
 import { Message, proto3, protoInt64, Timestamp } from "@bufbuild/protobuf";
 
 /**
+ * @generated from enum users.SwipeResetType
+ */
+export enum SwipeResetType {
+  /**
+   * @generated from enum value: RESET_ALL = 0;
+   */
+  RESET_ALL = 0,
+
+  /**
+   * @generated from enum value: RESET_LIKES = 1;
+   */
+  RESET_LIKES = 1,
+
+  /**
+   * @generated from enum value: RESET_DISLIKES = 2;
+   */
+  RESET_DISLIKES = 2,
+}
+// Retrieve enum metadata with: proto3.getEnumType(SwipeResetType)
+proto3.util.setEnumType(SwipeResetType, "users.SwipeResetType", [
+  { no: 0, name: "RESET_ALL" },
+  { no: 1, name: "RESET_LIKES" },
+  { no: 2, name: "RESET_DISLIKES" },
+]);
+
+/**
  * @generated from message users.RefreshRequest
  */
 export class RefreshRequest extends Message<RefreshRequest> {
@@ -484,6 +510,11 @@ export class DeleteReply extends Message<DeleteReply> {
    */
   success = false;
 
+  /**
+   * @generated from field: string message = 2;
+   */
+  message = "";
+
   constructor(data?: PartialMessage<DeleteReply>) {
     super();
     proto3.util.initPartial(data, this);
@@ -493,6 +524,7 @@ export class DeleteReply extends Message<DeleteReply> {
   static readonly typeName = "users.DeleteReply";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "success", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 2, name: "message", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): DeleteReply {
@@ -1508,6 +1540,80 @@ export class ExportPlaylistReply extends Message<ExportPlaylistReply> {
 
   static equals(a: ExportPlaylistReply | PlainMessage<ExportPlaylistReply> | undefined, b: ExportPlaylistReply | PlainMessage<ExportPlaylistReply> | undefined): boolean {
     return proto3.util.equals(ExportPlaylistReply, a, b);
+  }
+}
+
+/**
+ * @generated from message users.ResetSwipeHistoryRequest
+ */
+export class ResetSwipeHistoryRequest extends Message<ResetSwipeHistoryRequest> {
+  /**
+   * @generated from field: users.SwipeResetType type = 1;
+   */
+  type = SwipeResetType.RESET_ALL;
+
+  constructor(data?: PartialMessage<ResetSwipeHistoryRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.ResetSwipeHistoryRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "type", kind: "enum", T: proto3.getEnumType(SwipeResetType) },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ResetSwipeHistoryRequest {
+    return new ResetSwipeHistoryRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ResetSwipeHistoryRequest {
+    return new ResetSwipeHistoryRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ResetSwipeHistoryRequest {
+    return new ResetSwipeHistoryRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ResetSwipeHistoryRequest | PlainMessage<ResetSwipeHistoryRequest> | undefined, b: ResetSwipeHistoryRequest | PlainMessage<ResetSwipeHistoryRequest> | undefined): boolean {
+    return proto3.util.equals(ResetSwipeHistoryRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message users.DeleteAllPlaylistsRequest
+ */
+export class DeleteAllPlaylistsRequest extends Message<DeleteAllPlaylistsRequest> {
+  /**
+   * @generated from field: bool unsubscribe_spotify = 1;
+   */
+  unsubscribeSpotify = false;
+
+  constructor(data?: PartialMessage<DeleteAllPlaylistsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.DeleteAllPlaylistsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "unsubscribe_spotify", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): DeleteAllPlaylistsRequest {
+    return new DeleteAllPlaylistsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): DeleteAllPlaylistsRequest {
+    return new DeleteAllPlaylistsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): DeleteAllPlaylistsRequest {
+    return new DeleteAllPlaylistsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: DeleteAllPlaylistsRequest | PlainMessage<DeleteAllPlaylistsRequest> | undefined, b: DeleteAllPlaylistsRequest | PlainMessage<DeleteAllPlaylistsRequest> | undefined): boolean {
+    return proto3.util.equals(DeleteAllPlaylistsRequest, a, b);
   }
 }
 

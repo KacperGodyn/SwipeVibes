@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
+import { DeviceEventEmitter } from "react-native";
 import { setAccessToken, getRefreshToken, loadAccessToken } from "./token";
 import { refreshAccess } from "./api";
+
+export const AUTH_EVENT = "auth.state_change";
 
 export function useBootstrapAuth() {
   const [ready, setReady] = useState(false);
@@ -30,6 +33,14 @@ export function useBootstrapAuth() {
         setReady(true);
       }
     })();
+
+    const subscription = DeviceEventEmitter.addListener(AUTH_EVENT, (isAuth: boolean) => {
+      setIsAuthenticated(isAuth);
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   return { ready, isAuthenticated };

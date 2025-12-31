@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace SwipeVibesAPI.Services
 {
@@ -14,10 +16,15 @@ namespace SwipeVibesAPI.Services
         private readonly PredictionServiceClient _predictionServiceClient;
         private readonly string _vertexAiEndpoint;
         private readonly string _modelId = "gemini-2.0-flash-lite-001";
+        private readonly ILogger<GeminiGrpcService> _logger;
 
-        public GeminiGrpcService(PredictionServiceClient predictionServiceClient, IConfiguration configuration)
+        public GeminiGrpcService(
+            PredictionServiceClient predictionServiceClient,
+            IConfiguration configuration,
+            ILogger<GeminiGrpcService> logger)
         {
             _predictionServiceClient = predictionServiceClient;
+            _logger = logger;
 
             var projectId = configuration["GCP:ProjectId"]
                             ?? configuration["GCP__ProjectId"]
@@ -36,7 +43,12 @@ namespace SwipeVibesAPI.Services
         public override async Task<GetGeminiTrackRecommendationResponse> GetGeminiTrackRecommendation(
             GetGeminiTrackRecommendationRequest request, ServerCallContext context)
         {
-            var (systemPrompt, userContent) = BuildGeminiPrompt(request.Interactions);
+            var genreFilters = request.GenreFilters?.ToList() ?? new List<string>();
+            var languageFilters = request.LanguageFilters?.ToList() ?? new List<string>();
+
+            var (systemPrompt, userContent) = BuildGeminiPrompt(request.Interactions, genreFilters, languageFilters);
+
+            _logger.LogInformation("=== GEMINI SYSTEM PROMPT ===\n{SystemPrompt}", systemPrompt);
 
             var generateRequest = new GenerateContentRequest
             {
@@ -45,8 +57,8 @@ namespace SwipeVibesAPI.Services
                 Contents = { new Content { Role = "user", Parts = { new Part { Text = userContent } } } },
                 GenerationConfig = new GenerationConfig
                 {
-                    Temperature = 0.9f,
-                    TopP = 1.0f,
+                    Temperature = 0.5f, // Jeszcze niższa temperatura dla lepszego posłuszeństwa
+                    TopP = 0.9f,
                     MaxOutputTokens = 1024
                 }
             };
@@ -80,77 +92,65 @@ namespace SwipeVibesAPI.Services
             }
             catch (global::Grpc.Core.RpcException ex)
             {
-                Console.WriteLine($"Gemini API error:: {ex.Status.Detail}");
+                _logger.LogError(ex, "Gemini API error: {Detail}", ex.Status.Detail);
                 throw new RpcException(new Status(ex.StatusCode, $"Gemini API error: {ex.Status.Detail}"));
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Internal Server Exception: {ex.Message}");
+                _logger.LogError(ex, "Internal Server Exception during Gemini request");
                 throw new RpcException(new Status(StatusCode.Internal, $"Internal Server Exception: {ex.Message}"));
             }
         }
 
         private (string SystemPrompt, string UserContent) BuildGeminiPrompt(
-            Google.Protobuf.Collections.RepeatedField<InteractionReply> interactions)
+            Google.Protobuf.Collections.RepeatedField<InteractionReply> interactions,
+            List<string> genreFilters,
+            List<string> languageFilters)
         {
-            string systemPrompt = @"Jesteś ekspertem od rekomendacji muzycznych w aplikacji SwipeVibes.
-Twoim zadaniem jest zarekomendować listę 10 artystów pasujących do gustu użytkownika na podstawie listy utworów, które użytkownik polubił i nie polubił.
+            string genreInstruction = genreFilters.Any()
+                ? $"* FILTR GATUNKOWY (ABSOLUTNY): {string.Join(", ", genreFilters)}. Ignoruj gatunki z historii, jeśli nie pasują do tego filtra."
+                : "* FILTR GATUNKOWY: Brak. Bazuj na guście użytkownika.";
 
-Twoja analiza musi być dogłębna:
-1.  Przeanalizuj listę [Polubione] i [Niepolubione], aby zidentyfikować wspólne wzorce (gatunek, nastrój, energia, BPM, epoka/rok wydania, instrumentacja, styl wokalny, jakość produkcji).
-2.  Lista ta zawiera do 200 ostatnio ocenionych utworów. Staraj się polecać artystów, którzy **nie** pojawiają się na tej liście, aby zapewnić różnorodność.
-3.  **Faza Odkrywania (poniżej 20 ocen):** Jeśli lista interakcji jest krótka, traktuj to jako 'fazę odkrywania'. Poleć 10 artystów z 10 **szerokich i różnych** gatunków (np. 'Classic Rock', 'Elektronika', 'Jazz', 'Pop', 'Hip-Hop'), aby pomóc szybko zawęzić gust.
-4.  **Klastry 'Dislike' są KLUCZOWE:** Jeśli widzisz, że użytkownik konsekwentnie daje 'dislike' utworom o wspólnej cesze (np. ten sam **gatunek**, **niskie BPM/wolne piosenki**, **stare piosenki**, **mocny wokal rapowany**, **produkcja lo-fi**), **AGRESYWNIE UNIKAJ** polecania artystów, którzy pasują do tego negatywnego wzorca.
-5.  **Eksploracja vs. Zawężanie (profile powyżej 20 ocen):** Musisz zadecydować, czy użytkownik jest 'Odkrywcą' czy 'Specjalistą'.
-    * Przeanalizuj różnorodność gatunkową listy [Polubione].
-    * **Jeśli [Polubione] są zróżnicowane (wiele gatunków):** Użytkownik jest 'Odkrywcą'. Zastosuj strategię 8+2: 8 artystów podobnych do polubionych i 2 'odważne strzały' z nowych, ale potencjalnie powiązanych gatunków.
-    * **Jeśli [Polubione] są wąskie (jeden/dwa gatunki):** Użytkownik jest 'Specjalistą'. Zastosuj strategię 9+1: 9 artystów BARDZO podobnych (ale nie identycznych) do polubionych i 1 'bezpieczny strzał' z blisko powiązanego podgatunku.
+            string languageInstruction = "Brak filtra językowego.";
+            string antiBiasInstruction = "";
 
-Zawsze zwracaj odpowiedź jako listę 10 artystów. Każdy artysta musi być w nowej, osobnej linii.
-Nie dodawaj numerów, myślników, ani żadnego innego tekstu poza nazwami artystów.
+            if (languageFilters.Any())
+            {
+                string targetLangs = string.Join(", ", languageFilters);
+                languageInstruction = $"* FILTR JĘZYKOWY (KRYTYCZNY): {targetLangs}.";
 
----
-Przykład Wejścia (nowy użytkownik):
-[Polubione]
-- Daft Punk - One More Time
-[Niepolubione]
-- Taylor Swift - Shake It Off
+                antiBiasInstruction = $@"
+    !!! UWAGA - PRIORYTET FILTRA !!!
+    Użytkownik ustawił ścisły filtr językowy na: {targetLangs}.
+    Twoja analiza historii może wykazać, że użytkownik słucha muzyki w innym języku.
+    W TAKIM PRZYPADKU MUSISZ CAŁKOWICIE ZIGNOROWAĆ JĘZYK Z HISTORII.
+    
+    ZASADA KRYTYCZNA:
+    Jeśli filtr to '{targetLangs}', to KAŻDY z 10 poleconych artystów MUSI tworzyć w języku '{targetLangs}'.
+    Polecenie artysty w innym języku (nawet jeśli pasuje do historii) będzie uznane za błąd.";
+            }
 
-Przykład Wyjścia (nowy użytkownik, faza odkrywania):
-Radiohead
-Caribou
-Massive Attack
-Nina Simone
-Miles Davis
-Fleetwood Mac
-Kraftwerk
-Herbie Hancock
-Amon Tobin
-Bon Iver
----
-Przykład Wejścia (Wąski gust 'Specjalista' + Klastry Dislike):
-[Polubione]
-- Kanye West - Flashing Lights
-- Kendrick Lamar - HUMBLE.
-- A Tribe Called Quest - Can I Kick It?
-[Niepolubione]
-- Orville Peck - C'mon Baby, Cry (Dislike na Country)
-- Johnny Cash - Hurt (Dislike na Country/Folk)
-- Taylor Swift - Shake It Off (Dislike na Pop)
-- Miles Davis - So What (Dislike na wolny Jazz)
+            string systemPrompt = $@"Jesteś bezbłędnym DJ-em AI w aplikacji SwipeVibes.
+Twoim zadaniem jest wygenerowanie listy 10 artystów muzycznych.
 
-Przykład Wyjścia (Unika Country, Popu i wolnego Jazzu):
-J. Cole
-Freddie Gibbs
-Run The Jewels
-Pusha T
-Mos Def
-Joey Bada$$
-Mac Miller
-Snoop Dogg
-OutKast
-D'Angelo
----";
+ZASADY FILTROWANIA (Te zasady są nadrzędne wobec analizy gustu):
+1.  {genreInstruction}
+2.  {languageInstruction}
+{antiBiasInstruction}
+
+ANALIZA GUSTU:
+1.  Przeanalizuj [Polubione] pod kątem nastroju, BPM i energii.
+2.  Dopasuj artystów, którzy mają podobny 'Vibe' co polubione utwory, ALE spełniają powyższe filtry.
+3.  **Unikaj powtórzeń:** Nie polecaj artystów, którzy są już na listach [Polubione] lub [Niepolubione].
+4.  **Klastry Dislike:** Jeśli użytkownik odrzucił wiele utworów danego typu, nie polecaj tego gatunku.
+
+FORMAT ODPOWIEDZI:
+Zwróć TYLKO listę 10 wykonawców.
+Jeden wykonawca w jednej linii.
+Bez numeracji, bez myślników, bez zbędnych opisów.
+Tylko czyste nazwy.
+
+Twoja lista 10 artystów:";
 
             var likes = new StringBuilder();
             var dislikes = new StringBuilder();
@@ -164,7 +164,7 @@ D'Angelo
             {
                 foreach (var interaction in interactions)
                 {
-                    var trackInfo = $"- {interaction.Artist} - {interaction.Title}";
+                    var trackInfo = $"{interaction.Artist} - {interaction.Title}";
                     if (interaction.Decision.Equals("like", StringComparison.OrdinalIgnoreCase))
                     {
                         likes.AppendLine(trackInfo);
@@ -178,12 +178,12 @@ D'Angelo
                 if (dislikes.Length == 0) dislikes.AppendLine("Brak");
             }
 
-            string userContent = $@"== POLUBIONE UTWORY ==
+            string userContent = $@"== POLUBIONE UTWORY (HISTORY) ==
 {likes}
-== NIEPOLUBIONE UTWORY ==
+== NIEPOLUBIONE UTWORY (HISTORY) ==
 {dislikes}
 
-== TWOJA REKOMENDACJA 10 ARTYSTÓW ==
+== WYGENERUJ LISTĘ 10 ARTYSTÓW (FILTR: {(genreFilters.Any() ? string.Join(",", genreFilters) : "Dowolny")}, JĘZYK: {(languageFilters.Any() ? string.Join(",", languageFilters) : "Dowolny")}) ==
 ";
 
             return (systemPrompt, userContent);

@@ -21,6 +21,16 @@ export class GetGeminiTrackRecommendationRequest extends Message<GetGeminiTrackR
    */
   interactions: InteractionReply[] = [];
 
+  /**
+   * @generated from field: repeated string genre_filters = 3;
+   */
+  genreFilters: string[] = [];
+
+  /**
+   * @generated from field: repeated string language_filters = 4;
+   */
+  languageFilters: string[] = [];
+
   constructor(data?: PartialMessage<GetGeminiTrackRecommendationRequest>) {
     super();
     proto3.util.initPartial(data, this);
@@ -31,6 +41,8 @@ export class GetGeminiTrackRecommendationRequest extends Message<GetGeminiTrackR
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "prompt", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "interactions", kind: "message", T: InteractionReply, repeated: true },
+    { no: 3, name: "genre_filters", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 4, name: "language_filters", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetGeminiTrackRecommendationRequest {

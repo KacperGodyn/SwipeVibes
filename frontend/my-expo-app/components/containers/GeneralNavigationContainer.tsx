@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Pressable } from 'react-native';
+import { View, Pressable, Text } from 'react-native';
 import { router } from 'expo-router';
 import { createMMKV } from 'react-native-mmkv';
 
@@ -28,8 +28,9 @@ const VIBES: Record<
   games: GamesIcon,
 };
 
-export default function GeneralNavigationContainer() {
+const iconColor = '#F05454';
 
+export default function GeneralNavigationContainer() {
   const [isSelectedVibe, setIsSelectedVibe] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     return storage.getBoolean(KEY_SELECTED) ?? false;
@@ -61,72 +62,47 @@ export default function GeneralNavigationContainer() {
 
   const Vibe = VIBES[currentVibe] ?? MusicIcon;
 
-  if (false) { //isSelectedVibe
-    return (
-      <View className="flex-row items-center justify-around gap-6">
-        <Pressable
-          className="rounded-full p-2 active:bg-white/40"
-          onPress={() => {
-            onVibeChange();
-            setVibe('music');
-          }}>
-          <MusicIcon width={40} height={40} color={iconColor} />
-        </Pressable>
-        <Pressable
-          className="rounded-full p-2 active:bg-white/40"
-          onPress={() => {
-            onVibeChange();
-            setVibe('movies');
-          }}>
-          <MoviesIcon width={40} height={40} color={iconColor} />
-        </Pressable>
-        <Pressable
-          className="rounded-full p-2 active:bg-white/40"
-          onPress={() => {
-            onVibeChange();
-            setVibe('books');
-          }}>
-          <BooksIcon width={40} height={40} color={iconColor} />
-        </Pressable>
-        <Pressable
-          className="rounded-full p-2 active:bg-white/40"
-          onPress={() => {
-            onVibeChange();
-            setVibe('games');
-          }}>
-          <GamesIcon width={40} height={40} color={iconColor} />
-        </Pressable>
-      </View>
-    );
-  } else {
-    return (
-      <View className="flex-row items-center justify-around gap-10">
-        <Pressable
-          className="rounded-full p-2 active:bg-white/40"
-          onPress={() => {
-            setSelected(!isSelectedVibe);
-            router.push("/home")
-          }}>
-          <Vibe width={40} height={40} color={iconColor} />
-        </Pressable>
+  return (
+    <View className="mx-auto w-[95%] max-w-[400px] flex-row items-center justify-between self-center rounded-[32px] border border-[#222222] bg-[#0F0F0F] px-8 py-3 shadow-sm shadow-[#F05454]">
+      <Pressable
+        className="items-center gap-1 active:opacity-70"
+        onPress={() => {
+          setSelected(!isSelectedVibe);
+          router.push('/home');
+        }}>
+        <View className="rounded-2xl border border-[#333333] bg-[#1A1A1A] p-2">
+          <Vibe width={28} height={28} color={iconColor} />
+        </View>
+        <Text className="text-[10px] font-bold uppercase tracking-widest text-[#E8E8E8]">
+          Discover
+        </Text>
+      </Pressable>
 
-        <Pressable
-          className="rounded-full p-2 active:bg-white/40"
-          onPress={() => {
-            router.push('/profile');
-          }}>
-          <ProfileIcon width={40} height={40} color={iconColor} />
-        </Pressable>
-        <Pressable
-          className="rounded-full p-2 active:bg-white/40"
-          onPress={() => {
-            router.push('/settings');
-          }}>
-          <SettingsIcon width={40} height={40} color={iconColor} />
-        </Pressable>
-      </View>
-    );
-  }
+      <Pressable
+        className="items-center gap-1 active:opacity-70"
+        onPress={() => {
+          router.push('/profile');
+        }}>
+        <View className="p-2">
+          <ProfileIcon width={28} height={28} color="#888888" />
+        </View>
+        <Text className="text-[10px] font-bold uppercase tracking-widest text-[#666666]">
+          Profile
+        </Text>
+      </Pressable>
+
+      <Pressable
+        className="items-center gap-1 active:opacity-70"
+        onPress={() => {
+          router.push('/settings');
+        }}>
+        <View className="p-2">
+          <SettingsIcon width={28} height={28} color="#888888" />
+        </View>
+        <Text className="text-[10px] font-bold uppercase tracking-widest text-[#666666]">
+          Settings
+        </Text>
+      </Pressable>
+    </View>
+  );
 }
-
-const iconColor = '#f0f0f0ff';

@@ -7,12 +7,60 @@
       "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:services\\usergrpcservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\services\\firestoreservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:services\\firestoreservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\utility\\jwtservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:utility\\jwtservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\services\\spotifyservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:services\\spotifyservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\protos\\users.proto||{3B902123-F8A7-4915-9F01-361F908088D0}",
       "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:protos\\users.proto||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\protos\\interactions.proto||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:protos\\interactions.proto||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\entities\\userdoc.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:entities\\userdoc.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\services\\geminigrpcservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:services\\geminigrpcservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\controllers\\deezercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:controllers\\deezercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\services\\deezergrpcservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:services\\deezergrpcservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\controllers\\preferencescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:controllers\\preferencescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\entities\\userprefsdoc.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:entities\\userprefsdoc.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\protos\\gemini.proto||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:protos\\gemini.proto||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\controllers\\interactionscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:controllers\\interactionscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\protos\\deezer.proto||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:protos\\deezer.proto||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\entities\\playlisttrackdoc.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -23,16 +71,8 @@
       "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:entities\\playlistdoc.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\entities\\userdoc.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:entities\\userdoc.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\services\\firestoreservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:services\\firestoreservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\firebasehelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -51,56 +91,16 @@
       "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\controllers\\deezercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:controllers\\deezercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\controllers\\interactionscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:controllers\\interactionscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\services\\interactiongrpcservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:services\\interactiongrpcservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\entities\\userprefsdoc.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:entities\\userprefsdoc.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\entities\\interactiondoc.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:entities\\interactiondoc.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\controllers\\preferencescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:controllers\\preferencescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\protos\\interactions.proto||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:protos\\interactions.proto||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\services\\geminigrpcservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:services\\geminigrpcservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\services\\deezergrpcservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:services\\deezergrpcservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\controllers\\testcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:controllers\\testcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\protos\\deezer.proto||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:protos\\deezer.proto||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\protos\\gemini.proto||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:protos\\gemini.proto||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\utility\\jwtservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|solutionrelative:utility\\jwtservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{5F52B254-439B-40D3-8676-36B9A55FAD4E}|SwipeVibesAPI.csproj|c:\\_repos\\swipevibes\\backend\\swipevibesapi\\swipevibesapi.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
@@ -118,80 +118,75 @@
           "Children": [
             {
               "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "GeminiGrpcService.cs",
+              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\GeminiGrpcService.cs",
+              "RelativeDocumentMoniker": "Services\\GeminiGrpcService.cs",
+              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\GeminiGrpcService.cs",
+              "RelativeToolTip": "Services\\GeminiGrpcService.cs",
+              "ViewState": "AgIAAJAAAAAAAAAAAAAuwHkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-17T15:30:27.387Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "FirestoreService.cs",
+              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\FirestoreService.cs",
+              "RelativeDocumentMoniker": "Services\\FirestoreService.cs",
+              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\FirestoreService.cs",
+              "RelativeToolTip": "Services\\FirestoreService.cs",
+              "ViewState": "AgIAACIAAAAAAAAAAAA/wM8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-12T19:25:34.032Z"
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 10,
-              "Title": ".env",
-              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\.env",
-              "RelativeDocumentMoniker": ".env",
-              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\.env",
-              "RelativeToolTip": ".env",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAA2AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2025-10-17T14:22:45.381Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "PlaylistDoc.cs",
-              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Entities\\PlaylistDoc.cs",
-              "RelativeDocumentMoniker": "Entities\\PlaylistDoc.cs",
-              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Entities\\PlaylistDoc.cs",
-              "RelativeToolTip": "Entities\\PlaylistDoc.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAABAAAAAAAAAA==",
+              "Title": "PreferencesController.cs",
+              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Controllers\\PreferencesController.cs",
+              "RelativeDocumentMoniker": "Controllers\\PreferencesController.cs",
+              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Controllers\\PreferencesController.cs",
+              "RelativeToolTip": "Controllers\\PreferencesController.cs",
+              "ViewState": "AgIAACUAAAAAAAAAAADwvz0AAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-08T22:25:49.385Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-13T16:59:18.702Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
-              "Title": "InteractionsController.cs",
-              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Controllers\\InteractionsController.cs",
-              "RelativeDocumentMoniker": "Controllers\\InteractionsController.cs",
-              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Controllers\\InteractionsController.cs",
-              "RelativeToolTip": "Controllers\\InteractionsController.cs",
-              "ViewState": "AgIAAB8AAAAAAAAAAIAzwDUAAAAaAAAAAAAAAA==",
+              "DocumentIndex": 8,
+              "Title": "DeezerController.cs",
+              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Controllers\\DeezerController.cs",
+              "RelativeDocumentMoniker": "Controllers\\DeezerController.cs",
+              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Controllers\\DeezerController.cs",
+              "RelativeToolTip": "Controllers\\DeezerController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABsAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-12T19:26:56.692Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "appsettings.Development.json",
-              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\appsettings.Development.json",
-              "RelativeDocumentMoniker": "appsettings.Development.json",
-              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\appsettings.Development.json",
-              "RelativeToolTip": "appsettings.Development.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-10-17T15:24:16.976Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 11,
-              "Title": "appsettings.json",
-              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\appsettings.json",
-              "RelativeDocumentMoniker": "appsettings.json",
-              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\appsettings.json",
-              "RelativeToolTip": "appsettings.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-09-02T15:39:50.441Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-12T20:18:39.934Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "users.proto",
-              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Protos\\users.proto",
-              "RelativeDocumentMoniker": "Protos\\users.proto",
-              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Protos\\users.proto",
-              "RelativeToolTip": "Protos\\users.proto",
-              "ViewState": "AgIAALEAAAAAAAAAAAAAAM0AAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003853|",
-              "WhenOpened": "2025-11-18T15:15:00.476Z",
-              "EditorCaption": ""
+              "Title": "JWTService.cs",
+              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Utility\\JWTService.cs",
+              "RelativeDocumentMoniker": "Utility\\JWTService.cs",
+              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Utility\\JWTService.cs",
+              "RelativeToolTip": "Utility\\JWTService.cs",
+              "ViewState": "AgIAAEAAAAAAAAAAAAA/wGEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-02T16:33:36.019Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "UserDoc.cs",
+              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Entities\\UserDoc.cs",
+              "RelativeDocumentMoniker": "Entities\\UserDoc.cs",
+              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Entities\\UserDoc.cs",
+              "RelativeToolTip": "Entities\\UserDoc.cs",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAswCsAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-08T15:59:34.62Z"
             },
             {
               "$type": "Document",
@@ -201,164 +196,14 @@
               "RelativeDocumentMoniker": "Services\\UserGrpcService.cs",
               "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\UserGrpcService.cs",
               "RelativeToolTip": "Services\\UserGrpcService.cs",
-              "ViewState": "AgIAALcCAAAAAAAAAAAcwOMCAAANAAAAAAAAAA==",
+              "ViewState": "AgIAAKEBAAAAAAAAAAAQwMwBAAArAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-13T18:04:19.27Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "FirebaseHelper.cs",
-              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\FirebaseHelper.cs",
-              "RelativeDocumentMoniker": "FirebaseHelper.cs",
-              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\FirebaseHelper.cs",
-              "RelativeToolTip": "FirebaseHelper.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAACAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-02T18:00:47.99Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 5,
-              "Title": "UserDoc.cs",
-              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Entities\\UserDoc.cs",
-              "RelativeDocumentMoniker": "Entities\\UserDoc.cs",
-              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Entities\\UserDoc.cs",
-              "RelativeToolTip": "Entities\\UserDoc.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAACsAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-08T15:59:34.62Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "PlaylistTrackDoc.cs",
-              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Entities\\PlaylistTrackDoc.cs",
-              "RelativeDocumentMoniker": "Entities\\PlaylistTrackDoc.cs",
-              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Entities\\PlaylistTrackDoc.cs",
-              "RelativeToolTip": "Entities\\PlaylistTrackDoc.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-08T22:30:02.465Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Program.cs",
-              "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Program.cs",
-              "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAKwAAAAAAAAAAAAcwOIAAAAKAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-02T15:37:34.645Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "SpotifyService.cs",
-              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\SpotifyService.cs",
-              "RelativeDocumentMoniker": "Services\\SpotifyService.cs",
-              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\SpotifyService.cs",
-              "RelativeToolTip": "Services\\SpotifyService.cs",
-              "ViewState": "AgIAALkAAAAAAAAAAAAUwN4AAAARAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-08T22:10:40.589Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "FirestoreService.cs",
-              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\FirestoreService.cs",
-              "RelativeDocumentMoniker": "Services\\FirestoreService.cs",
-              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\FirestoreService.cs",
-              "RelativeToolTip": "Services\\FirestoreService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAPwAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-12T19:25:34.032Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 14,
-              "Title": "InteractionGrpcService.cs",
-              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\InteractionGrpcService.cs",
-              "RelativeDocumentMoniker": "Services\\InteractionGrpcService.cs",
-              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\InteractionGrpcService.cs",
-              "RelativeToolTip": "Services\\InteractionGrpcService.cs",
-              "ViewState": "AgIAAAYAAAAAAAAAAAASwBwAAAAWAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-12T19:30:46.975Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 12,
-              "Title": "DeezerController.cs",
-              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Controllers\\DeezerController.cs",
-              "RelativeDocumentMoniker": "Controllers\\DeezerController.cs",
-              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Controllers\\DeezerController.cs",
-              "RelativeToolTip": "Controllers\\DeezerController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAdAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-12T20:18:39.934Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 16,
-              "Title": "InteractionDoc.cs",
-              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Entities\\InteractionDoc.cs",
-              "RelativeDocumentMoniker": "Entities\\InteractionDoc.cs",
-              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Entities\\InteractionDoc.cs",
-              "RelativeToolTip": "Entities\\InteractionDoc.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-08T22:30:22.686Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 15,
-              "Title": "UserPrefsDoc.cs",
-              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Entities\\UserPrefsDoc.cs",
-              "RelativeDocumentMoniker": "Entities\\UserPrefsDoc.cs",
-              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Entities\\UserPrefsDoc.cs",
-              "RelativeToolTip": "Entities\\UserPrefsDoc.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-08T22:30:35.667Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 19,
-              "Title": "GeminiGrpcService.cs",
-              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\GeminiGrpcService.cs",
-              "RelativeDocumentMoniker": "Services\\GeminiGrpcService.cs",
-              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\GeminiGrpcService.cs",
-              "RelativeToolTip": "Services\\GeminiGrpcService.cs",
-              "ViewState": "AgIAAKQAAAAAAAAAAAAgwBQAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-17T15:30:27.387Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 17,
-              "Title": "PreferencesController.cs",
-              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Controllers\\PreferencesController.cs",
-              "RelativeDocumentMoniker": "Controllers\\PreferencesController.cs",
-              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Controllers\\PreferencesController.cs",
-              "RelativeToolTip": "Controllers\\PreferencesController.cs",
-              "ViewState": "AgIAAAkAAAAAAAAAAAAuwCwAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-13T16:59:18.702Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 18,
               "Title": "interactions.proto",
               "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Protos\\interactions.proto",
               "RelativeDocumentMoniker": "Protos\\interactions.proto",
@@ -370,19 +215,91 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 20,
+              "DocumentIndex": 4,
+              "Title": "users.proto",
+              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Protos\\users.proto",
+              "RelativeDocumentMoniker": "Protos\\users.proto",
+              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Protos\\users.proto",
+              "RelativeToolTip": "Protos\\users.proto",
+              "ViewState": "AgIAAMUAAAAAAAAAAAAwwOMAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003853|",
+              "WhenOpened": "2025-11-18T15:15:00.476Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "SpotifyService.cs",
+              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\SpotifyService.cs",
+              "RelativeDocumentMoniker": "Services\\SpotifyService.cs",
+              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\SpotifyService.cs",
+              "RelativeToolTip": "Services\\SpotifyService.cs",
+              "ViewState": "AgIAANEAAAAAAAAAAAAjwOQAAAAYAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-08T22:10:40.589Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "UserPrefsDoc.cs",
+              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Entities\\UserPrefsDoc.cs",
+              "RelativeDocumentMoniker": "Entities\\UserPrefsDoc.cs",
+              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Entities\\UserPrefsDoc.cs",
+              "RelativeToolTip": "Entities\\UserPrefsDoc.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABwAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-08T22:30:35.667Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
               "Title": "DeezerGrpcService.cs",
               "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\DeezerGrpcService.cs",
               "RelativeDocumentMoniker": "Services\\DeezerGrpcService.cs",
               "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\DeezerGrpcService.cs",
               "RelativeToolTip": "Services\\DeezerGrpcService.cs",
-              "ViewState": "AgIAADYBAAAAAAAAAAAQwIAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAHYBAAAAAAAAAAA+wIwBAAAsAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-17T17:48:28.871Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 22,
+              "DocumentIndex": 15,
+              "Title": "PlaylistTrackDoc.cs",
+              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Entities\\PlaylistTrackDoc.cs",
+              "RelativeDocumentMoniker": "Entities\\PlaylistTrackDoc.cs",
+              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Entities\\PlaylistTrackDoc.cs",
+              "RelativeToolTip": "Entities\\PlaylistTrackDoc.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-08T22:30:02.465Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAAKwAAAAAAAAAAAAcwOIAAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-02T15:37:34.645Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "InteractionsController.cs",
+              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Controllers\\InteractionsController.cs",
+              "RelativeDocumentMoniker": "Controllers\\InteractionsController.cs",
+              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Controllers\\InteractionsController.cs",
+              "RelativeToolTip": "Controllers\\InteractionsController.cs",
+              "ViewState": "AgIAAC0AAAAAAAAAAAAIwEYAAAAWAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-12T19:26:56.692Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
               "Title": "deezer.proto",
               "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Protos\\deezer.proto",
               "RelativeDocumentMoniker": "Protos\\deezer.proto",
@@ -394,19 +311,103 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 23,
+              "DocumentIndex": 12,
               "Title": "gemini.proto",
               "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Protos\\gemini.proto",
               "RelativeDocumentMoniker": "Protos\\gemini.proto",
               "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Protos\\gemini.proto",
               "RelativeToolTip": "Protos\\gemini.proto",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003853|",
               "WhenOpened": "2025-11-17T15:38:26.273Z"
             },
             {
               "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "FirebaseHelper.cs",
+              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\FirebaseHelper.cs",
+              "RelativeDocumentMoniker": "FirebaseHelper.cs",
+              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\FirebaseHelper.cs",
+              "RelativeToolTip": "FirebaseHelper.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-02T18:00:47.99Z"
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 21,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\appsettings.json",
+              "RelativeDocumentMoniker": "appsettings.json",
+              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\appsettings.json",
+              "RelativeToolTip": "appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-09-02T15:39:50.441Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "appsettings.Development.json",
+              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\appsettings.Development.json",
+              "RelativeDocumentMoniker": "appsettings.Development.json",
+              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\appsettings.Development.json",
+              "RelativeToolTip": "appsettings.Development.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-10-17T15:24:16.976Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "PlaylistDoc.cs",
+              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Entities\\PlaylistDoc.cs",
+              "RelativeDocumentMoniker": "Entities\\PlaylistDoc.cs",
+              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Entities\\PlaylistDoc.cs",
+              "RelativeToolTip": "Entities\\PlaylistDoc.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-08T22:25:49.385Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": ".env",
+              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\.env",
+              "RelativeDocumentMoniker": ".env",
+              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\.env",
+              "RelativeToolTip": ".env",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAA2AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-10-17T14:22:45.381Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "InteractionGrpcService.cs",
+              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\InteractionGrpcService.cs",
+              "RelativeDocumentMoniker": "Services\\InteractionGrpcService.cs",
+              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\InteractionGrpcService.cs",
+              "RelativeToolTip": "Services\\InteractionGrpcService.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAASwBwAAAAWAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-12T19:30:46.975Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "InteractionDoc.cs",
+              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Entities\\InteractionDoc.cs",
+              "RelativeDocumentMoniker": "Entities\\InteractionDoc.cs",
+              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Entities\\InteractionDoc.cs",
+              "RelativeToolTip": "Entities\\InteractionDoc.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-08T22:30:22.686Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
               "Title": "TestController.cs",
               "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Controllers\\TestController.cs",
               "RelativeDocumentMoniker": "Controllers\\TestController.cs",
@@ -415,18 +416,6 @@
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-02T17:47:31.634Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 24,
-              "Title": "JWTService.cs",
-              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Utility\\JWTService.cs",
-              "RelativeDocumentMoniker": "Utility\\JWTService.cs",
-              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Utility\\JWTService.cs",
-              "RelativeToolTip": "Utility\\JWTService.cs",
-              "ViewState": "AgIAABIAAAAAAAAAAAArwCYAAAAlAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-02T16:33:36.019Z"
             },
             {
               "$type": "Document",

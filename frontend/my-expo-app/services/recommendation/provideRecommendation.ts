@@ -3,6 +3,7 @@ import http from '../api/http';
 import axios from 'axios';
 import { useBootstrapAuth } from '../auth/useBootstrapAuth';
 import { getAccessToken } from '../auth/token';
+import { useAudioPrefs } from '../audio/useAudioPrefs';
 
 export type ArtistDto = {
   id: number;
@@ -53,7 +54,9 @@ export default function provideRecommendation() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { ready, isAuthenticated } = useBootstrapAuth();
+  const { ready: authReady, isAuthenticated } = useBootstrapAuth();
+  
+  const { genreFilters, languageFilters, ready: prefsReady } = useAudioPrefs();
 
   const currentRef = useRef<RandomTrackResponse | null>(null);
   useEffect(() => { currentRef.current = track; }, [track]);
@@ -75,7 +78,6 @@ export default function provideRecommendation() {
       const token = getAccessToken();
 
       if (!token) {
-          
           if (retryCount < 5) {
               setTimeout(() => {
                   fetchRecommendation(signal, retryCount + 1);
@@ -86,9 +88,17 @@ export default function provideRecommendation() {
           }
       }
 
-      
+      const params = new URLSearchParams();
+      if (genreFilters && genreFilters.length > 0) {
+          genreFilters.forEach((g: string) => params.append('genres', g));
+      }
+      if (languageFilters && languageFilters.length > 0) {
+          languageFilters.forEach((l: string) => params.append('languages', l));
+      }
+
       const { data } = await http.get<RandomTrackResponse>("/api/deezer/recommendation", { 
         signal,
+        params: params, 
         headers: {
             Authorization: `Bearer ${token}`
         }
@@ -115,7 +125,7 @@ export default function provideRecommendation() {
           setLoading(false);
       }
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, genreFilters, languageFilters]);
 
   const undo = useCallback(() => {
     setHistory((prev) => {
@@ -129,7 +139,7 @@ export default function provideRecommendation() {
   useEffect(() => {
     const controller = new AbortController();
     
-    if (ready) {
+    if (authReady && prefsReady) {
         if (isAuthenticated) {
             fetchRecommendation(controller.signal);
         } else {
@@ -139,7 +149,7 @@ export default function provideRecommendation() {
     }
     
     return () => controller.abort();
-  }, [fetchRecommendation, ready, isAuthenticated]);
+  }, [fetchRecommendation, authReady, isAuthenticated, prefsReady]);
 
   return {
     track,

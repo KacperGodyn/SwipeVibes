@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { AddTrackToPlaylistRequest, CreatePlaylistRequest, CreateUserRequest, DeletePlaylistRequest, DeleteReply, Empty, ExportPlaylistReply, ExportPlaylistRequest, GetPlaylistTracksRequest, LoginReply, LoginRequest, LogoutReply, LogoutRequest, PlaylistReply, PlaylistsListReply, PlaylistTrackReply, PlaylistTracksListReply, RefreshReply, RefreshRequest, RemoveTrackFromPlaylistRequest, SpotifyAuthUrlReply, SpotifyCallbackReply, SpotifyCallbackRequest, UpdateUserRequest, UserInteractionsReply, UserInteractionsRequest, UserReply, UserRequest, UsersReply, UserStatsReply, UserStatsRequest } from "./users_pb";
+import { AddTrackToPlaylistRequest, CreatePlaylistRequest, CreateUserRequest, DeleteAllPlaylistsRequest, DeletePlaylistRequest, DeleteReply, Empty, ExportPlaylistReply, ExportPlaylistRequest, GetPlaylistTracksRequest, LoginReply, LoginRequest, LogoutReply, LogoutRequest, PlaylistReply, PlaylistsListReply, PlaylistTrackReply, PlaylistTracksListReply, RefreshReply, RefreshRequest, RemoveTrackFromPlaylistRequest, ResetSwipeHistoryRequest, SpotifyAuthUrlReply, SpotifyCallbackReply, SpotifyCallbackRequest, UpdateUserRequest, UserInteractionsReply, UserInteractionsRequest, UserReply, UserRequest, UsersReply, UserStatsReply, UserStatsRequest } from "./users_pb";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -181,6 +181,35 @@ export const UserService = {
       name: "ExportPlaylist",
       I: ExportPlaylistRequest,
       O: ExportPlaylistReply,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Danger Zone
+     *
+     * @generated from rpc users.UserService.ResetSwipeHistory
+     */
+    resetSwipeHistory: {
+      name: "ResetSwipeHistory",
+      I: ResetSwipeHistoryRequest,
+      O: DeleteReply,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc users.UserService.DeleteAllPlaylists
+     */
+    deleteAllPlaylists: {
+      name: "DeleteAllPlaylists",
+      I: DeleteAllPlaylistsRequest,
+      O: DeleteReply,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc users.UserService.DeleteAccount
+     */
+    deleteAccount: {
+      name: "DeleteAccount",
+      I: Empty,
+      O: DeleteReply,
       kind: MethodKind.Unary,
     },
   }

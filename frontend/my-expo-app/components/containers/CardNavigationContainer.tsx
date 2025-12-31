@@ -17,25 +17,34 @@ export default function CardNavigationContainer({
   onUndo, onDislike, onSuper, onLike, undoDisabled,
 }: Props) {
   return (
-    <View className="rounded-3xl bg-white py-2 px-2 shadow-md flex-row items-center justify-around gap-5 border border-white/20 bg-white/30 backdrop-blur-xl">
+    <View className="mx-auto w-full max-w-[380px] flex-row items-center justify-between rounded-[32px] border border-[#222222] bg-[#0F0F0F] px-8 py-4 shadow-xl shadow-black self-center gap-5">
       <Pressable
-        className="rounded-full p-2"
-        style={{ opacity: undoDisabled ? 0.4 : 1 }}
+        className="items-center justify-center rounded-full bg-[#1A1A1A] border border-[#333333] p-3 shadow-lg shadow-black/50 active:scale-95 active:border-[#4CAF50]/50"
+        style={{ opacity: undoDisabled ? 0.3 : 1 }}
         onPress={() => !undoDisabled && onUndo?.()}
       >
-        <UndoIcon width={40} height={40} />
+        <UndoIcon width={28} height={28} color="#f0c954ff"/>
       </Pressable>
 
-      <Pressable className='active:bg-white/40 rounded-full p-2' onPress={onDislike}>
-        <DislikeIcon width={40} height={40} />
+      <Pressable 
+        className="items-center justify-center rounded-full bg-[#1A1A1A] border border-[#333333] p-3 shadow-lg shadow-black/50 active:scale-95 active:border-[#F05454]/50" 
+        onPress={onDislike}
+      >
+        <DislikeIcon width={32} height={32} color="#F05454" />
       </Pressable>
 
-      <Pressable className='active:bg-white/40 rounded-full p-2' onPress={onSuper}>
-        <StarIcon width={40} height={40} />
+      <Pressable 
+        className="items-center justify-center rounded-full bg-[#1A1A1A] border border-[#333333] p-3 shadow-lg shadow-black/50 active:scale-95 active:border-[#4CAF50]/50" 
+        onPress={onSuper}
+      >
+        <StarIcon width={28} height={28} color="#4c6bafff" />
       </Pressable>
 
-      <Pressable className='active:bg-white/40 rounded-full p-2' onPress={onLike}>
-        <LikeIcon width={40} height={40} />
+      <Pressable 
+        className="items-center justify-center rounded-full bg-[#1A1A1A] border border-[#333333] p-3 shadow-lg shadow-black/50 active:scale-95 active:border-[#4CAF50]/50" 
+        onPress={onLike}
+      >
+        <LikeIcon width={32} height={32} color="#4CAF50" />
       </Pressable>
     </View>
   );

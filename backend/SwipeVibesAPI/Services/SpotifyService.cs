@@ -16,8 +16,8 @@ namespace SwipeVibesAPI.Services
         Task<string?> SearchTrackByIsrcAsync(string isrc, string accessToken);
         Task<bool> AddTracksToPlaylistAsync(string playlistId, List<string> trackUris, string accessToken);
         Task<bool> RemoveTrackFromPlaylistAsync(string playlistId, string trackUri, string accessToken);
-
         Task<bool> ReplacePlaylistTracksAsync(string playlistId, List<string> trackUris, string accessToken);
+        Task<bool> UnfollowPlaylistAsync(string playlistId, string accessToken);
     }
 
     public class SpotifyService : ISpotifyService
@@ -227,6 +227,15 @@ namespace SwipeVibesAPI.Services
             }
 
             return true;
+        }
+
+        public async Task<bool> UnfollowPlaylistAsync(string playlistId, string accessToken)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Delete, $"https://api.spotify.com/v1/playlists/{playlistId}/followers");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            var response = await _httpClient.SendAsync(request);
+            return response.IsSuccessStatusCode;
         }
     }
 

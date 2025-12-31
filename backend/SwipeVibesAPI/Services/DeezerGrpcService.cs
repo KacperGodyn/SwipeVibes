@@ -47,6 +47,7 @@ namespace SwipeVibesAPI.Grpc
 
         private readonly UserGrpcService _userSvc;
         private readonly GeminiGrpcService _geminiSvc;
+        private readonly FirestoreService _firestoreService;
 
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
@@ -58,12 +59,14 @@ namespace SwipeVibesAPI.Grpc
             IHttpClientFactory httpClientFactory,
             ILogger<DeezerGrpcService> logger,
             UserGrpcService userSvc,
-            GeminiGrpcService geminiSvc)
+            GeminiGrpcService geminiSvc,
+            FirestoreService firestoreService)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
             _userSvc = userSvc;
             _geminiSvc = geminiSvc;
+            _firestoreService = firestoreService;
         }
 
         public override async Task<GetTrackResponse> GetTrack(GetTrackRequest request, ServerCallContext context)
@@ -84,98 +87,137 @@ namespace SwipeVibesAPI.Grpc
         {
             var fakeContext = new FakeServerCallContext(ct);
 
-            var interactionsRequest = new UserInteractionsRequest { UserId = userId };
-            var interactionsResponse = await _userSvc.GetUserInteractions(interactionsRequest, fakeContext);
+            var interactionsTask = _userSvc.GetUserInteractions(new UserInteractionsRequest { UserId = userId }, fakeContext);
+            var prefsTask = _firestoreService.GetUserPrefsAsync(userId);
+
+            await Task.WhenAll(interactionsTask, prefsTask);
+
+            var interactionsResponse = interactionsTask.Result;
+            var userPrefs = prefsTask.Result;
 
             var recentTrackIds = interactionsResponse.Interactions
                 .Select(i => i.DeezerTrackId)
                 .ToHashSet();
 
-            if (interactionsResponse.Interactions.Count == 0)
+            bool hasFilters = userPrefs != null && (userPrefs.GenreFilters.Any() || userPrefs.LanguageFilters.Any());
+
+            if (interactionsResponse.Interactions.Count == 0 && !hasFilters)
             {
-                var trackDto = await GetAsync<TrackDto>(Client, "track/913160312", ct); // Fallback: Blinding Lights
+                var trackDto = await GetAsync<TrackDto>(Client, "track/913160312", ct);
                 if (trackDto == null)
                     throw new RpcException(new Status(StatusCode.NotFound, "Fallback track not found."));
 
-                _logger.LogInformation("Użytkownik {UserId} nie ma interakcji, zwrócono utwór domyślny.", userId);
+                _logger.LogInformation("Użytkownik {UserId} nie ma interakcji ani filtrów, zwrócono utwór domyślny.", userId);
                 return MapTrack(trackDto);
             }
 
             var geminiRequest = new GetGeminiTrackRecommendationRequest();
             geminiRequest.Interactions.AddRange(interactionsResponse.Interactions);
+
+            if (userPrefs != null)
+            {
+                if (userPrefs.GenreFilters != null) geminiRequest.GenreFilters.AddRange(userPrefs.GenreFilters);
+                if (userPrefs.LanguageFilters != null) geminiRequest.LanguageFilters.AddRange(userPrefs.LanguageFilters);
+            }
+
             var geminiResponse = await _geminiSvc.GetGeminiTrackRecommendation(geminiRequest, fakeContext);
 
             if (!geminiResponse.RecommendedArtistNames.Any())
             {
-                throw new RpcException(new Status(StatusCode.Internal, "Gemini nie polecił żadnych artystów."));
+                _logger.LogError("Gemini zwróciło pustą listę.");
+                var fallback = await GetAsync<TrackDto>(Client, "track/913160312", ct);
+                return MapTrack(fallback!);
             }
 
             foreach (var recommendedArtistName in geminiResponse.RecommendedArtistNames)
             {
                 if (string.IsNullOrWhiteSpace(recommendedArtistName)) continue;
 
-                _logger.LogInformation("Próba znalezienia artysty: {ArtistName}", recommendedArtistName);
+                if (ct.IsCancellationRequested) break;
 
-                var searchUrl = $"/search/artist?q={Uri.EscapeDataString(recommendedArtistName)}";
-                var artistPayload = await GetAsync<ApiList<ArtistDto>>(Client, searchUrl, ct, treat404AsNull: true);
-
-                var artistId = artistPayload?.Data?.FirstOrDefault()?.Id;
-
-                if (artistId == null || artistId == 0)
+                try
                 {
-                    _logger.LogWarning("Rekomendacja Gemini ({ArtistName}) nie zwróciła wyników w Deezer. Próba następnego.", recommendedArtistName);
+                    _logger.LogInformation("Próba znalezienia artysty: {ArtistName}", recommendedArtistName);
+
+                    var searchUrl = $"/search/artist?q={Uri.EscapeDataString(recommendedArtistName)}";
+                    var artistPayload = await GetAsync<ApiList<ArtistDto>>(Client, searchUrl, ct, treat404AsNull: true);
+
+                    var artistId = artistPayload?.Data?.FirstOrDefault()?.Id;
+
+                    if (artistId == null || artistId == 0)
+                    {
+                        _logger.LogWarning("Brak wyników w Deezer dla: {ArtistName}", recommendedArtistName);
+                        continue;
+                    }
+
+                    var topTracksUrl = $"/artist/{artistId}/top?limit=20";
+                    var tracksPayload = await GetAsync<ApiList<TrackDto>>(Client, topTracksUrl, ct, treat404AsNull: true);
+
+                    if (tracksPayload?.Data == null || !tracksPayload.Data.Any())
+                    {
+                        _logger.LogWarning("Artysta {ArtistName} nie ma top tracków.", recommendedArtistName);
+                        continue;
+                    }
+
+                    var validTracks = tracksPayload.Data
+                        .Where(t => !string.IsNullOrWhiteSpace(t.Preview) && !recentTrackIds.Contains(t.Id))
+                        .ToList();
+
+                    if (!validTracks.Any())
+                    {
+                        _logger.LogWarning("Artysta {ArtistName} nie ma pasujących utworów (wszystkie ocenione lub brak preview).", recommendedArtistName);
+                        continue;
+                    }
+
+                    var pickedTrackDto = validTracks[_rng.Next(validTracks.Count)];
+
+                    _logger.LogInformation("SUKCES: {UserId} -> {ArtistName} - {TrackTitle}", userId, recommendedArtistName, pickedTrackDto.Title);
+
+                    var fullTrackDto = await GetAsync<TrackDto>(Client, $"track/{pickedTrackDto.Id}", ct, treat404AsNull: true);
+                    return MapTrack(fullTrackDto ?? pickedTrackDto);
+                }
+                catch (TaskCanceledException)
+                {
+                    _logger.LogWarning("Timeout podczas pobierania danych dla artysty: {ArtistName}", recommendedArtistName);
                     continue;
                 }
-
-                var topTracksUrl = $"/artist/{artistId}/top?limit=10";
-                var tracksPayload = await GetAsync<ApiList<TrackDto>>(Client, topTracksUrl, ct, treat404AsNull: true);
-
-                if (tracksPayload?.Data == null || !tracksPayload.Data.Any())
+                catch (Exception ex)
                 {
-                    _logger.LogWarning("Artysta {ArtistName} (ID: {ArtistId}) nie ma top tracków.", recommendedArtistName, artistId);
+                    _logger.LogError(ex, "Błąd podczas przetwarzania artysty {ArtistName}", recommendedArtistName);
                     continue;
                 }
-
-                var validTracks = tracksPayload.Data
-                    .Where(t => !string.IsNullOrWhiteSpace(t.Preview) && !recentTrackIds.Contains(t.Id))
-                    .ToList();
-
-                if (!validTracks.Any())
-                {
-                    _logger.LogWarning("Artysta {ArtistName} (ID: {ArtistId}) nie ma nowych utworów z podglądem. Próba następnego artysty.", recommendedArtistName, artistId);
-                    continue;
-                }
-
-                var pickedTrackDto = validTracks[_rng.Next(validTracks.Count)];
-
-                _logger.LogInformation("Pomyślnie pobrano rekomendację dla {UserId} (Artysta: {ArtistName}, Utwór: {TrackTitle}).", userId, recommendedArtistName, pickedTrackDto.Title);
-
-                var fullTrackDto = await GetAsync<TrackDto>(Client, $"track/{pickedTrackDto.Id}", ct, treat404AsNull: true);
-                return MapTrack(fullTrackDto ?? pickedTrackDto);
             }
 
-            _logger.LogError("Nie udało się pobrać poprawnej rekomendacji dla {UserId} po sprawdzeniu {Count} poleconych artystów.", userId, geminiResponse.RecommendedArtistNames.Count);
-            throw new RpcException(new Status(StatusCode.NotFound, "Żaden z poleconych artystów nie przyniósł pasujących wyników w Deezer."));
+            _logger.LogError("Nie znaleziono żadnego utworu po sprawdzeniu listy Gemini.");
+            var finalFallback = await GetAsync<TrackDto>(Client, "track/913160312", ct);
+            return MapTrack(finalFallback!);
         }
 
         private HttpClient Client => _httpClientFactory.CreateClient("deezer");
 
         private static async Task<T?> GetAsync<T>(HttpClient client, string relativeUrl, CancellationToken ct, bool treat404AsNull = false)
         {
-            using var req = new HttpRequestMessage(HttpMethod.Get, relativeUrl);
-            using var res = await client.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct);
-
-            if (treat404AsNull && res.StatusCode == HttpStatusCode.NotFound)
-                return default;
-
-            if (!res.IsSuccessStatusCode)
+            try
             {
-                var body = await res.Content.ReadAsStringAsync(ct);
-                throw new RpcException(new Status(StatusCode.Unknown, $"Deezer API error {(int)res.StatusCode}: {body}"));
-            }
+                using var req = new HttpRequestMessage(HttpMethod.Get, relativeUrl);
+                using var res = await client.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct);
 
-            await using var stream = await res.Content.ReadAsStreamAsync(ct);
-            return await JsonSerializer.DeserializeAsync<T>(stream, JsonOptions, ct);
+                if (treat404AsNull && res.StatusCode == HttpStatusCode.NotFound)
+                    return default;
+
+                if (!res.IsSuccessStatusCode)
+                {
+                    var body = await res.Content.ReadAsStringAsync(ct);
+                    throw new Exception($"Deezer API error {(int)res.StatusCode}: {body}");
+                }
+
+                await using var stream = await res.Content.ReadAsStreamAsync(ct);
+                return await JsonSerializer.DeserializeAsync<T>(stream, JsonOptions, ct);
+            }
+            catch (Exception ex) when (treat404AsNull && ex is not OperationCanceledException)
+            {
+                throw;
+            }
         }
 
         private static Track MapTrack(TrackDto dto)

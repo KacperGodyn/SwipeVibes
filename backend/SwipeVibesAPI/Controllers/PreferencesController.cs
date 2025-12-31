@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SwipeVibesAPI.Services;
+using System.Collections.Generic;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 [ApiController]
 [Route("api/prefs")]
@@ -14,6 +16,9 @@ public class PreferencesController : ControllerBase
     public sealed class PrefsDto
     {
         public bool AudioMuted { get; set; }
+        public bool AutoExportLikes { get; set; }
+        public List<string> GenreFilters { get; set; } = new List<string>();
+        public List<string> LanguageFilters { get; set; } = new List<string>();
     }
 
     [HttpGet]
@@ -26,7 +31,13 @@ public class PreferencesController : ControllerBase
         if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
         var doc = await _fs.GetUserPrefsAsync(userId);
-        return Ok(new PrefsDto { AudioMuted = doc?.AudioMuted ?? true });
+        return Ok(new PrefsDto
+        {
+            AudioMuted = doc?.AudioMuted ?? true,
+            AutoExportLikes = doc?.AutoExportLikes ?? false,
+            GenreFilters = doc?.GenreFilters ?? new List<string>(),
+            LanguageFilters = doc?.LanguageFilters ?? new List<string>()
+        });
     }
 
     [HttpPut]
@@ -38,7 +49,14 @@ public class PreferencesController : ControllerBase
             ?? User.FindFirstValue("user_id");
         if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
-        await _fs.SetUserPrefsAsync(userId, body.AudioMuted);
+        await _fs.SetUserPrefsAsync(
+            userId,
+            body.AudioMuted,
+            body.AutoExportLikes,
+            body.GenreFilters ?? new List<string>(),
+            body.LanguageFilters ?? new List<string>()
+        );
+
         return NoContent();
     }
 }

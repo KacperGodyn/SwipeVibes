@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { View, Text, FlatList, Pressable, ActivityIndicator, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { deletePlaylist, getMyPlaylists } from '../../services/auth/api';
@@ -7,9 +7,10 @@ import type { PlaylistReply } from '../../services/auth/gRPC/user/users_pb';
 type Props = {
   refreshTrigger?: number;
   onSelect?: (playlistId: string) => void;
+  lastActivePlaylistId?: string | null;
 };
 
-export default function Playlists({ refreshTrigger = 0, onSelect }: Props) {
+export default function Playlists({ refreshTrigger = 0, onSelect, lastActivePlaylistId }: Props) {
   const [playlists, setPlaylists] = useState<PlaylistReply[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +33,16 @@ export default function Playlists({ refreshTrigger = 0, onSelect }: Props) {
   useEffect(() => {
     fetchPlaylists();
   }, [fetchPlaylists, refreshTrigger]);
+
+  const sortedPlaylists = useMemo(() => {
+    if (!lastActivePlaylistId || !onSelect) return playlists;
+    
+    return [...playlists].sort((a, b) => {
+      if (a.id === lastActivePlaylistId) return -1;
+      if (b.id === lastActivePlaylistId) return 1;
+      return 0;
+    });
+  }, [playlists, lastActivePlaylistId, onSelect]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -89,43 +100,64 @@ export default function Playlists({ refreshTrigger = 0, onSelect }: Props) {
       )}
 
       <FlatList
-        data={playlists}
+        data={sortedPlaylists}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingVertical: 10, paddingHorizontal: 20 }}
         showsVerticalScrollIndicator={true}
         indicatorStyle="white"
-        renderItem={({ item }) => (
-          <Pressable
-            onPress={() => handlePress(item)}
-            className="mb-2 flex-row items-center justify-between rounded-lg border-b border-white/10 bg-black/20 px-3 py-3 active:bg-black/40">
-            <View className="flex-1 pr-4">
-              <Text className="text-lg font-semibold text-white" numberOfLines={1}>
-                {item.name}
-              </Text>
-              <Text className="font-mono text-xs text-gray-400">
-                ID: {item.id.substring(0, 6)}...
-              </Text>
-            </View>
+        renderItem={({ item }) => {
+          const isSticky = lastActivePlaylistId === item.id && !!onSelect;
+          
+          return (
+            <Pressable
+              onPress={() => handlePress(item)}
+              className={`mb-2 flex-row items-center justify-between rounded-lg border-b px-3 py-3 active:bg-black/40 ${
+                isSticky 
+                  ? 'bg-white/20 border-white/40' 
+                  : 'bg-black/20 border-white/10'
+              }`}>
+              <View className="flex-1 pr-4">
+                <View className="flex-row items-center gap-2">
+                  <Text className="text-lg font-semibold text-white" numberOfLines={1}>
+                    {item.name}
+                  </Text>
+                  {isSticky && (
+                    <View className="rounded bg-blue-500/80 px-1.5 py-0.5">
+                      <Text className="text-[10px] font-bold text-white uppercase">Last used</Text>
+                    </View>
+                  )}
+                </View>
+                <Text className="font-mono text-xs text-gray-400">
+                  ID: {item.id.substring(0, 6)}...
+                </Text>
+              </View>
 
-            {!onSelect && (
-              <View className="flex-column items-center gap-2">
-                <Pressable
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    handleDelete(item.id);
-                  }}
-                  className="w-24 items-center rounded bg-red-300/20 py-3">
-                  <Text className="text-[16px] font-bold uppercase text-red-300">DELETE</Text>
-                </Pressable>
-              </View>
-            )}
-            {onSelect && (
-              <View className="rounded-full border border-green-500/50 bg-green-500/20 px-3 py-2">
-                <Text className="text-xs font-bold text-green-400">ADD</Text>
-              </View>
-            )}
-          </Pressable>
-        )}
+              {!onSelect && (
+                <View className="flex-column items-center gap-2">
+                  <Pressable
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      handleDelete(item.id);
+                    }}
+                    className="w-24 items-center rounded bg-red-300/20 py-3">
+                    <Text className="text-[16px] font-bold uppercase text-red-300">DELETE</Text>
+                  </Pressable>
+                </View>
+              )}
+              {onSelect && (
+                <View className={`rounded-full border px-3 py-2 ${
+                  isSticky 
+                    ? 'bg-blue-500/20 border-blue-400' 
+                    : 'bg-green-500/20 border-green-500/50'
+                }`}>
+                  <Text className={`text-xs font-bold ${isSticky ? 'text-blue-200' : 'text-green-400'}`}>
+                    {isSticky ? 'QUICK ADD' : 'ADD'}
+                  </Text>
+                </View>
+              )}
+            </Pressable>
+          );
+        }}
       />
     </View>
   );

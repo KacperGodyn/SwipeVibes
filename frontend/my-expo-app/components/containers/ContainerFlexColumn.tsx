@@ -10,12 +10,12 @@ type ContainerProps = {
 };
 
   const DEFAULT_COLORS = [
-    '#0000FF',
-    '#2323D5',
-    '#3838AB',
-    '#404080',
-    '#393955',
-    '#2B2B33',
+    '#222831',
+    '#222831',
+    '#222831',
+    '#222831',
+    '#222831',
+    '#222831',
   ] as const;
 
 export default function ContainerFlexColumn({ style, children, colors = DEFAULT_COLORS }: ContainerProps) {
@@ -36,12 +36,10 @@ export default function ContainerFlexColumn({ style, children, colors = DEFAULT_
 
 const styles = StyleSheet.create({
   gradientCard: {
-    borderRadius: 30,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 10,
-    maxWidth: 500,
   },
 });

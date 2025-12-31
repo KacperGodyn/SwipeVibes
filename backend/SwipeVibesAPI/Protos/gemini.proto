@@ -13,6 +13,8 @@ service GeminiService {
 message GetGeminiTrackRecommendationRequest {
   string prompt = 1;
   repeated users.InteractionReply interactions = 2;
+  repeated string genre_filters = 3;
+  repeated string language_filters = 4;
 }
 
 message GetGeminiTrackRecommendationResponse {

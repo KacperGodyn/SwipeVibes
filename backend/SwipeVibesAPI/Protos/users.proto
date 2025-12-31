@@ -40,6 +40,11 @@ service UserService {
   rpc GetSpotifyAuthUrl (Empty) returns (SpotifyAuthUrlReply);
   rpc HandleSpotifyCallback (SpotifyCallbackRequest) returns (SpotifyCallbackReply);
   rpc ExportPlaylist (ExportPlaylistRequest) returns (ExportPlaylistReply);
+  
+  // Danger Zone
+  rpc ResetSwipeHistory (ResetSwipeHistoryRequest) returns (DeleteReply);
+  rpc DeleteAllPlaylists (DeleteAllPlaylistsRequest) returns (DeleteReply);
+  rpc DeleteAccount (Empty) returns (DeleteReply);
 }
 
 message Empty {}
@@ -82,6 +87,7 @@ message UsersReply {
 
 message DeleteReply {
   bool success = 1;
+  string message = 2;
 }
 
 message LoginReply {
@@ -203,4 +209,20 @@ message ExportPlaylistReply {
   bool success = 1;
   string message = 2;
   string spotify_playlist_url = 3;
+}
+
+// Danger Zone Enums & Requests
+
+enum SwipeResetType {
+  RESET_ALL = 0;
+  RESET_LIKES = 1;
+  RESET_DISLIKES = 2;
+}
+
+message ResetSwipeHistoryRequest {
+  SwipeResetType type = 1;
+}
+
+message DeleteAllPlaylistsRequest {
+  bool unsubscribe_spotify = 1;
 }

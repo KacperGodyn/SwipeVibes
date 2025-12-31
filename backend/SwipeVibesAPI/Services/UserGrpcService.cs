@@ -26,19 +26,22 @@ namespace SwipeVibesAPI.Services
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ISpotifyService _spotifyService;
         private readonly IConfiguration _configuration;
+        private readonly FirestoreService _firestoreService;
 
         public UserGrpcService(
             FirestoreDb firestoreDb,
             JwtService jwtService,
             IHttpClientFactory httpClientFactory,
             ISpotifyService spotifyService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            FirestoreService firestoreService)
         {
             _firestoreDb = firestoreDb;
             _jwtService = jwtService;
             _httpClientFactory = httpClientFactory;
             _spotifyService = spotifyService;
             _configuration = configuration;
+            _firestoreService = firestoreService;
         }
 
         private async Task<UserDoc?> FindUserByEmail(string email)
@@ -191,7 +194,6 @@ namespace SwipeVibesAPI.Services
         public override async Task<DeleteReply> DeleteUser(UserRequest request, ServerCallContext context)
         {
             var currentUserId = GetCurrentUserId(context);
-
             var docRef = _firestoreDb.Collection("users").Document(request.Id);
             await docRef.DeleteAsync();
             return new DeleteReply { Success = true };
@@ -230,7 +232,6 @@ namespace SwipeVibesAPI.Services
             }
             return reply;
         }
-
 
         public override async Task<UserStatsReply> GetUserStats(UserStatsRequest request, ServerCallContext context)
         {
@@ -385,54 +386,22 @@ namespace SwipeVibesAPI.Services
             var userId = GetCurrentUserId(context);
             if (string.IsNullOrWhiteSpace(request.Name)) throw new RpcException(new Status(StatusCode.InvalidArgument, "Name required"));
 
-            var playlistDoc = new PlaylistDoc
-            {
-                UserId = userId,
-                Name = request.Name,
-                CreatedAt = Google.Cloud.Firestore.Timestamp.FromDateTime(DateTime.UtcNow)
-            };
+            var playlistDoc = await _firestoreService.CreatePlaylistAsync(userId, request.Name);
 
-            var docRef = await _firestoreDb.Collection("playlists").AddAsync(playlistDoc);
-
-            try
-            {
-                var spotifyAccessToken = await GetSpotifyAccessTokenForUser(userId);
-                if (!string.IsNullOrEmpty(spotifyAccessToken))
-                {
-                    var spotifyUserId = await _spotifyService.GetSpotifyUserIdAsync(spotifyAccessToken);
-                    if (!string.IsNullOrEmpty(spotifyUserId))
-                    {
-                        var spotifyPlaylistId = await _spotifyService.CreatePlaylistAsync(spotifyUserId, request.Name, spotifyAccessToken);
-                        if (!string.IsNullOrEmpty(spotifyPlaylistId))
-                        {
-                            await docRef.UpdateAsync("SpotifyPlaylistId", spotifyPlaylistId);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to create Spotify playlist: {ex.Message}");
-            }
-
-            return new PlaylistReply { Id = docRef.Id, Name = request.Name, CreatedAt = ProtoTimestamp.FromDateTime(DateTime.UtcNow) };
+            return new PlaylistReply { Id = playlistDoc.Id, Name = request.Name, CreatedAt = ProtoTimestamp.FromDateTime(DateTime.UtcNow) };
         }
 
         public override async Task<PlaylistsListReply> GetMyPlaylists(Empty request, ServerCallContext context)
         {
             var userId = GetCurrentUserId(context);
-            var snapshot = await _firestoreDb.Collection("playlists")
-                .WhereEqualTo("UserId", userId)
-                .OrderByDescending("CreatedAt")
-                .GetSnapshotAsync();
+            var playlists = await _firestoreService.GetUserPlaylistsAsync(userId);
 
             var reply = new PlaylistsListReply();
-            foreach (var doc in snapshot.Documents)
+            foreach (var (id, data) in playlists)
             {
-                var data = doc.ConvertTo<PlaylistDoc>();
                 reply.Playlists.Add(new PlaylistReply
                 {
-                    Id = doc.Id,
+                    Id = id,
                     Name = data.Name,
                     CreatedAt = ProtoTimestamp.FromDateTime(data.CreatedAt.ToDateTime())
                 });
@@ -443,27 +412,16 @@ namespace SwipeVibesAPI.Services
         public override async Task<DeleteReply> DeletePlaylist(DeletePlaylistRequest request, ServerCallContext context)
         {
             var userId = GetCurrentUserId(context);
-            var docRef = _firestoreDb.Collection("playlists").Document(request.Id);
-            var snap = await docRef.GetSnapshotAsync();
+            var success = await _firestoreService.DeletePlaylistAsync(userId, request.Id);
 
-            if (!snap.Exists) throw new RpcException(new Status(StatusCode.NotFound, "Playlist not found"));
-            var data = snap.ConvertTo<PlaylistDoc>();
-            if (data.UserId != userId) throw new RpcException(new Status(StatusCode.PermissionDenied, "Not your playlist"));
+            if (!success) throw new RpcException(new Status(StatusCode.PermissionDenied, "Cannot delete playlist"));
 
-            await docRef.DeleteAsync();
             return new DeleteReply { Success = true };
         }
 
         public override async Task<PlaylistTrackReply> AddTrackToPlaylist(AddTrackToPlaylistRequest request, ServerCallContext context)
         {
             var userId = GetCurrentUserId(context);
-            var playlistRef = _firestoreDb.Collection("playlists").Document(request.PlaylistId);
-            var snap = await playlistRef.GetSnapshotAsync();
-
-            if (!snap.Exists) throw new RpcException(new Status(StatusCode.NotFound, "Playlist not found"));
-
-            var playlistData = snap.ConvertTo<PlaylistDoc>();
-            if (playlistData.UserId != userId) throw new RpcException(new Status(StatusCode.PermissionDenied, "Not your playlist"));
 
             var trackDoc = new PlaylistTrackDoc
             {
@@ -472,36 +430,26 @@ namespace SwipeVibesAPI.Services
                 Isrc = request.Isrc,
                 ArtistId = request.ArtistId,
                 ArtistName = request.ArtistName,
-                AlbumCover = request.AlbumCover,
-                AddedAt = Google.Cloud.Firestore.Timestamp.FromDateTime(DateTime.UtcNow)
+                AlbumCover = request.AlbumCover
             };
 
-            var trackRef = playlistRef.Collection("tracks").Document(request.DeezerTrackId.ToString());
-            await trackRef.SetAsync(trackDoc);
-
-            if (!string.IsNullOrEmpty(playlistData.SpotifyPlaylistId))
+            try
             {
-                try
+                await _firestoreService.AddTrackToPlaylistAsync(userId, request.PlaylistId, trackDoc);
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
                 {
-                    var spotifyAccessToken = await GetSpotifyAccessTokenForUser(userId);
-                    if (!string.IsNullOrEmpty(spotifyAccessToken))
-                    {
-                        var trackUri = await _spotifyService.SearchTrackByIsrcAsync(request.Isrc, spotifyAccessToken);
-                        if (!string.IsNullOrEmpty(trackUri))
-                        {
-                            var added = await _spotifyService.AddTracksToPlaylistAsync(playlistData.SpotifyPlaylistId, new List<string> { trackUri }, spotifyAccessToken);
-                            if (added)
-                            {
-                                await trackRef.UpdateAsync("SpotifyUri", trackUri);
-                                trackDoc.SpotifyUri = trackUri;
-                            }
-                        }
-                    }
+                    throw new RpcException(new Status(StatusCode.NotFound, "Playlist not found. It might have been deleted."));
                 }
-                catch (Exception ex)
+                if (ex.Message.Contains("Unauthorized", StringComparison.OrdinalIgnoreCase))
                 {
-                    Console.WriteLine($"Failed to add track to Spotify: {ex.Message}");
+                    throw new RpcException(new Status(StatusCode.PermissionDenied, "You do not own this playlist."));
                 }
+
+                Console.WriteLine($"[AddTrackToPlaylist] Error: {ex.Message}");
+                throw new RpcException(new Status(StatusCode.Internal, $"Internal error: {ex.Message}"));
             }
 
             return new PlaylistTrackReply
@@ -523,57 +471,24 @@ namespace SwipeVibesAPI.Services
         public override async Task<DeleteReply> RemoveTrackFromPlaylist(RemoveTrackFromPlaylistRequest request, ServerCallContext context)
         {
             var userId = GetCurrentUserId(context);
-            var playlistRef = _firestoreDb.Collection("playlists").Document(request.PlaylistId);
-            var snap = await playlistRef.GetSnapshotAsync();
-
-            if (!snap.Exists) throw new RpcException(new Status(StatusCode.NotFound, "Playlist not found"));
-            var playlistData = snap.ConvertTo<PlaylistDoc>();
-
-            if (playlistData.UserId != userId) throw new RpcException(new Status(StatusCode.PermissionDenied, "Not your playlist"));
-
-            var trackRef = playlistRef.Collection("tracks").Document(request.DeezerTrackId.ToString());
-            var trackSnap = await trackRef.GetSnapshotAsync();
-
-            if (trackSnap.Exists)
-            {
-                var trackData = trackSnap.ConvertTo<PlaylistTrackDoc>();
-                if (!string.IsNullOrEmpty(playlistData.SpotifyPlaylistId) && !string.IsNullOrEmpty(trackData.SpotifyUri))
-                {
-                    try
-                    {
-                        var spotifyAccessToken = await GetSpotifyAccessTokenForUser(userId);
-                        if (!string.IsNullOrEmpty(spotifyAccessToken))
-                        {
-                            await _spotifyService.RemoveTrackFromPlaylistAsync(playlistData.SpotifyPlaylistId, trackData.SpotifyUri, spotifyAccessToken);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Failed to remove track from Spotify: {ex.Message}");
-                    }
-                }
-
-                await trackRef.DeleteAsync();
-            }
-
+            await _firestoreService.RemoveTrackFromPlaylistAsync(userId, request.PlaylistId, request.DeezerTrackId);
             return new DeleteReply { Success = true };
         }
 
         public override async Task<PlaylistTracksListReply> GetPlaylistTracks(GetPlaylistTracksRequest request, ServerCallContext context)
         {
             var userId = GetCurrentUserId(context);
+
             var playlistRef = _firestoreDb.Collection("playlists").Document(request.PlaylistId);
             var snap = await playlistRef.GetSnapshotAsync();
+            if (snap.Exists && snap.GetValue<string>("UserId") != userId)
+                throw new RpcException(new Status(StatusCode.PermissionDenied, "Not your playlist"));
 
-            if (!snap.Exists) throw new RpcException(new Status(StatusCode.NotFound, "Playlist not found"));
-            if (snap.GetValue<string>("UserId") != userId) throw new RpcException(new Status(StatusCode.PermissionDenied, "Not your playlist"));
-
-            var tracksSnap = await playlistRef.Collection("tracks").OrderByDescending("AddedAt").GetSnapshotAsync();
+            var tracks = await _firestoreService.GetPlaylistTracksAsync(userId, request.PlaylistId);
 
             var reply = new PlaylistTracksListReply();
-            foreach (var doc in tracksSnap.Documents)
+            foreach (var t in tracks)
             {
-                var t = doc.ConvertTo<PlaylistTrackDoc>();
                 reply.Tracks.Add(new PlaylistTrack
                 {
                     DeezerTrackId = t.DeezerTrackId,
@@ -652,9 +567,9 @@ namespace SwipeVibesAPI.Services
             }
 
             var updates = new Dictionary<string, object>
-    {
-        { "SpotifyRefreshToken", tokenResponse.RefreshToken }
-    };
+            {
+                { "SpotifyRefreshToken", tokenResponse.RefreshToken }
+            };
 
             await docRef.UpdateAsync(updates);
 
@@ -742,6 +657,33 @@ namespace SwipeVibesAPI.Services
                 Message = "Playlist exported successfully!",
                 SpotifyPlaylistUrl = $"https://open.spotify.com/playlist/{spotifyPlaylistId}"
             };
+        }
+
+        public override async Task<DeleteReply> ResetSwipeHistory(ResetSwipeHistoryRequest request, ServerCallContext context)
+        {
+            var userId = GetCurrentUserId(context);
+            string? decision = null;
+
+            if (request.Type == SwipeResetType.ResetLikes) decision = "like";
+            else if (request.Type == SwipeResetType.ResetDislikes) decision = "dislike";
+
+            await _firestoreService.DeleteUserInteractionsAsync(userId, decision);
+
+            return new DeleteReply { Success = true, Message = "History reset successfully" };
+        }
+
+        public override async Task<DeleteReply> DeleteAllPlaylists(DeleteAllPlaylistsRequest request, ServerCallContext context)
+        {
+            var userId = GetCurrentUserId(context);
+            await _firestoreService.DeleteAllUserPlaylistsAsync(userId, request.UnsubscribeSpotify);
+            return new DeleteReply { Success = true, Message = "All playlists deleted" };
+        }
+
+        public override async Task<DeleteReply> DeleteAccount(Empty request, ServerCallContext context)
+        {
+            var userId = GetCurrentUserId(context);
+            await _firestoreService.DeleteUserAccountAsync(userId);
+            return new DeleteReply { Success = true, Message = "Account deleted forever" };
         }
     }
 }

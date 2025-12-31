@@ -50,9 +50,6 @@ public class JwtService
         var issuer = _config["Jwt:Issuer"];
         var audience = _config["Jwt:Audience"];
 
-        // <<< DODAJ TEN LOG >>>
-        Console.WriteLine($"[JwtService] Generowanie tokenu: Issuer='{issuer}', Audience='{audience}'");
-
         var token = new JwtSecurityToken(
             issuer: _config["Jwt:Issuer"],
             audience: _config["Jwt:Audience"],
@@ -98,10 +95,7 @@ public class JwtService
         if (string.IsNullOrWhiteSpace(key))
             throw new InvalidOperationException("JWT key not configured. Set Jwt:Key (and optionally Jwt:AccessKey/Jwt:RefreshKey).");
 
-        // <<< DODAJ TEN LOG >>>
         var keyType = forRefresh ? "Refresh" : "Access";
-        Console.WriteLine($"[JwtService] Używam klucza {keyType}: {key.Substring(0, 4)}... (dł: {key.Length})");
-        // <<< KONIEC LOGU >>>
 
         return new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
     }

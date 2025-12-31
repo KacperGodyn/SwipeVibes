@@ -26,13 +26,6 @@ public class DeezerController : ControllerBase
     [HttpGet("recommendation")]
     public async Task<ActionResult<RandomTrackResponse>> GetRecommendation(CancellationToken ct)
     {
-        Console.WriteLine($"[DeezerController] IsAuthenticated={HttpContext.User?.Identity?.IsAuthenticated}");
-        Console.WriteLine($"[DeezerController] Name={HttpContext.User?.Identity?.Name}");
-
-        foreach (var cl in HttpContext.User.Claims)
-        {
-            Console.WriteLine($"[DeezerController] claim {cl.Type} = {cl.Value}");
-        }
         var userId = HttpContext.User?.Identity?.Name;
         if (string.IsNullOrWhiteSpace(userId))
         {

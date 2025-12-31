@@ -13,6 +13,7 @@ export async function logInteraction(payload: {
   album?: string;
   bpm?: number | null;
   gain?: number | null;
+  autoExport?: boolean;
 }) {
   await http.post("/api/interactions", {
     Isrc: payload.isrc,
@@ -25,5 +26,6 @@ export async function logInteraction(payload: {
     Album: payload.album,
     Bpm: payload.bpm ?? undefined,
     Gain: payload.gain ?? undefined,
+    InstantSync: payload.autoExport ?? false,
   });
 }

@@ -8,7 +8,7 @@ type InputFieldProps = TextInputProps & {
 export default function InputField({ className, ...props }: InputFieldProps) {
   return (
     <TextInput
-      className={`items-center justify-center rounded-full border border-white/20 bg-white/30 shadow-md backdrop-blur-xl active:bg-white/40 ${className || ""}`}
+      className={`items-center justify-center rounded-full border border-[#F05454]/20 bg-[#0F0F0F] shadow-md backdrop-blur-xl outline-none ${className || ""}`}
       {...props}
     />
   );

@@ -6,11 +6,11 @@ import SubContainerFlexRow from '../components/containers/SubContainerFlexRow';
 import InputField from '../components/InputField';
 
 import { useSpotifyLogin } from '../services/auth/gRPC/user/services/useSpotifyLogin';
-import { 
-  loginWithSpotify, 
-  loginWithGoogle, 
-  loginWithPassword, 
-  registerUser 
+import {
+  loginWithSpotify,
+  loginWithGoogle,
+  loginWithPassword,
+  registerUser,
 } from '../services/auth/api';
 import { setSavedUser, setSavedAvatar } from '../services/auth/userInfo';
 import { loadAccessToken } from '../services/auth/token';
@@ -29,7 +29,7 @@ export default function SignUpScreen() {
 
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
@@ -45,14 +45,13 @@ export default function SignUpScreen() {
       if (isLoginMode) {
         const res = await loginWithPassword(username, password);
         setSavedUser(res.username, (res as any).role);
-        setSavedAvatar(null); 
+        setSavedAvatar(null);
 
         const token = loadAccessToken();
         if (token) signIn(token);
-
       } else {
         await registerUser(username, password);
-        
+
         const res = await loginWithPassword(username, password);
         setSavedUser(res.username, (res as any).role);
         setSavedAvatar(null);
@@ -76,7 +75,7 @@ export default function SignUpScreen() {
 
       try {
         const meRes = await fetch('https://api.spotify.com/v1/me', {
-            headers: { Authorization: `Bearer ${spotifyIdToken}` },
+          headers: { Authorization: `Bearer ${spotifyIdToken}` },
         });
         if (meRes.ok) {
           const me = await meRes.json();
@@ -125,80 +124,90 @@ export default function SignUpScreen() {
   });
 
   return (
-    <ContainerFlexColumn style={{ width: '85%', height: '90%' }}>
-      
-      <View style={{ width: '100%', marginBottom: 20, gap: 15 }}>
-        
-        <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 10 }}>
-          {isLoginMode ? 'Welcome Back!' : 'Create Account'}
-        </Text>
-
-        <InputField 
-          placeholder="Username"
-          placeholderTextColor="#ccc"
-          value={username}
-          onChangeText={setUsername}
-          autoCapitalize="none"
-          className="h-12 px-4"
-        />
-
-        <InputField 
-          placeholder="Password"
-          placeholderTextColor="#ccc"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          className="h-12 px-4"
-        />
-
-        <TouchableOpacity 
-          onPress={handleStandardAuth}
-          disabled={isLoading}
-          className="items-center justify-center h-12 rounded-full bg-white/20 active:bg-white/30 border border-white/40 mt-2 shadow-lg"
-        >
-          {isLoading ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>
-              {isLoginMode ? 'Log In' : 'Sign Up'}
-            </Text>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => setIsLoginMode(!isLoginMode)}>
-          <Text style={{ color: '#ddd', textAlign: 'center', marginTop: 5, textDecorationLine: 'underline' }}>
-            {isLoginMode 
-              ? "Don't have an account? Sign up" 
-              : "Already have an account? Log in"}
+    <View style={{ flex: 1, backgroundColor: '#121212' }} >
+      <ContainerFlexColumn style={{ width: '95%', height: '90%', borderRadius: 20 }}>
+        <View style={{ width: '80%', marginBottom: 20, gap: 15, maxWidth: 360 }} >
+          <Text
+            style={{
+              color: 'white',
+              fontSize: 24,
+              fontWeight: 'bold',
+              textAlign: 'center',
+              marginBottom: 10,
+            }}>
+            {isLoginMode ? 'Welcome Back!' : 'Create an Account'}
           </Text>
-        </TouchableOpacity>
 
-      </View>
+          <InputField
+            placeholder="Username"
+            placeholderTextColor="#ccc"
+            value={username}
+            onChangeText={setUsername}
+            autoCapitalize="none"
+            className="h-12 px-4 text-white"
+          />
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 20 }}>
-        <View style={{ flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.3)' }} />
-        <Text style={{ width: 50, textAlign: 'center', color: 'rgba(255,255,255,0.7)' }}>OR</Text>
-        <View style={{ flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.3)' }} />
-      </View>
+          <InputField
+            placeholder="Password"
+            placeholderTextColor="#ccc"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            className="h-12 px-4 text-white"
+          />
 
-      <SubContainerFlexRow>
-        <ButtonLogInVia
-          provider="spotify"
-          onPress={() => {
-            void spotify.promptAsync();
-          }}
-          disabled={!spotify.ready}
-          loading={spotify.loading}
-        />
-        <ButtonLogInVia
-          provider="google"
-          onPress={() => {
-            void google.promptAsync();
-          }}
-          disabled={!google.ready}
-          loading={google.loading}
-        />
-      </SubContainerFlexRow>
-    </ContainerFlexColumn>
+          <TouchableOpacity
+            onPress={handleStandardAuth}
+            disabled={isLoading}
+            className="mt-2 h-12 items-center justify-center rounded-full border border-[#0F0F0F]/40 bg-[#0F0F0F] shadow-lg active:bg-white/30">
+            {isLoading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>
+                {isLoginMode ? 'Log In' : 'Sign Up'}
+              </Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => setIsLoginMode(!isLoginMode)}>
+            <Text
+              style={{
+                color: '#ddd',
+                textAlign: 'center',
+                marginTop: 5,
+                textDecorationLine: 'underline',
+              }}>
+              {isLoginMode ? "Don't have an account? Sign up" : 'Already have an account? Log in'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View
+          style={{ flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 20 }}>
+          <View style={{ flex: 1, height: 1, backgroundColor: '#F05454' }} />
+          <Text style={{ width: 50, textAlign: 'center', color: '#F05454' }}>OR</Text>
+          <View style={{ flex: 1, height: 1, backgroundColor: '#F05454' }} />
+        </View>
+
+        <SubContainerFlexRow>
+          <ButtonLogInVia
+            provider="spotify"
+            onPress={() => {
+              void spotify.promptAsync();
+            }}
+            disabled={!spotify.ready}
+            loading={spotify.loading}
+          />
+          <ButtonLogInVia
+            provider="google"
+            onPress={() => {
+              void google.promptAsync();
+            }}
+            disabled={!google.ready}
+            loading={google.loading}
+          />
+        </SubContainerFlexRow>
+      </ContainerFlexColumn>
+    </View>
   );
 }

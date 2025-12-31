@@ -8,6 +8,8 @@ import MutedIcon from '../assets/HomeCard/muted.svg';
 import UnMutedIcon from '../assets/HomeCard/unmuted.svg';
 import Playlists from './playlists/Playlists';
 import { addTrackToPlaylist } from '../services/auth/api';
+import { getString, setString } from '../services/storage/mmkv';
+import { Toggle } from '@/components/buttons/Toggle';
 
 type Props = {
   track: RandomTrackResponse;
@@ -16,7 +18,7 @@ type Props = {
   onUndo: () => void;
   undoDisabled: boolean;
   onDislike: () => void;
-  onLike: () => void;
+  onLike: (skipAutoAdd?: boolean) => void;
 };
 
 export default function MainCardDisplayedContent({
@@ -28,14 +30,27 @@ export default function MainCardDisplayedContent({
   onDislike,
   onLike,
 }: Props) {
-  const { setMuted } = useAudioPrefs();
+  const { setMuted, snippetDuration } = useAudioPrefs();
   const [isSelectingPlaylist, setIsSelectingPlaylist] = useState(false);
+  const [localMuted, setLocalMuted] = useState(muted);
+
+  const [lastPlaylistId, setLastPlaylistId] = useState<string | null>(() => {
+    const val = getString('last_active_playlist_id');
+    return val || null;
+  });
+
+  useEffect(() => {
+    setLocalMuted(muted);
+  }, [muted]);
 
   const source = useMemo(() => track?.preview ?? null, [track?.preview]);
 
   const tryPlay = () => {
     if (!source) return;
-    player.muted = muted;
+    player.muted = localMuted;
+    if (player.currentTime >= snippetDuration) {
+      player.seekTo(0);
+    }
     const p: any = player.play();
     if (p && typeof p.catch === 'function') {
       p.catch(() => {});
@@ -44,7 +59,18 @@ export default function MainCardDisplayedContent({
 
   useEffect(() => {
     if (source) tryPlay();
-  }, [player, muted, source]);
+  }, [player, localMuted, source]);
+
+  useEffect(() => {
+    if (!source) return;
+    const interval = setInterval(() => {
+      if (player.playing && player.currentTime >= snippetDuration) {
+        player.pause();
+        player.seekTo(0);
+      }
+    }, 250);
+    return () => clearInterval(interval);
+  }, [player, snippetDuration, source]);
 
   useEffect(() => {
     if (Platform.OS !== 'web') return;
@@ -61,7 +87,7 @@ export default function MainCardDisplayedContent({
     document.addEventListener('visibilitychange', onVis);
     let tries = 0;
     const id = setInterval(() => {
-      if (!source || muted) return;
+      if (!source || localMuted) return;
       tries++;
       if (tries > 12) {
         clearInterval(id);
@@ -76,10 +102,11 @@ export default function MainCardDisplayedContent({
       document.removeEventListener('visibilitychange', onVis as any);
       clearInterval(id);
     };
-  }, [source, muted, player]);
+  }, [source, localMuted, player]);
 
-  const toggleMute = () => {
-    const next = !muted;
+  const toggleMute = (val?: boolean) => {
+    const next = typeof val === 'boolean' ? val : !localMuted;
+    setLocalMuted(next);
     setMuted(next);
     player.muted = next;
     if (!next && source) tryPlay();
@@ -101,7 +128,10 @@ export default function MainCardDisplayedContent({
         albumCover: track.album?.coverMedium || '',
       });
 
-      onLike();
+      setString('last_active_playlist_id', playlistId);
+      setLastPlaylistId(playlistId);
+
+      onLike(true);
 
       setIsSelectingPlaylist(false);
     } catch (error) {
@@ -125,19 +155,26 @@ export default function MainCardDisplayedContent({
   if (isSelectingPlaylist) {
     return (
       <View style={{ alignItems: 'center', width: '100%' }}>
-        <View style={[styles.square, { backgroundColor: 'rgba(0,0,0,0.5)', padding: 10, minHeight: 500 }]} className='items-center'>
-          <Text className="mb-2 text-center text-lg font-bold text-white">Where do you want to save?</Text>
+        <View
+          style={[
+            styles.square,
+            { backgroundColor: 'rgba(0,0,0,0.5)', padding: 10, minHeight: 500 },
+          ]}
+          className="items-center">
+          <Text className="mb-2 text-center text-lg font-bold text-white">
+            Where do you want to save?
+          </Text>
           <Text className="mb-4 text-center text-xs text-gray-200">
             The track will be added & liked
           </Text>
 
           <View style={{ flex: 1, width: '100%' }}>
-            <Playlists onSelect={handleAddToPlaylist} />
+            <Playlists onSelect={handleAddToPlaylist} lastActivePlaylistId={lastPlaylistId} />
           </View>
 
           <Pressable
             onPress={() => setIsSelectingPlaylist(false)}
-            className="w-24 my-4 py-2 items-center rounded-full border border-white/20 bg-white/30 shadow-md backdrop-blur-xl active:bg-white/40">
+            className="my-4 w-24 items-center rounded-full border border-white/20 bg-white/30 py-2 shadow-md backdrop-blur-xl active:bg-white/40">
             <Text className="font-bold text-white">Cancel</Text>
           </Pressable>
         </View>
@@ -147,6 +184,20 @@ export default function MainCardDisplayedContent({
 
   return (
     <View style={{ alignItems: 'center', gap: 16 }}>
+      <View className="items-center gap-2 p-6">
+        <Toggle value={localMuted} onValueChange={toggleMute} />
+
+        {localMuted ? (
+          <Text className="text-[12px] font-bold uppercase tracking-widest text-[#F05454]">
+            Muted
+          </Text>
+        ) : (
+          <Text className="text-[12px] font-bold uppercase tracking-widest text-[#666666]">
+            Unmuted
+          </Text>
+        )}
+      </View>
+
       <View style={styles.square}>
         {artistPic ? (
           <Image source={{ uri: artistPic }} style={styles.image} resizeMode="cover" />
@@ -155,17 +206,6 @@ export default function MainCardDisplayedContent({
             <Text style={styles.fallbackText}>{track.title ?? 'No Art'}</Text>
           </View>
         )}
-
-        <Pressable
-          onPress={toggleMute}
-          style={styles.muteBtn}
-          className="flex-row items-center justify-around gap-5 rounded-3xl border border-white/20 bg-white bg-white/30 px-2 py-2 shadow-md backdrop-blur-xl">
-          <View>
-            <Text style={styles.muteText}>
-              {muted ? <MutedIcon style={styles.Icon} /> : <UnMutedIcon style={styles.Icon} />}
-            </Text>
-          </View>
-        </Pressable>
       </View>
 
       <View style={styles.meta}>
@@ -182,7 +222,7 @@ export default function MainCardDisplayedContent({
         undoDisabled={undoDisabled}
         onDislike={onDislike}
         onSuper={() => setIsSelectingPlaylist(true)}
-        onLike={onLike}
+        onLike={() => onLike(false)}
       />
     </View>
   );
@@ -190,7 +230,7 @@ export default function MainCardDisplayedContent({
 
 const styles = StyleSheet.create({
   square: {
-    width: 302,
+    width: 320,
     aspectRatio: 1,
     overflow: 'hidden',
     backgroundColor: 'transparent',
@@ -210,7 +250,6 @@ const styles = StyleSheet.create({
   title: { fontSize: 16, fontWeight: '700', color: '#fff', textAlign: 'center' },
   artist: { fontSize: 13, fontWeight: '500', color: '#ddd', textAlign: 'center' },
 
-  muteBtn: { position: 'absolute', top: 10, right: 10 },
   muteText: { color: '#000', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
 
   Icon: { height: 30, width: 30 },

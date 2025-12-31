@@ -70,6 +70,11 @@ namespace SwipeVibesAPI.Controllers
 
             await _fs.UpdateUserStatsAsync(userId!, body.Decision.ToLowerInvariant(), body.Bpm, body.Artist);
 
+            if (body.Decision.ToLowerInvariant() == "like")
+            {
+                await _fs.ExportLikeToSpotifyAsync(userId!, body.Isrc);
+            }
+
             return Ok(new { id = added.Id, ok = true });
         }
     }

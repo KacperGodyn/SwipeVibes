@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import ButtonLogInVia from '../components/buttons/ButtonLogInVia';
-import ContainerFlexColumn from '../components/containers/ContainerFlexColumn';
-import SubContainerFlexRow from '../components/containers/SubContainerFlexRow';
+import ScreenLayout from 'components/ScreenLayout';
 import InputField from '../components/InputField';
+import { useTheme } from '../services/theme/ThemeContext';
 
 import { useSpotifyLogin } from '../services/auth/gRPC/user/services/useSpotifyLogin';
 import {
@@ -20,9 +20,6 @@ import { auth } from '../firebase';
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 
 import { useSession } from '../services/auth/ctx';
-import Constants from 'expo-constants';
-
-const config = Constants.expoConfig?.extra;
 
 export default function SignUpScreen() {
   const { signIn } = useSession();
@@ -123,73 +120,100 @@ export default function SignUpScreen() {
     },
   });
 
+  const { colors } = useTheme();
+
   return (
-    <View style={{ flex: 1, backgroundColor: '#121212' }} >
-      <ContainerFlexColumn style={{ width: '95%', height: '90%', borderRadius: 20 }}>
-        <View style={{ width: '80%', marginBottom: 20, gap: 15, maxWidth: 360 }} >
+    <ScreenLayout className="items-center justify-center" showVolumeControl={false}>
+      <View
+        style={{
+          width: '90%',
+          maxWidth: 400,
+          backgroundColor: colors.card,
+          borderRadius: 32,
+          borderWidth: 1,
+          borderColor: colors.cardBorder,
+          paddingHorizontal: 32,
+          paddingVertical: 40,
+        }}>
+        <View style={{ alignItems: 'center', marginBottom: 40 }}>
           <Text
             style={{
-              color: 'white',
-              fontSize: 24,
-              fontWeight: 'bold',
-              textAlign: 'center',
-              marginBottom: 10,
+              fontSize: 32,
+              fontWeight: '900',
+              fontStyle: 'italic',
+              letterSpacing: -1,
+              color: colors.text,
             }}>
-            {isLoginMode ? 'Welcome Back!' : 'Create an Account'}
+            SWIPE<Text style={{ color: colors.accent }}>VIBES</Text>
           </Text>
+          <Text
+            style={{
+              marginTop: 12,
+              fontSize: 11,
+              letterSpacing: 3,
+              color: colors.textSecondary,
+              textTransform: 'uppercase',
+            }}>
+            {isLoginMode ? 'Welcome back' : 'Find your sound'}
+          </Text>
+        </View>
 
+        <View style={{ gap: 16 }}>
           <InputField
             placeholder="Username"
-            placeholderTextColor="#ccc"
             value={username}
             onChangeText={setUsername}
             autoCapitalize="none"
-            className="h-12 px-4 text-white"
           />
 
           <InputField
             placeholder="Password"
-            placeholderTextColor="#ccc"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
-            className="h-12 px-4 text-white"
           />
 
           <TouchableOpacity
             onPress={handleStandardAuth}
             disabled={isLoading}
-            className="mt-2 h-12 items-center justify-center rounded-full border border-[#0F0F0F]/40 bg-[#0F0F0F] shadow-lg active:bg-white/30">
+            style={{
+              marginTop: 24,
+              height: 56,
+              backgroundColor: '#F05454',
+              borderRadius: 28,
+              alignItems: 'center',
+              justifyContent: 'center',
+              shadowColor: '#F05454',
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.5,
+              shadowRadius: 20,
+            }}>
             {isLoading ? (
-              <ActivityIndicator color="white" />
+              <ActivityIndicator color="black" />
             ) : (
-              <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>
-                {isLoginMode ? 'Log In' : 'Sign Up'}
+              <Text style={{ fontSize: 16, fontWeight: '900', color: 'black', letterSpacing: 1 }}>
+                {isLoginMode ? 'LOG IN' : 'SIGN UP'}
               </Text>
             )}
           </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => setIsLoginMode(!isLoginMode)}>
-            <Text
-              style={{
-                color: '#ddd',
-                textAlign: 'center',
-                marginTop: 5,
-                textDecorationLine: 'underline',
-              }}>
-              {isLoginMode ? "Don't have an account? Sign up" : 'Already have an account? Log in'}
-            </Text>
-          </TouchableOpacity>
         </View>
 
-        <View
-          style={{ flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 20 }}>
-          <View style={{ flex: 1, height: 1, backgroundColor: '#F05454' }} />
-          <Text style={{ width: 50, textAlign: 'center', color: '#F05454' }}>OR</Text>
-          <View style={{ flex: 1, height: 1, backgroundColor: '#F05454' }} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 32, gap: 16 }}>
+          <View style={{ flex: 1, height: 1, backgroundColor: colors.divider }} />
+          <Text
+            style={{
+              fontSize: 10,
+              fontWeight: '700',
+              color: colors.textSecondary,
+              textTransform: 'uppercase',
+              letterSpacing: 2,
+            }}>
+            or
+          </Text>
+          <View style={{ flex: 1, height: 1, backgroundColor: colors.divider }} />
         </View>
 
-        <SubContainerFlexRow>
+        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 24 }}>
           <ButtonLogInVia
             provider="spotify"
             onPress={() => {
@@ -206,8 +230,17 @@ export default function SignUpScreen() {
             disabled={!google.ready}
             loading={google.loading}
           />
-        </SubContainerFlexRow>
-      </ContainerFlexColumn>
-    </View>
+        </View>
+
+        <TouchableOpacity onPress={() => setIsLoginMode(!isLoginMode)} style={{ marginTop: 32 }}>
+          <Text style={{ textAlign: 'center', fontSize: 14, color: colors.textSecondary }}>
+            {isLoginMode ? "Don't have an account? " : 'Already have an account? '}
+            <Text style={{ fontWeight: '700', color: colors.accent }}>
+              {isLoginMode ? 'Sign up' : 'Log in'}
+            </Text>
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </ScreenLayout>
   );
 }

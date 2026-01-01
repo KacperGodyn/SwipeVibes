@@ -1,12 +1,13 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { View, Text, useWindowDimensions } from 'react-native';
-import ContainerFlexColumn from 'components/containers/ContainerFlexColumn';
-import SubContainerFlexRow from 'components/containers/SubContainerFlexRow';
-import GeneralNavigationContainer from 'components/containers/GeneralNavigationContainer';
+import { useFocusEffect } from 'expo-router';
+import { useIsFocused } from '@react-navigation/native';
+import ScreenLayout from 'components/ScreenLayout';
 import MainCardDisplayedContent from 'components/MainCardDisplayedContent';
-import provideRecommendation, {
-  RandomTrackResponse,
-} from '../services/recommendation/provideRecommendation';
+import WebPlaybackStarter from '../components/WebPlaybackStarter';
+
+import { useRecommendation } from '../services/recommendation/RecommendationContext';
+import { RandomTrackResponse } from '../services/recommendation/provideRecommendation';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
@@ -19,7 +20,6 @@ import Animated, {
   withRepeat,
   Easing,
 } from 'react-native-reanimated';
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useAudioPrefs } from '../services/audio/useAudioPrefs';
 import { logInteraction } from '../services/interactions';
 import ActivityIndicatorIcon from '../assets/HomeCard/activity_indicator.svg';
@@ -31,9 +31,10 @@ const SWIPE_THRESHOLD = 120;
 const SWIPE_VELOCITY_THRESHOLD = 800;
 
 export default function HomeScreen() {
-  const { track, loading, error, refetch, undo, canUndo } = provideRecommendation();
+  const { track, loading, error, refetch, undo, canUndo, player } = useRecommendation();
   const { muted, ready, autoExportLikes } = useAudioPrefs();
-  const { width: screenWidth } = useWindowDimensions();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const isFocused = useIsFocused();
 
   const translateX = useSharedValue(0);
   const rotation = useSharedValue(0);
@@ -55,22 +56,15 @@ export default function HomeScreen() {
     ],
   }));
 
-  const source = useMemo(() => track?.preview ?? null, [track?.preview]);
-  const player = useAudioPlayer(source);
-  useAudioPlayerStatus(player);
-
-  useEffect(() => {
-    player.loop = true;
-  }, [player]);
-
-  useEffect(() => {
-    const old = player;
-    return () => {
-      try {
-        old.pause();
-      } catch {}
-    };
-  }, [source]);
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        try {
+          player.pause();
+        } catch {}
+      };
+    }, [player])
+  );
 
   useEffect(() => {
     if (!loading && track) {
@@ -178,49 +172,50 @@ export default function HomeScreen() {
   const onDislike = () => handleSwipeAction('dislike');
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#121212' }}>
-      <View style={{ flex: 8, justifyContent: 'center', alignItems: 'center' }}>
-        {error && <Text style={{ color: 'black' }}>Error: {String(error)}</Text>}
+    <ScreenLayout
+      className="items-center px-4"
+      style={{ paddingTop: 70 }}
+      testID="home-screen-layout">
+      <WebPlaybackStarter />
+
+      <View className="w-full flex-1 items-center">
+        {error && <Text style={{ color: 'red', marginTop: 50 }}>Error: {String(error)}</Text>}
 
         {(!track || !ready || loading) && !error && (
-          <Animated.View style={loaderTranslateStyle}>
-            <ActivityIndicatorIcon width={120} height={120} color="#F05454" />
-          </Animated.View>
+          <View
+            style={{
+              height: screenHeight - 240,
+              width: '100%',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <Animated.View style={loaderTranslateStyle}>
+              <ActivityIndicatorIcon width={120} height={120} color="#F05454" />
+            </Animated.View>
+          </View>
         )}
 
         {!loading && track && ready && !error && (
           <GestureDetector gesture={panGesture}>
-            <Animated.View style={[{ width: '95%', height: '90%' }, animatedStyle]}>
-              <ContainerFlexColumn
-                style={{ width: '100%', height: '100%', borderRadius: 40, boxShadow: '0 1px 2px 0 #F05454', maxWidth: 600 }}
-                colors={cardGradient}
-                >
-                <SubContainerFlexRow style={{ width: '95%', alignSelf: 'center', height: '82%' }}>
-                  <View>
-                    <MainCardDisplayedContent
-                      track={track}
-                      player={player}
-                      muted={muted}
-                      onUndo={() => {
-                        undo?.();
-                      }}
-                      undoDisabled={!canUndo}
-                      onDislike={onDislike}
-                      onLike={onLike}
-                    />
-                  </View>
-                </SubContainerFlexRow>
-              </ContainerFlexColumn>
+            <Animated.View style={[{ width: '100%', alignItems: 'center' }, animatedStyle]}>
+              <MainCardDisplayedContent
+                track={track}
+                player={player}
+                muted={muted}
+                onUndo={() => {
+                  undo?.();
+                }}
+                undoDisabled={!canUndo}
+                onDislike={onDislike}
+                onLike={onLike}
+                cardHeight={screenHeight - 240}
+                cardWidth={Math.min(screenWidth - 32, 500)}
+                isFocused={isFocused}
+              />
             </Animated.View>
           </GestureDetector>
         )}
       </View>
-
-      <View style={{ flex: 1.5 }}>
-        <GeneralNavigationContainer />
-      </View>
-    </View>
+    </ScreenLayout>
   );
 }
-
-const cardGradient = ['#222831', '#222831', '#222831', '#222831', '#222831', '#222831'] as const;

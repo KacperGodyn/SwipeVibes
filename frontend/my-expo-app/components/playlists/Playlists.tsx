@@ -1,16 +1,38 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { View, Text, FlatList, Pressable, ActivityIndicator, Alert, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  Pressable,
+  ActivityIndicator,
+  Alert,
+  Platform,
+  StyleSheet,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { deletePlaylist, getMyPlaylists } from '../../services/auth/api';
 import type { PlaylistReply } from '../../services/auth/gRPC/user/users_pb';
+import { useTheme } from '../../services/theme/ThemeContext';
+import Animated, { AnimatedProps } from 'react-native-reanimated';
 
 type Props = {
   refreshTrigger?: number;
   onSelect?: (playlistId: string) => void;
   lastActivePlaylistId?: string | null;
+  onScroll?: AnimatedProps<any>['onScroll'];
+  onContentSizeChange?: (w: number, h: number) => void;
+  onLayout?: (e: any) => void;
 };
 
-export default function Playlists({ refreshTrigger = 0, onSelect, lastActivePlaylistId }: Props) {
+export default function Playlists({
+  refreshTrigger = 0,
+  onSelect,
+  lastActivePlaylistId,
+  onScroll,
+  onContentSizeChange,
+  onLayout,
+}: Props) {
+  const { colors } = useTheme();
   const [playlists, setPlaylists] = useState<PlaylistReply[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +58,7 @@ export default function Playlists({ refreshTrigger = 0, onSelect, lastActivePlay
 
   const sortedPlaylists = useMemo(() => {
     if (!lastActivePlaylistId || !onSelect) return playlists;
-    
+
     return [...playlists].sort((a, b) => {
       if (a.id === lastActivePlaylistId) return -1;
       if (b.id === lastActivePlaylistId) return 1;
@@ -64,7 +86,7 @@ export default function Playlists({ refreshTrigger = 0, onSelect, lastActivePlay
   if (loading && playlists.length === 0) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator color="#fff" size="large" />
+        <ActivityIndicator color={colors.accent} size="large" />
       </View>
     );
   }
@@ -72,9 +94,17 @@ export default function Playlists({ refreshTrigger = 0, onSelect, lastActivePlay
   if (error) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text className="mb-2 text-center text-red-400">{error}</Text>
-        <Pressable onPress={fetchPlaylists} className="mt-2 rounded-full bg-white/10 px-4 py-2">
-          <Text className="text-white underline">Try again</Text>
+        <Text style={{ marginBottom: 8, textAlign: 'center', color: '#ef4444' }}>{error}</Text>
+        <Pressable
+          onPress={fetchPlaylists}
+          style={{
+            marginTop: 8,
+            borderRadius: 999,
+            backgroundColor: colors.input,
+            paddingHorizontal: 16,
+            paddingVertical: 8,
+          }}>
+          <Text style={{ color: colors.text, textDecorationLine: 'underline' }}>Try again</Text>
         </Pressable>
       </View>
     );
@@ -83,75 +113,132 @@ export default function Playlists({ refreshTrigger = 0, onSelect, lastActivePlay
   if (playlists.length === 0) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text className="text-lg font-semibold text-gray-300">No playlists yet...</Text>
-        {!onSelect && <Text className="mt-2 text-gray-400">Click "+" to create one!</Text>}
+        <Text style={{ fontSize: 18, fontWeight: '600', color: colors.textSecondary }}>
+          No playlists yet...
+        </Text>
+        {!onSelect && (
+          <Text style={{ marginTop: 8, color: colors.textSecondary }}>
+            Click "+" to create one!
+          </Text>
+        )}
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, width: '100%', height: '100%' }} className="px-2 py-2">
+    <View className="w-full flex-1 bg-transparent">
       {Platform.OS === 'web' && (
         <style>{`
-          ::-webkit-scrollbar { width: 8px; background-color: transparent; }
-          ::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.2); border-radius: 10px; }
-          ::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.4); }
+          ::-webkit-scrollbar { width: 6px; }
+          ::-webkit-scrollbar-track { background: transparent; }
+          ::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+          ::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.2); }
         `}</style>
       )}
 
-      <FlatList
+      <Animated.FlatList
         data={sortedPlaylists}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingVertical: 10, paddingHorizontal: 20 }}
-        showsVerticalScrollIndicator={true}
-        indicatorStyle="white"
+        contentContainerStyle={{ paddingVertical: 12, paddingHorizontal: 10, gap: 8 }}
+        showsVerticalScrollIndicator={false}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        onContentSizeChange={onContentSizeChange}
+        onLayout={onLayout}
         renderItem={({ item }) => {
           const isSticky = lastActivePlaylistId === item.id && !!onSelect;
-          
+
           return (
             <Pressable
               onPress={() => handlePress(item)}
-              className={`mb-2 flex-row items-center justify-between rounded-lg border-b px-3 py-3 active:bg-black/40 ${
-                isSticky 
-                  ? 'bg-white/20 border-white/40' 
-                  : 'bg-black/20 border-white/10'
-              }`}>
-              <View className="flex-1 pr-4">
-                <View className="flex-row items-center gap-2">
-                  <Text className="text-lg font-semibold text-white" numberOfLines={1}>
+              style={({ pressed }) => [
+                {
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  padding: 16,
+                  transform: [{ scale: pressed ? 0.98 : 1 }],
+                  backgroundColor: isSticky ? 'rgba(240, 84, 84, 0.2)' : colors.input,
+                  borderColor: isSticky ? colors.accent : colors.inputBorder,
+                },
+              ]}>
+              <View style={{ flex: 1, paddingRight: 16 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: '700',
+                      color: isSticky ? colors.accent : colors.text,
+                    }}
+                    numberOfLines={1}>
                     {item.name}
                   </Text>
                   {isSticky && (
-                    <View className="rounded bg-blue-500/80 px-1.5 py-0.5">
-                      <Text className="text-[10px] font-bold text-white uppercase">Last used</Text>
+                    <View
+                      style={{
+                        backgroundColor: colors.accent,
+                        borderRadius: 4,
+                        paddingHorizontal: 6,
+                        paddingVertical: 2,
+                      }}>
+                      <Text
+                        style={{
+                          fontSize: 9,
+                          fontWeight: '700',
+                          textTransform: 'uppercase',
+                          color: '#000',
+                        }}>
+                        Active
+                      </Text>
                     </View>
                   )}
                 </View>
-                <Text className="font-mono text-xs text-gray-400">
-                  ID: {item.id.substring(0, 6)}...
+                <Text
+                  style={{
+                    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+                    fontSize: 10,
+                    color: colors.textSecondary,
+                  }}>
+                  {item.id.substring(0, 8)}...
                 </Text>
               </View>
 
               {!onSelect && (
-                <View className="flex-column items-center gap-2">
-                  <Pressable
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      handleDelete(item.id);
-                    }}
-                    className="w-24 items-center rounded bg-red-300/20 py-3">
-                    <Text className="text-[16px] font-bold uppercase text-red-300">DELETE</Text>
-                  </Pressable>
-                </View>
+                <Pressable
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    handleDelete(item.id);
+                  }}
+                  style={({ pressed }) => ({
+                    height: 40,
+                    width: 40,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: 20,
+                    backgroundColor: pressed ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.1)',
+                  })}>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: '#ef4444' }}>✕</Text>
+                </Pressable>
               )}
               {onSelect && (
-                <View className={`rounded-full border px-3 py-2 ${
-                  isSticky 
-                    ? 'bg-blue-500/20 border-blue-400' 
-                    : 'bg-green-500/20 border-green-500/50'
-                }`}>
-                  <Text className={`text-xs font-bold ${isSticky ? 'text-blue-200' : 'text-green-400'}`}>
-                    {isSticky ? 'QUICK ADD' : 'ADD'}
+                <View
+                  style={{
+                    height: 32,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: 999,
+                    paddingHorizontal: 12,
+                    backgroundColor: isSticky ? colors.accent : 'rgba(255,255,255,0.1)',
+                  }}>
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      fontWeight: '700',
+                      color: isSticky ? '#000' : colors.text,
+                    }}>
+                    {isSticky ? 'SAVED' : 'ADD'}
                   </Text>
                 </View>
               )}

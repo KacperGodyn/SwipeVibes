@@ -1,32 +1,76 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Switch, ScrollView, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  ScrollView,
+  ActivityIndicator,
+  useWindowDimensions,
+  LayoutChangeEvent,
+} from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+  useAnimatedScrollHandler,
+} from 'react-native-reanimated';
 import { useAudioPrefs } from '../services/audio/useAudioPrefs';
 import { SwipeResetType } from '../services/auth/gRPC/user/users_pb';
 import { resetSwipeHistory, deleteAllPlaylists, deleteAccount } from '../services/auth/api';
+import ScreenLayout from 'components/ScreenLayout';
+import { useTheme } from '../services/theme/ThemeContext';
+import { Toggle } from 'components/buttons/Toggle';
 
 const AVAILABLE_GENRES = [
-  'Pop', 'Rock', 'Hip-Hop', 'Rap', 'R&B', 
-  'Electronic', 'Techno', 'House', 'Jazz', 
-  'Classical', 'Metal', 'Indie', 'Reggae', 'Country'
+  'Pop',
+  'Rock',
+  'Hip-Hop',
+  'Rap',
+  'R&B',
+  'Electronic',
+  'Techno',
+  'House',
+  'Jazz',
+  'Classical',
+  'Metal',
+  'Indie',
+  'Reggae',
+  'Country',
 ];
 
 const AVAILABLE_LANGUAGES = [
-  'English', 'Polish', 'Spanish', 'French', 
-  'German', 'Italian', 'Japanese', 'Korean'
+  'English',
+  'Polish',
+  'Spanish',
+  'French',
+  'German',
+  'Italian',
+  'Japanese',
+  'Korean',
 ];
+
+// Card dimension constants - reusable across screens
+const CARD_PADDING_HORIZONTAL = 16;
+const CARD_MARGIN_BOTTOM = 120; // Space for navbar + some padding
+const CARD_BORDER_RADIUS = 24;
 
 type DangerActionType = 'reset' | 'playlists' | 'wipe' | null;
 
 export default function SettingsScreen() {
-  const { 
-    snippetDuration, 
+  const { colors } = useTheme();
+  const { height: screenHeight } = useWindowDimensions();
+
+  const {
+    snippetDuration,
     setSnippetDuration,
     autoExportLikes,
     setAutoExportLikes,
     genreFilters,
     setGenreFilters,
     languageFilters,
-    setLanguageFilters
+    setLanguageFilters,
   } = useAudioPrefs();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -34,46 +78,121 @@ export default function SettingsScreen() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   const options = [10, 20, 30] as const;
+  const activeOptionIndex = options.indexOf(snippetDuration as 10 | 20 | 30);
+
+  // Card height: screen height minus top (theme toggle + padding) and bottom (navbar)
+  const cardHeight = screenHeight - 240;
+
+  // Scrollbar state
+  const scrollY = useSharedValue(0);
+  const [contentHeight, setContentHeight] = useState(1);
+  const [visibleHeight, setVisibleHeight] = useState(1);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+
+  // Calculate scrollbar thumb stylestw
+  const scrollIndicatorStyle = useAnimatedStyle(() => {
+    // If content fits in view, hide scrollbar
+    if (contentHeight <= visibleHeight || visibleHeight <= 0) {
+      return { opacity: 0 };
+    }
+
+    const indicatorHeight = (visibleHeight / contentHeight) * visibleHeight;
+    const translateY =
+      (scrollY.value / (contentHeight - visibleHeight)) * (visibleHeight - indicatorHeight - 24); // -24 for padding
+
+    // Clamp values to keep inside header/footer bounds if needed, but simplified here
+    return {
+      height: Math.max(indicatorHeight, 40), // Min height 40
+      transform: [
+        { translateY: Math.max(0, Math.min(translateY, visibleHeight - indicatorHeight)) },
+      ],
+      opacity: withTiming(1, { duration: 200 }),
+    };
+  });
+
+  // Animation state for snippet duration slider
+  const [optionWidth, setOptionWidth] = useState(0);
+  const indicatorLeft = useSharedValue(0);
+  const hasInitialized = useRef(false);
+
+  // Measure option button width on layout
+  const handleOptionLayout = (e: LayoutChangeEvent) => {
+    const { width } = e.nativeEvent.layout;
+    if (width > 0 && optionWidth === 0) {
+      setOptionWidth(width);
+    }
+  };
+
+  // Animate indicator when selection changes
+  useEffect(() => {
+    if (optionWidth > 0 && activeOptionIndex >= 0) {
+      const targetLeft = activeOptionIndex * optionWidth + 4; // 4 = padding
+      if (!hasInitialized.current) {
+        indicatorLeft.value = targetLeft;
+        hasInitialized.current = true;
+      } else {
+        indicatorLeft.value = withTiming(targetLeft, {
+          duration: 250,
+          easing: Easing.out(Easing.cubic),
+        });
+      }
+    }
+  }, [activeOptionIndex, optionWidth]);
+
+  const indicatorStyle = useAnimatedStyle(() => ({
+    left: indicatorLeft.value,
+  }));
 
   const toggleFilter = (item: string, currentList: string[], setList: (l: string[]) => void) => {
     if (currentList.includes(item)) {
-      setList(currentList.filter(i => i !== item));
+      setList(currentList.filter((i) => i !== item));
     } else {
       setList([...currentList, item]);
     }
   };
 
-  const renderChips = (items: string[], currentList: string[] = [], setList: (l: string[]) => void) => {
-    return (
-      <View style={styles.chipContainer}>
-        {items.map((item) => {
-          const isActive = currentList.includes(item);
-          return (
-            <Pressable
-              key={item}
-              onPress={() => toggleFilter(item, currentList, setList)}
-              style={[styles.chip, isActive && styles.chipActive]}
-            >
-              <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
-                {item}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-    );
-  };
+  const renderChips = (
+    items: string[],
+    currentList: string[] = [],
+    setList: (l: string[]) => void
+  ) => (
+    <View style={styles.chipsContainer}>
+      {items.map((item) => {
+        const isActive = currentList.includes(item);
+        return (
+          <Pressable
+            key={item}
+            onPress={() => toggleFilter(item, currentList, setList)}
+            style={[
+              styles.chip,
+              {
+                backgroundColor: isActive ? colors.accent : colors.input,
+                borderColor: isActive ? colors.accent : colors.inputBorder,
+              },
+            ]}>
+            <Text style={[styles.chipText, { color: isActive ? '#fff' : colors.textSecondary }]}>
+              {item}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
 
-  // --- API Executors ---
-
+  // API Executors
   const performReset = async (type: SwipeResetType) => {
     try {
       setIsLoading(true);
       await resetSwipeHistory(type);
-      setStatusMessage("Swipe history cleared successfully.");
+      setStatusMessage('Swipe history cleared successfully.');
       setActiveAction(null);
-    } catch (e) {
-      setStatusMessage("Error: Failed to reset history.");
+    } catch {
+      setStatusMessage('Error: Failed to reset history.');
     } finally {
       setIsLoading(false);
       setTimeout(() => setStatusMessage(null), 3000);
@@ -84,10 +203,10 @@ export default function SettingsScreen() {
     try {
       setIsLoading(true);
       await deleteAllPlaylists(unsubSpotify);
-      setStatusMessage("All playlists deleted.");
+      setStatusMessage('All playlists deleted.');
       setActiveAction(null);
-    } catch (e) {
-      setStatusMessage("Error: Failed to delete playlists.");
+    } catch {
+      setStatusMessage('Error: Failed to delete playlists.');
     } finally {
       setIsLoading(false);
       setTimeout(() => setStatusMessage(null), 3000);
@@ -98,283 +217,493 @@ export default function SettingsScreen() {
     try {
       setIsLoading(true);
       await deleteAccount();
-      // User should be logged out automatically by the api function logic if implemented there,
-      // otherwise handle redirection here.
-    } catch (e) {
-      setStatusMessage("Error: Failed to delete account.");
+    } catch {
+      setStatusMessage('Error: Failed to delete account.');
       setIsLoading(false);
       setTimeout(() => setStatusMessage(null), 3000);
     }
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 60 }}>
-        <Text style={styles.header}>Settings</Text>
-        
-        {/* Status Message Toast (Inline) */}
-        {statusMessage && (
-            <View style={styles.statusContainer}>
-                <Text style={styles.statusText}>{statusMessage}</Text>
-            </View>
-        )}
+    <ScreenLayout>
+      <View style={styles.container}>
+        {/* Main Card */}
+        <View
+          style={[
+            styles.card,
+            {
+              height: cardHeight,
+              backgroundColor: colors.card,
+              borderColor: colors.cardBorder,
+            },
+          ]}>
+          {/* Card Header */}
+          <View style={styles.cardHeader}>
+            <Text style={[styles.title, { color: colors.text }]}>Settings</Text>
+          </View>
 
-        <View style={styles.section}>
-          <Text style={styles.label}>Snippet Duration</Text>
-          <View style={styles.row}>
-            {options.map((opt) => (
-              <Pressable 
-                key={opt} 
-                onPress={() => setSnippetDuration(opt)}
+          {/* Status Message */}
+          {statusMessage && (
+            <View style={styles.statusMessage}>
+              <Text style={styles.statusText}>{statusMessage}</Text>
+            </View>
+          )}
+
+          {/* Scrollable Content */}
+          <Animated.ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            onScroll={scrollHandler}
+            scrollEventThrottle={16}
+            onContentSizeChange={(_, height) => setContentHeight(height)}
+            onLayout={(e) => setVisibleHeight(e.nativeEvent.layout.height)}>
+            {/* Snippet Duration */}
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Snippet Duration</Text>
+              <View
                 style={[
-                  styles.optionBtn, 
-                  snippetDuration === opt && styles.optionBtnActive
-                ]}
-              >
-                <Text style={[
-                  styles.optionText,
-                  snippetDuration === opt && styles.optionTextActive
-                ]}>{opt}s</Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
+                  styles.optionsRow,
+                  { borderColor: colors.inputBorder, backgroundColor: colors.input },
+                ]}>
+                {/* Animated Slide Indicator */}
+                {optionWidth > 0 && (
+                  <Animated.View
+                    style={[
+                      {
+                        position: 'absolute',
+                        top: 4,
+                        bottom: 4,
+                        width: optionWidth,
+                        borderRadius: 8,
+                        backgroundColor: colors.accent,
+                      },
+                      indicatorStyle,
+                    ]}
+                  />
+                )}
 
-        <View style={[styles.section, styles.rowBetween]}>
-            <View style={{ flex: 1, paddingRight: 10 }}>
-                <Text style={styles.label}>Auto-Export "Likes"</Text>
-                <Text style={styles.subLabel}>Instant Sync to Spotify playlist</Text>
+                {options.map((opt, index) => (
+                  <Pressable
+                    key={opt}
+                    onLayout={index === 0 ? handleOptionLayout : undefined}
+                    onPress={() => setSnippetDuration(opt)}
+                    style={styles.optionButton}>
+                    <Text
+                      style={[
+                        styles.optionText,
+                        { color: snippetDuration === opt ? '#fff' : colors.textSecondary },
+                      ]}>
+                      {opt}s
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
             </View>
-            <Switch 
-              value={autoExportLikes} 
-              onValueChange={setAutoExportLikes}
-              trackColor={{ false: '#e0e0e0', true: '#000' }}
+
+            {/* Auto Export */}
+            <View
+              style={[
+                styles.switchRow,
+                { borderColor: colors.inputBorder, backgroundColor: colors.input },
+              ]}>
+              <View style={styles.switchInfo}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                  Auto-Export "Likes"
+                </Text>
+                <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+                  Instant Sync to Spotify
+                </Text>
+              </View>
+              <Toggle value={autoExportLikes} onValueChange={setAutoExportLikes} />
+            </View>
+
+            <View style={[styles.divider, { backgroundColor: colors.divider }]} />
+
+            {/* Genre Preferences */}
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Genre Preferences</Text>
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+                Select genres to focus on (Optional)
+              </Text>
+              {renderChips(AVAILABLE_GENRES, genreFilters || [], setGenreFilters)}
+            </View>
+
+            {/* Language Preferences */}
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Language Preferences
+              </Text>
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+                Select preferred languages
+              </Text>
+              {renderChips(AVAILABLE_LANGUAGES, languageFilters || [], setLanguageFilters)}
+            </View>
+
+            <View style={[styles.divider, { backgroundColor: colors.divider }]} />
+
+            {/* Danger Zone */}
+            <View style={styles.dangerZone}>
+              <Text style={styles.dangerTitle}>Danger Zone</Text>
+              <Text style={styles.dangerSubtitle}>Irreversible actions</Text>
+
+              {/* Reset History */}
+              {activeAction === 'reset' ? (
+                <View style={styles.dangerPanel}>
+                  <Text style={[styles.dangerPanelTitle, { color: colors.text }]}>
+                    Reset Swipe History?
+                  </Text>
+                  <View style={styles.dangerButtons}>
+                    <Pressable
+                      style={styles.dangerButton}
+                      onPress={() => performReset(SwipeResetType.RESET_LIKES)}>
+                      <Text style={styles.dangerButtonText}>Likes Only</Text>
+                    </Pressable>
+                    <Pressable
+                      style={styles.dangerButton}
+                      onPress={() => performReset(SwipeResetType.RESET_DISLIKES)}>
+                      <Text style={styles.dangerButtonText}>Dislikes Only</Text>
+                    </Pressable>
+                  </View>
+                  <Pressable
+                    style={styles.dangerButtonRed}
+                    onPress={() => performReset(SwipeResetType.RESET_ALL)}>
+                    <Text style={styles.dangerButtonRedText}>RESET ALL</Text>
+                  </Pressable>
+                  <Pressable style={styles.cancelButton} onPress={() => setActiveAction(null)}>
+                    <Text style={styles.cancelText}>Cancel</Text>
+                  </Pressable>
+                </View>
+              ) : (
+                <Pressable
+                  style={styles.dangerTrigger}
+                  onPress={() => setActiveAction('reset')}
+                  disabled={isLoading || activeAction !== null}>
+                  <Text style={styles.dangerTriggerText}>Reset Swipe History...</Text>
+                </Pressable>
+              )}
+
+              {/* Delete Playlists */}
+              {activeAction === 'playlists' ? (
+                <View style={styles.dangerPanel}>
+                  <Text style={[styles.dangerPanelTitle, { color: colors.text }]}>
+                    Delete All Playlists?
+                  </Text>
+                  <Pressable
+                    style={styles.dangerButton}
+                    onPress={() => performDeletePlaylists(false)}>
+                    <Text style={styles.dangerButtonText}>Delete Local Only</Text>
+                  </Pressable>
+                  <Pressable
+                    style={styles.dangerButtonRed}
+                    onPress={() => performDeletePlaylists(true)}>
+                    <Text style={styles.dangerButtonRedText}>Delete & Unsubscribe</Text>
+                  </Pressable>
+                  <Pressable style={styles.cancelButton} onPress={() => setActiveAction(null)}>
+                    <Text style={styles.cancelText}>Cancel</Text>
+                  </Pressable>
+                </View>
+              ) : (
+                <Pressable
+                  style={styles.dangerTrigger}
+                  onPress={() => setActiveAction('playlists')}
+                  disabled={isLoading || activeAction !== null}>
+                  <Text style={styles.dangerTriggerText}>Delete All Playlists...</Text>
+                </Pressable>
+              )}
+
+              {/* Wipe Account */}
+              {activeAction === 'wipe' ? (
+                <View style={[styles.dangerPanel, { borderColor: '#F05454' }]}>
+                  <Text style={styles.wipeTitle}>DELETE ACCOUNT</Text>
+                  <Text style={styles.wipeSubtitle}>This is strictly irreversible.</Text>
+                  <Pressable style={styles.wipeButton} onPress={performWipeAccount}>
+                    <Text style={styles.wipeButtonText}>CONFIRM DELETE</Text>
+                  </Pressable>
+                  <Pressable style={styles.cancelButton} onPress={() => setActiveAction(null)}>
+                    <Text style={styles.cancelText}>Cancel</Text>
+                  </Pressable>
+                </View>
+              ) : (
+                <Pressable
+                  style={styles.wipeTrigger}
+                  onPress={() => setActiveAction('wipe')}
+                  disabled={isLoading || activeAction !== null}>
+                  <Text style={styles.wipeTriggerText}>Delete Account</Text>
+                </Pressable>
+              )}
+            </View>
+          </Animated.ScrollView>
+
+          {/* Custom Scrollbar */}
+          <View style={styles.customScrollbarTrack}>
+            <Animated.View
+              style={[
+                styles.customScrollbarThumb,
+                { backgroundColor: colors.accent },
+                scrollIndicatorStyle,
+              ]}
             />
-        </View>
-
-        <View style={styles.divider} />
-
-        <View style={styles.section}>
-            <Text style={styles.label}>Genre Preferences</Text>
-            <Text style={styles.subLabel}>Select specific genres to focus on (Optional)</Text>
-            {renderChips(AVAILABLE_GENRES, genreFilters || [], setGenreFilters)}
-        </View>
-
-        <View style={styles.section}>
-            <Text style={styles.label}>Language Preferences</Text>
-            <Text style={styles.subLabel}>Select preferred languages (Default: English)</Text>
-            {renderChips(AVAILABLE_LANGUAGES, languageFilters || [], setLanguageFilters)}
-        </View>
-
-        <View style={styles.divider} />
-
-        {/* DANGER ZONE */}
-        <View style={styles.section}>
-           <Text style={[styles.label, { color: 'red' }]}>Danger Zone</Text>
-           <Text style={styles.subLabel}>Irreversible actions</Text>
-           
-           {/* 1. RESET HISTORY */}
-           {activeAction === 'reset' ? (
-             <View style={styles.confirmationBox}>
-               <Text style={styles.confirmTitle}>Reset Swipe History</Text>
-               <Text style={styles.confirmSub}>Which history to clear?</Text>
-               <View style={styles.confirmRow}>
-                 <Pressable style={styles.confirmBtn} onPress={() => performReset(SwipeResetType.RESET_LIKES)}>
-                    <Text style={styles.confirmBtnText}>Likes Only</Text>
-                 </Pressable>
-                 <Pressable style={styles.confirmBtn} onPress={() => performReset(SwipeResetType.RESET_DISLIKES)}>
-                    <Text style={styles.confirmBtnText}>Dislikes Only</Text>
-                 </Pressable>
-               </View>
-               <Pressable style={[styles.confirmBtn, styles.dangerConfirmBtn]} onPress={() => performReset(SwipeResetType.RESET_ALL)}>
-                  <Text style={[styles.confirmBtnText, { color: '#fff' }]}>RESET ALL HISTORY</Text>
-               </Pressable>
-               <Pressable style={styles.cancelBtn} onPress={() => setActiveAction(null)}>
-                  <Text style={styles.cancelBtnText}>Cancel</Text>
-               </Pressable>
-             </View>
-           ) : (
-             <Pressable style={styles.dangerBtn} onPress={() => setActiveAction('reset')} disabled={isLoading || activeAction !== null}>
-               <Text style={styles.dangerBtnText}>Reset Swipe History...</Text>
-             </Pressable>
-           )}
-
-           {/* 2. DELETE PLAYLISTS */}
-           {activeAction === 'playlists' ? (
-             <View style={styles.confirmationBox}>
-               <Text style={styles.confirmTitle}>Delete All Playlists</Text>
-               <Text style={styles.confirmSub}>Also unsubscribe on Spotify?</Text>
-               <Pressable style={[styles.confirmBtn, styles.dangerConfirmBtn]} onPress={() => performDeletePlaylists(false)}>
-                  <Text style={[styles.confirmBtnText, { color: '#fff' }]}>No, Just Delete Local</Text>
-               </Pressable>
-               <Pressable style={[styles.confirmBtn, styles.dangerConfirmBtn]} onPress={() => performDeletePlaylists(true)}>
-                  <Text style={[styles.confirmBtnText, { color: '#fff' }]}>Yes, Delete & Unsubscribe</Text>
-               </Pressable>
-               <Pressable style={styles.cancelBtn} onPress={() => setActiveAction(null)}>
-                  <Text style={styles.cancelBtnText}>Cancel</Text>
-               </Pressable>
-             </View>
-           ) : (
-             <Pressable style={styles.dangerBtn} onPress={() => setActiveAction('playlists')} disabled={isLoading || activeAction !== null}>
-               <Text style={styles.dangerBtnText}>Delete All Playlists...</Text>
-             </Pressable>
-           )}
-
-           {/* 3. WIPE ACCOUNT */}
-           {activeAction === 'wipe' ? (
-             <View style={[styles.confirmationBox, { borderColor: 'red', backgroundColor: '#fff5f5' }]}>
-               <Text style={[styles.confirmTitle, { color: 'red' }]}>DELETE ACCOUNT</Text>
-               <Text style={[styles.confirmSub, { color: 'red' }]}>WARNING: This is strictly irreversible. All data will be lost.</Text>
-               <Pressable style={[styles.confirmBtn, { backgroundColor: 'red' }]} onPress={performWipeAccount}>
-                  <Text style={[styles.confirmBtnText, { color: '#fff', fontWeight: 'bold' }]}>CONFIRM PERMANENT DELETE</Text>
-               </Pressable>
-               <Pressable style={styles.cancelBtn} onPress={() => setActiveAction(null)}>
-                  <Text style={styles.cancelBtnText}>Cancel</Text>
-               </Pressable>
-             </View>
-           ) : (
-             <Pressable style={[styles.dangerBtn, { backgroundColor: '#ffebee', borderColor: '#ffcdd2' }]} onPress={() => setActiveAction('wipe')} disabled={isLoading || activeAction !== null}>
-               <Text style={[styles.dangerBtnText, { color: 'red', fontWeight: 'bold' }]}>Delete Account (Wipe)</Text>
-             </Pressable>
-           )}
-
-        </View>
-
-        {isLoading && (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color="#000" />
           </View>
-        )}
 
-    </ScrollView>
+          {/* Loading Overlay */}
+          {isLoading && (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="large" color="#F05454" />
+            </View>
+          )}
+        </View>
+      </View>
+    </ScreenLayout>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
-  header: { fontSize: 24, fontWeight: 'bold', marginBottom: 24, marginTop: 10 },
-  section: { marginBottom: 24 },
-  divider: { height: 1, backgroundColor: '#eee', marginVertical: 10, marginBottom: 24 },
-  label: { fontSize: 16, fontWeight: '600', marginBottom: 6, color: '#333' },
-  subLabel: { fontSize: 12, color: '#666', marginBottom: 12 },
-  row: { flexDirection: 'row', gap: 12 },
-  rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  
-  optionBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  optionBtnActive: {
-    backgroundColor: '#000',
-    borderColor: '#000',
-  },
-  optionText: { fontSize: 14, color: '#333' },
-  optionTextActive: { color: '#fff', fontWeight: 'bold' },
-
-  chipContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    backgroundColor: '#f8f8f8',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  chipActive: {
-    backgroundColor: '#000',
-    borderColor: '#000',
-  },
-  chipText: { fontSize: 13, color: '#444' },
-  chipTextActive: { color: '#fff', fontWeight: '600' },
-
-  // Default Danger Button
-  dangerBtn: {
-    padding: 14,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    marginBottom: 10,
-    alignItems: 'center',
-    backgroundColor: '#fff'
-  },
-  dangerBtnText: {
-    color: '#333',
-    fontWeight: '500'
-  },
-
-  // Inline Confirmation Styles
-  confirmationBox: {
-    padding: 15,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    marginBottom: 10,
-  },
-  confirmTitle: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    marginBottom: 5,
-    textAlign: 'center',
-  },
-  confirmSub: {
-    fontSize: 13,
-    color: '#666',
-    marginBottom: 15,
-    textAlign: 'center',
-  },
-  confirmRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 10,
-  },
-  confirmBtn: {
+  container: {
     flex: 1,
-    paddingVertical: 10,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 6,
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  dangerConfirmBtn: {
-    backgroundColor: '#000',
-  },
-  confirmBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#333',
-  },
-  cancelBtn: {
-    paddingVertical: 8,
-    alignItems: 'center',
-  },
-  cancelBtnText: {
-    color: '#007AFF',
-    fontSize: 14,
+    paddingHorizontal: CARD_PADDING_HORIZONTAL,
+    paddingTop: 70, // Space for theme toggle button
+    alignItems: 'center', // Center card on web
   },
 
-  // Status Toast
-  statusContainer: {
-    backgroundColor: '#333',
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 15,
-    alignItems: 'center',
+  card: {
+    borderRadius: CARD_BORDER_RADIUS,
+    borderWidth: 1,
+    overflow: 'hidden', // IMPORTANT: Content must be clipped
+    width: '100%',
+    maxWidth: 500, // Limit width on web
+  },
+  cardHeader: {
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 16,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '800',
+  },
+  statusMessage: {
+    marginHorizontal: 24,
+    marginBottom: 16,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(34, 197, 94, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(34, 197, 94, 0.5)',
   },
   statusText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '500',
+    color: '#22c55e',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+  },
+  customScrollbarTrack: {
+    position: 'absolute',
+    right: 4,
+    top: 80, // Skip header
+    bottom: 4,
+    width: 4,
+    borderRadius: 2,
+    backgroundColor: 'transparent',
+    overflow: 'hidden',
+  },
+  customScrollbarThumb: {
+    width: '100%',
+    borderRadius: 99,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 12,
+    marginBottom: 12,
+  },
+  optionsRow: {
+    flexDirection: 'row',
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 4,
+  },
+  optionButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  optionText: {
+    fontWeight: '700',
+  },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 24,
   },
 
+  switchInfo: {
+    flex: 1,
+    paddingRight: 16,
+  },
+  divider: {
+    height: 1,
+    marginBottom: 24,
+  },
+  chipsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  chipText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  dangerZone: {
+    padding: 20,
+    borderRadius: 20,
+    backgroundColor: 'rgba(239, 68, 68, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.2)',
+  },
+  dangerTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#ef4444',
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    marginBottom: 4,
+  },
+  dangerSubtitle: {
+    fontSize: 11,
+    color: 'rgba(239, 68, 68, 0.7)',
+    marginBottom: 20,
+  },
+  dangerPanel: {
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    marginBottom: 12,
+  },
+  dangerPanelTitle: {
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  dangerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 8,
+  },
+  dangerButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  dangerButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  dangerButtonRed: {
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 8,
+    backgroundColor: '#ef4444',
+    marginBottom: 8,
+  },
+  dangerButtonRedText: {
+    color: '#000',
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  cancelButton: {
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  cancelText: {
+    color: '#888',
+    fontSize: 12,
+  },
+  dangerTrigger: {
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+    marginBottom: 12,
+  },
+  dangerTriggerText: {
+    color: '#f87171',
+    fontWeight: '600',
+  },
+  wipeTrigger: {
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.6)',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+  },
+  wipeTriggerText: {
+    color: '#ef4444',
+    fontWeight: '800',
+    textTransform: 'uppercase',
+  },
+  wipeTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#ef4444',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  wipeSubtitle: {
+    fontSize: 11,
+    color: '#f87171',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  wipeButton: {
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 8,
+    backgroundColor: '#ef4444',
+    marginBottom: 8,
+  },
+  wipeButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '900',
+  },
   loadingOverlay: {
-    position: 'absolute',
-    left: 0, right: 0, top: 0, bottom: 0,
-    backgroundColor: 'rgba(255,255,255,0.7)',
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center'
-  }
+    borderRadius: CARD_BORDER_RADIUS,
+  },
 });

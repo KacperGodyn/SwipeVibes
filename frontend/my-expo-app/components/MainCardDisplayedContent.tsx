@@ -10,6 +10,7 @@ import Playlists from './playlists/Playlists';
 import { addTrackToPlaylist } from '../services/auth/api';
 import { getString, setString } from '../services/storage/mmkv';
 import { Toggle } from '@/components/buttons/Toggle';
+import { useTheme } from '../services/theme/ThemeContext';
 
 type Props = {
   track: RandomTrackResponse;
@@ -19,6 +20,9 @@ type Props = {
   undoDisabled: boolean;
   onDislike: () => void;
   onLike: (skipAutoAdd?: boolean) => void;
+  cardHeight: number;
+  cardWidth: number;
+  isFocused: boolean;
 };
 
 export default function MainCardDisplayedContent({
@@ -29,7 +33,11 @@ export default function MainCardDisplayedContent({
   undoDisabled,
   onDislike,
   onLike,
+  cardHeight,
+  cardWidth,
+  isFocused,
 }: Props) {
+  const { colors } = useTheme();
   const { setMuted, snippetDuration } = useAudioPrefs();
   const [isSelectingPlaylist, setIsSelectingPlaylist] = useState(false);
   const [localMuted, setLocalMuted] = useState(muted);
@@ -43,10 +51,24 @@ export default function MainCardDisplayedContent({
     setLocalMuted(muted);
   }, [muted]);
 
+  // Pause if lost focus
+  useEffect(() => {
+    if (!isFocused) {
+      try {
+        player.pause();
+      } catch {}
+    } else if (source && !localMuted) {
+      // Resume if regained focus and should be playing
+      // tryPlay(); // Optional: do we want auto-resume? User didn't explicitly ask, but typical behavior.
+      // User said "problem is timeami leci dalej".
+      // Only pause on blur is the critical fix.
+    }
+  }, [isFocused, player]);
+
   const source = useMemo(() => track?.preview ?? null, [track?.preview]);
 
   const tryPlay = () => {
-    if (!source) return;
+    if (!source || !isFocused) return;
     player.muted = localMuted;
     if (player.currentTime >= snippetDuration) {
       player.seekTo(0);
@@ -58,36 +80,36 @@ export default function MainCardDisplayedContent({
   };
 
   useEffect(() => {
-    if (source) tryPlay();
-  }, [player, localMuted, source]);
+    if (source && isFocused) tryPlay();
+  }, [player, localMuted, source, isFocused]);
 
   useEffect(() => {
     if (!source) return;
     const interval = setInterval(() => {
-      if (player.playing && player.currentTime >= snippetDuration) {
-        player.pause();
+      // Only loop if focused
+      if (isFocused && player.playing && player.currentTime >= snippetDuration) {
         player.seekTo(0);
       }
     }, 250);
     return () => clearInterval(interval);
-  }, [player, snippetDuration, source]);
+  }, [player, snippetDuration, source, isFocused]);
 
   useEffect(() => {
     if (Platform.OS !== 'web') return;
     const resumeFromGesture = () => {
-      if (!source) return;
+      if (!source || !isFocused) return;
       tryPlay();
     };
     window.addEventListener('pointerdown', resumeFromGesture, { passive: true, once: true });
     window.addEventListener('keydown', resumeFromGesture, { passive: true, once: true });
     window.addEventListener('touchstart', resumeFromGesture, { passive: true, once: true });
     const onVis = () => {
-      if (document.visibilityState === 'visible') tryPlay();
+      if (document.visibilityState === 'visible' && isFocused) tryPlay();
     };
     document.addEventListener('visibilitychange', onVis);
     let tries = 0;
     const id = setInterval(() => {
-      if (!source || localMuted) return;
+      if (!source || localMuted || !isFocused) return;
       tries++;
       if (tries > 12) {
         clearInterval(id);
@@ -102,7 +124,7 @@ export default function MainCardDisplayedContent({
       document.removeEventListener('visibilitychange', onVis as any);
       clearInterval(id);
     };
-  }, [source, localMuted, player]);
+  }, [source, localMuted, player, isFocused]);
 
   const toggleMute = (val?: boolean) => {
     const next = typeof val === 'boolean' ? val : !localMuted;
@@ -156,16 +178,13 @@ export default function MainCardDisplayedContent({
     return (
       <View style={{ alignItems: 'center', width: '100%' }}>
         <View
-          style={[
-            styles.square,
-            { backgroundColor: 'rgba(0,0,0,0.5)', padding: 10, minHeight: 500 },
-          ]}
-          className="items-center">
-          <Text className="mb-2 text-center text-lg font-bold text-white">
-            Where do you want to save?
+          className="w-[90%] items-center overflow-hidden rounded-3xl border border-white/10 bg-black/60 p-6 backdrop-blur-2xl"
+          style={{ minHeight: 400 }}>
+          <Text className="mb-2 text-center text-xl font-bold text-white shadow-sm">
+            Save to Playlist
           </Text>
-          <Text className="mb-4 text-center text-xs text-gray-200">
-            The track will be added & liked
+          <Text className="mb-6 text-center text-sm font-medium text-gray-400">
+            Track will be added & liked
           </Text>
 
           <View style={{ flex: 1, width: '100%' }}>
@@ -174,7 +193,7 @@ export default function MainCardDisplayedContent({
 
           <Pressable
             onPress={() => setIsSelectingPlaylist(false)}
-            className="my-4 w-24 items-center rounded-full border border-white/20 bg-white/30 py-2 shadow-md backdrop-blur-xl active:bg-white/40">
+            className="mt-6 w-32 items-center rounded-full bg-white/10 py-3 active:bg-white/20">
             <Text className="font-bold text-white">Cancel</Text>
           </Pressable>
         </View>
@@ -182,75 +201,161 @@ export default function MainCardDisplayedContent({
     );
   }
 
-  return (
-    <View style={{ alignItems: 'center', gap: 16 }}>
-      <View className="items-center gap-2 p-6">
-        <Toggle value={localMuted} onValueChange={toggleMute} />
+  // --- Main Card Design ---
 
-        {localMuted ? (
-          <Text className="text-[12px] font-bold uppercase tracking-widest text-[#F05454]">
-            Muted
+  // Calculate dynamic image size based on remaining space
+  // Card Height - Padding (32) - Header (36) - Meta (70) - Controls (80) - Gaps (approx 30) - Extra Spacing (70)
+  const availableHeight = cardHeight - 320;
+  const imageSize = Math.min(availableHeight, 280);
+
+  return (
+    <View
+      style={[
+        styles.card,
+        {
+          height: cardHeight,
+          width: cardWidth,
+          backgroundColor: colors.card,
+          borderColor: colors.cardBorder,
+        },
+      ]}>
+      {/* Top Status Bar (Mute) */}
+      <View style={styles.header}>
+        <Pressable
+          onPress={() => toggleMute()}
+          style={[
+            styles.muteButton,
+            { backgroundColor: colors.input, borderColor: colors.inputBorder },
+          ]}>
+          <Toggle value={localMuted} onValueChange={toggleMute} />
+          <Text
+            style={[styles.muteText, { color: localMuted ? colors.accent : colors.textSecondary }]}>
+            {localMuted ? 'Muted' : 'Sound On'}
           </Text>
-        ) : (
-          <Text className="text-[12px] font-bold uppercase tracking-widest text-[#666666]">
-            Unmuted
-          </Text>
-        )}
+        </Pressable>
       </View>
 
-      <View style={styles.square}>
+      {/* Album Art Container */}
+      <View
+        style={[
+          styles.imageContainer,
+          {
+            width: imageSize,
+            height: imageSize,
+            borderColor: colors.inputBorder,
+            backgroundColor: colors.input,
+          },
+        ]}>
         {artistPic ? (
           <Image source={{ uri: artistPic }} style={styles.image} resizeMode="cover" />
         ) : (
-          <View style={[styles.image, styles.fallback]}>
-            <Text style={styles.fallbackText}>{track.title ?? 'No Art'}</Text>
+          <View style={styles.placeholderContainer}>
+            <Text style={[styles.placeholderText, { color: colors.textSecondary }]}>
+              {track.title?.charAt(0) ?? '?'}
+            </Text>
           </View>
         )}
       </View>
 
-      <View style={styles.meta}>
-        <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+      {/* Meta Info */}
+      <View style={styles.metaContainer}>
+        <Text style={[styles.trackTitle, { color: colors.text }]} numberOfLines={1}>
           {title}
         </Text>
-        <Text style={styles.artist} numberOfLines={1} ellipsizeMode="tail">
+        <Text style={[styles.artistName, { color: colors.accent }]} numberOfLines={1}>
           {artistNames}
         </Text>
       </View>
 
-      <CardNavigationContainer
-        onUndo={onUndo}
-        undoDisabled={undoDisabled}
-        onDislike={onDislike}
-        onSuper={() => setIsSelectingPlaylist(true)}
-        onLike={() => onLike(false)}
-      />
+      {/* Controls */}
+      <View style={styles.controlsContainer}>
+        <CardNavigationContainer
+          onUndo={onUndo}
+          undoDisabled={undoDisabled}
+          onDislike={onDislike}
+          onSuper={() => setIsSelectingPlaylist(true)}
+          onLike={() => onLike(false)}
+        />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  square: {
-    width: 320,
-    aspectRatio: 1,
+  card: {
+    borderRadius: 24,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
     overflow: 'hidden',
-    backgroundColor: 'transparent',
-    borderRadius: 16,
-    position: 'relative',
   },
-  image: { width: '100%', height: '100%' },
-  fallback: {
+  header: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  muteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  muteText: {
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  imageContainer: {
+    borderRadius: 20,
+    borderWidth: 1,
+    overflow: 'hidden',
+    marginBottom: 8,
+    // Shadow for depth
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  placeholderContainer: {
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
-    backgroundColor: 'transparent',
   },
-  fallbackText: { color: '#fff', textAlign: 'center' },
-
-  meta: { width: 302, alignItems: 'center', gap: 2 },
-  title: { fontSize: 16, fontWeight: '700', color: '#fff', textAlign: 'center' },
-  artist: { fontSize: 13, fontWeight: '500', color: '#ddd', textAlign: 'center' },
-
-  muteText: { color: '#000', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
-
-  Icon: { height: 30, width: 30 },
+  placeholderText: {
+    fontSize: 48,
+    fontWeight: '700',
+    opacity: 0.5,
+  },
+  metaContainer: {
+    width: '85%',
+    alignItems: 'center',
+    gap: 2,
+    marginBottom: 6, // Reduced from 8 to 6
+  },
+  trackTitle: {
+    fontSize: 18, // Reduced from 22 to 18
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  artistName: {
+    fontSize: 12, // Reduced from 14 to 12
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 4, // Kept as 4
+  },
+  controlsContainer: {
+    // Removed scale to prevent overflow/crowding
+    paddingBottom: 4,
+  },
 });

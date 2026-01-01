@@ -18,7 +18,16 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 
+using Serilog;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog
+builder.Host.UseSerilog((context, services, configuration) => configuration
+    .ReadFrom.Configuration(context.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext()
+    .WriteTo.Console());
 
 Env.Load();
 
@@ -212,6 +221,8 @@ if (!app.Environment.IsProduction())
 
 app.UseRouting();
 app.UseCors("WebCors");
+
+app.UseSerilogRequestLogging();
 
 app.UseAuthentication();
 app.UseAuthorization();

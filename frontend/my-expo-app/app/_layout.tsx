@@ -8,17 +8,20 @@ import { RecommendationProvider } from '../services/recommendation/Recommendatio
 import { ThemeProvider } from '../services/theme/ThemeContext';
 import GeneralNavigationContainer from '../components/containers/GeneralNavigationContainer';
 import CookieConsentModal from '../components/CookieConsentModal';
+import { AudioPrefsProvider } from '../services/audio/useAudioPrefs';
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function Root() {
   return (
     <ThemeProvider>
-      <SessionProvider>
-        <RecommendationProvider>
-          <RootLayoutNav />
-        </RecommendationProvider>
-      </SessionProvider>
+      <AudioPrefsProvider>
+        <SessionProvider>
+          <RecommendationProvider>
+            <RootLayoutNav />
+          </RecommendationProvider>
+        </SessionProvider>
+      </AudioPrefsProvider>
     </ThemeProvider>
   );
 }

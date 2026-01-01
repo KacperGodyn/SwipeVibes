@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using Google.Cloud.Firestore;
 using SwipeVibesAPI.Services;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace SwipeVibesAPI.Services
 {
@@ -27,6 +28,7 @@ namespace SwipeVibesAPI.Services
         private readonly ISpotifyService _spotifyService;
         private readonly IConfiguration _configuration;
         private readonly FirestoreService _firestoreService;
+        private readonly ILogger<UserGrpcService> _logger;
 
         public UserGrpcService(
             FirestoreDb firestoreDb,
@@ -34,7 +36,8 @@ namespace SwipeVibesAPI.Services
             IHttpClientFactory httpClientFactory,
             ISpotifyService spotifyService,
             IConfiguration configuration,
-            FirestoreService firestoreService)
+            FirestoreService firestoreService,
+            ILogger<UserGrpcService> logger)
         {
             _firestoreDb = firestoreDb;
             _jwtService = jwtService;
@@ -42,6 +45,7 @@ namespace SwipeVibesAPI.Services
             _spotifyService = spotifyService;
             _configuration = configuration;
             _firestoreService = firestoreService;
+            _logger = logger;
         }
 
         private async Task<UserDoc?> FindUserByEmail(string email)
@@ -259,29 +263,18 @@ namespace SwipeVibesAPI.Services
 
         public override async Task<LoginReply> Login(LoginRequest request, ServerCallContext context)
         {
-            UserDoc user = null;
-
-            if (!string.IsNullOrWhiteSpace(request.Provider))
+            try
             {
-                if (IsProvider(request.Provider, "google"))
-                {
-                    var email = await VerifyGoogleAndGetEmailAsync(request.Token);
-                    user = await FindUserByEmail(email);
+                _logger.LogInformation("Login Request Provider: {Provider}, Username: {Username}", request.Provider, request.Username);
+                UserDoc user = null;
 
-                    if (user == null)
-                    {
-                        user = new UserDoc { Username = email.Split('@')[0], Email = email, Role = "User" };
-                        var refDoc = await _firestoreDb.Collection("users").AddAsync(user);
-                        user.Id = refDoc.Id;
-                    }
-                }
-                else if (IsProvider(request.Provider, "spotify"))
+                if (!string.IsNullOrWhiteSpace(request.Provider))
                 {
-                    var (email, spotifyId) = await VerifySpotifyAndGetProfileAsync(request.Token);
-
-                    if (!string.IsNullOrWhiteSpace(email))
+                    if (IsProvider(request.Provider, "google"))
                     {
+                        var email = await VerifyGoogleAndGetEmailAsync(request.Token);
                         user = await FindUserByEmail(email);
+
                         if (user == null)
                         {
                             user = new UserDoc { Username = email.Split('@')[0], Email = email, Role = "User" };
@@ -289,52 +282,85 @@ namespace SwipeVibesAPI.Services
                             user.Id = refDoc.Id;
                         }
                     }
+                    else if (IsProvider(request.Provider, "spotify"))
+                    {
+                        _logger.LogInformation("Verifying Spotify Token...");
+                        var (email, spotifyId) = await VerifySpotifyAndGetProfileAsync(request.Token);
+                        _logger.LogInformation("Spotify Profile: Email='{Email}', Id='{SpotifyId}'", email, spotifyId);
+
+                        if (!string.IsNullOrWhiteSpace(email))
+                        {
+                            user = await FindUserByEmail(email);
+                            if (user == null)
+                            {
+                                _logger.LogInformation("Creating new user via Email match: {Email}", email);
+                                var username = email.Split('@')[0];
+                                user = new UserDoc { Username = username, Email = email, Role = "User" };
+                                var refDoc = await _firestoreDb.Collection("users").AddAsync(user);
+                                user.Id = refDoc.Id;
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogInformation("Email missing, checking via Spotify ID: {SpotifyId}", spotifyId);
+                            var uname = $"spotify:{spotifyId}";
+                            user = await FindUserByUsername(uname);
+                            if (user == null)
+                            {
+                                _logger.LogInformation("Creating new user via Spotify ID");
+                                user = new UserDoc { Username = uname, Email = $"user+{spotifyId}@spotify.local", Role = "User" };
+                                var refDoc = await _firestoreDb.Collection("users").AddAsync(user);
+                                user.Id = refDoc.Id;
+                            }
+                        }
+                    }
                     else
                     {
-                        var uname = $"spotify:{spotifyId}";
-                        user = await FindUserByUsername(uname);
-                        if (user == null)
-                        {
-                            user = new UserDoc { Username = uname, Email = $"user+{spotifyId}@spotify.local", Role = "User" };
-                            var refDoc = await _firestoreDb.Collection("users").AddAsync(user);
-                            user.Id = refDoc.Id;
-                        }
+                        throw new RpcException(new Status(StatusCode.InvalidArgument, $"Unsupported provider '{request.Provider}'"));
                     }
                 }
                 else
                 {
-                    throw new RpcException(new Status(StatusCode.InvalidArgument, $"Unsupported provider '{request.Provider}'"));
+                    user = await FindUserByUsername(request.Username);
+                    if (user == null) throw new RpcException(new Status(StatusCode.NotFound, "User not found"));
+                    if (!BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
+                        throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid password"));
                 }
+
+                _logger.LogInformation("User resolved: {UserId} / {Username}. Generating tokens...", user?.Id, user?.Username);
+
+                var access = _jwtService.GenerateAccess(user.Id, user.Role, TimeSpan.FromMinutes(15));
+                var refresh = _jwtService.GenerateRefresh(user.Id, TimeSpan.FromDays(14));
+
+                _logger.LogInformation("Tokens generated. Setting cookie...");
+
+                context.GetHttpContext().Response.Cookies.Append("sv_refresh", refresh, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
+                    Path = "/",
+                    Expires = DateTimeOffset.UtcNow.AddDays(14),
+                });
+
+                return new LoginReply
+                {
+                    Token = access,
+                    RefreshToken = refresh,
+                    Username = user.Username,
+                    Role = user.Role,
+                    Id = user.Id,
+                    IsSpotifyConnected = !string.IsNullOrEmpty(user.SpotifyRefreshToken)
+                };
             }
-            else
+            catch (Exception ex)
             {
-                user = await FindUserByUsername(request.Username);
-                if (user == null) throw new RpcException(new Status(StatusCode.NotFound, "User not found"));
-                if (!BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid password"));
+                _logger.LogError(ex, "Login Handler Crash");
+                // Ensure we don't double wrap RpcExceptions
+                if (ex is RpcException) throw;
+                
+                throw new RpcException(new Status(StatusCode.Internal, $"Login Handler Crash: {ex.Message} | Trace: {ex.StackTrace}"));
             }
-
-            var access = _jwtService.GenerateAccess(user.Id, user.Role, TimeSpan.FromMinutes(15));
-            var refresh = _jwtService.GenerateRefresh(user.Id, TimeSpan.FromDays(14));
-
-            context.GetHttpContext().Response.Cookies.Append("sv_refresh", refresh, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
-                Path = "/",
-                Expires = DateTimeOffset.UtcNow.AddDays(14),
-            });
-
-            return new LoginReply
-            {
-                Token = access,
-                RefreshToken = refresh,
-                Username = user.Username,
-                Role = user.Role,
-                Id = user.Id,
-                IsSpotifyConnected = !string.IsNullOrEmpty(user.SpotifyRefreshToken)
-            };
         }
 
         public override Task<RefreshReply> Refresh(RefreshRequest request, ServerCallContext context)

@@ -19,6 +19,7 @@ message LogRequest {
   string album = 8;
   double bpm = 9;
   double gain = 10;
+  int32 position = 11; // Position in recommendation queue (1-indexed)
 }
 
 message LogReply { bool ok = 1; string id = 2; }

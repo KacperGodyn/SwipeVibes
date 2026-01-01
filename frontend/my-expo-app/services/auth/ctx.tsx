@@ -2,16 +2,19 @@ import React, { useContext, createContext, type PropsWithChildren } from 'react'
 import { logout as apiLogout } from './api';
 import { setAccessToken } from './token';
 import { useBootstrapAuth } from './useBootstrapAuth';
+import { getSavedRole } from './userInfo';
 
 const AuthContext = createContext<{
   signIn: (token: string) => void;
   signOut: () => void;
   session: string | null;
+  role: string | null;
   isLoading: boolean;
 }>({
   signIn: () => null,
   signOut: () => null,
   session: null,
+  role: null,
   isLoading: false,
 });
 
@@ -38,9 +41,9 @@ export function SessionProvider({ children }: PropsWithChildren) {
           await apiLogout();
         },
         session: isAuthenticated ? 'active_session' : null,
+        role: isAuthenticated ? getSavedRole() : null,
         isLoading: !ready,
-      }}
-    >
+      }}>
       {children}
     </AuthContext.Provider>
   );

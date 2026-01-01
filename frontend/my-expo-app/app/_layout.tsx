@@ -27,7 +27,7 @@ export default function Root() {
 }
 
 function RootLayoutNav() {
-  const { session, isLoading } = useSession();
+  const { session, role, isLoading } = useSession();
   const segments = useSegments();
   const router = useRouter();
 
@@ -48,6 +48,10 @@ function RootLayoutNav() {
       if (inAuthGroup) {
         router.replace('/home');
       }
+
+      const inAdminPage = segments[0] === 'admin';
+      const { role } = (session as any) || {}; // Wait, session is string. We need role from hook.
+      // We will access role from useSession in the next step properly.
     }
   }, [session, segments, isLoading]);
 
@@ -82,6 +86,7 @@ function RootLayoutNav() {
         <Stack.Screen name="playlists" />
         <Stack.Screen name="playlist/[id]" />
         <Stack.Screen name="statistics" />
+        <Stack.Screen name="admin" />
       </Stack>
       {showNavbar && <GeneralNavigationContainer />}
     </GestureHandlerRootView>

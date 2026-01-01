@@ -317,6 +317,11 @@ export class UpdateUserRequest extends Message<UpdateUserRequest> {
    */
   password = "";
 
+  /**
+   * @generated from field: bool cookies_accepted = 5;
+   */
+  cookiesAccepted = false;
+
   constructor(data?: PartialMessage<UpdateUserRequest>) {
     super();
     proto3.util.initPartial(data, this);
@@ -329,6 +334,7 @@ export class UpdateUserRequest extends Message<UpdateUserRequest> {
     { no: 2, name: "username", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 3, name: "email", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 4, name: "password", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: "cookies_accepted", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UpdateUserRequest {
@@ -432,6 +438,11 @@ export class UserReply extends Message<UserReply> {
    */
   isSpotifyConnected = false;
 
+  /**
+   * @generated from field: bool cookies_accepted = 6;
+   */
+  cookiesAccepted = false;
+
   constructor(data?: PartialMessage<UserReply>) {
     super();
     proto3.util.initPartial(data, this);
@@ -445,6 +456,7 @@ export class UserReply extends Message<UserReply> {
     { no: 3, name: "email", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 4, name: "role", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 5, name: "is_spotify_connected", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 6, name: "cookies_accepted", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UserReply {
@@ -578,6 +590,11 @@ export class LoginReply extends Message<LoginReply> {
    */
   isSpotifyConnected = false;
 
+  /**
+   * @generated from field: bool cookies_accepted = 7;
+   */
+  cookiesAccepted = false;
+
   constructor(data?: PartialMessage<LoginReply>) {
     super();
     proto3.util.initPartial(data, this);
@@ -592,6 +609,7 @@ export class LoginReply extends Message<LoginReply> {
     { no: 4, name: "refresh_token", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 5, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 6, name: "is_spotify_connected", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 7, name: "cookies_accepted", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): LoginReply {
@@ -1614,6 +1632,237 @@ export class DeleteAllPlaylistsRequest extends Message<DeleteAllPlaylistsRequest
 
   static equals(a: DeleteAllPlaylistsRequest | PlainMessage<DeleteAllPlaylistsRequest> | undefined, b: DeleteAllPlaylistsRequest | PlainMessage<DeleteAllPlaylistsRequest> | undefined): boolean {
     return proto3.util.equals(DeleteAllPlaylistsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message users.PromoteToAdminRequest
+ */
+export class PromoteToAdminRequest extends Message<PromoteToAdminRequest> {
+  /**
+   * @generated from field: string secret = 1;
+   */
+  secret = "";
+
+  /**
+   * Optional, if not set, promote self
+   *
+   * @generated from field: string user_id = 2;
+   */
+  userId = "";
+
+  constructor(data?: PartialMessage<PromoteToAdminRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.PromoteToAdminRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "secret", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "user_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PromoteToAdminRequest {
+    return new PromoteToAdminRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PromoteToAdminRequest {
+    return new PromoteToAdminRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PromoteToAdminRequest {
+    return new PromoteToAdminRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: PromoteToAdminRequest | PlainMessage<PromoteToAdminRequest> | undefined, b: PromoteToAdminRequest | PlainMessage<PromoteToAdminRequest> | undefined): boolean {
+    return proto3.util.equals(PromoteToAdminRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message users.AdminDeleteUserRequest
+ */
+export class AdminDeleteUserRequest extends Message<AdminDeleteUserRequest> {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id = "";
+
+  constructor(data?: PartialMessage<AdminDeleteUserRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.AdminDeleteUserRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): AdminDeleteUserRequest {
+    return new AdminDeleteUserRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): AdminDeleteUserRequest {
+    return new AdminDeleteUserRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): AdminDeleteUserRequest {
+    return new AdminDeleteUserRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: AdminDeleteUserRequest | PlainMessage<AdminDeleteUserRequest> | undefined, b: AdminDeleteUserRequest | PlainMessage<AdminDeleteUserRequest> | undefined): boolean {
+    return proto3.util.equals(AdminDeleteUserRequest, a, b);
+  }
+}
+
+/**
+ * Can add time range filters later
+ *
+ * @generated from message users.AdminDashboardStatsRequest
+ */
+export class AdminDashboardStatsRequest extends Message<AdminDashboardStatsRequest> {
+  constructor(data?: PartialMessage<AdminDashboardStatsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.AdminDashboardStatsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): AdminDashboardStatsRequest {
+    return new AdminDashboardStatsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): AdminDashboardStatsRequest {
+    return new AdminDashboardStatsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): AdminDashboardStatsRequest {
+    return new AdminDashboardStatsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: AdminDashboardStatsRequest | PlainMessage<AdminDashboardStatsRequest> | undefined, b: AdminDashboardStatsRequest | PlainMessage<AdminDashboardStatsRequest> | undefined): boolean {
+    return proto3.util.equals(AdminDashboardStatsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message users.AdminDashboardStatsReply
+ */
+export class AdminDashboardStatsReply extends Message<AdminDashboardStatsReply> {
+  /**
+   * @generated from field: int32 total_users = 1;
+   */
+  totalUsers = 0;
+
+  /**
+   * @generated from field: int32 total_swipes = 2;
+   */
+  totalSwipes = 0;
+
+  /**
+   * @generated from field: double gemini_precision = 3;
+   */
+  geminiPrecision = 0;
+
+  /**
+   * @generated from field: int32 gemini_likes = 4;
+   */
+  geminiLikes = 0;
+
+  /**
+   * @generated from field: int32 gemini_dislikes = 5;
+   */
+  geminiDislikes = 0;
+
+  /**
+   * @generated from field: double precision_at_1 = 6;
+   */
+  precisionAt1 = 0;
+
+  /**
+   * @generated from field: double precision_at_3 = 7;
+   */
+  precisionAt3 = 0;
+
+  /**
+   * @generated from field: double precision_at_5 = 8;
+   */
+  precisionAt5 = 0;
+
+  constructor(data?: PartialMessage<AdminDashboardStatsReply>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.AdminDashboardStatsReply";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "total_users", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 2, name: "total_swipes", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: "gemini_precision", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
+    { no: 4, name: "gemini_likes", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 5, name: "gemini_dislikes", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 6, name: "precision_at_1", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
+    { no: 7, name: "precision_at_3", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
+    { no: 8, name: "precision_at_5", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): AdminDashboardStatsReply {
+    return new AdminDashboardStatsReply().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): AdminDashboardStatsReply {
+    return new AdminDashboardStatsReply().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): AdminDashboardStatsReply {
+    return new AdminDashboardStatsReply().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: AdminDashboardStatsReply | PlainMessage<AdminDashboardStatsReply> | undefined, b: AdminDashboardStatsReply | PlainMessage<AdminDashboardStatsReply> | undefined): boolean {
+    return proto3.util.equals(AdminDashboardStatsReply, a, b);
+  }
+}
+
+/**
+ * @generated from message users.SetCookiesAcceptedRequest
+ */
+export class SetCookiesAcceptedRequest extends Message<SetCookiesAcceptedRequest> {
+  /**
+   * @generated from field: bool accepted = 1;
+   */
+  accepted = false;
+
+  constructor(data?: PartialMessage<SetCookiesAcceptedRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "users.SetCookiesAcceptedRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "accepted", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SetCookiesAcceptedRequest {
+    return new SetCookiesAcceptedRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SetCookiesAcceptedRequest {
+    return new SetCookiesAcceptedRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SetCookiesAcceptedRequest {
+    return new SetCookiesAcceptedRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: SetCookiesAcceptedRequest | PlainMessage<SetCookiesAcceptedRequest> | undefined, b: SetCookiesAcceptedRequest | PlainMessage<SetCookiesAcceptedRequest> | undefined): boolean {
+    return proto3.util.equals(SetCookiesAcceptedRequest, a, b);
   }
 }
 

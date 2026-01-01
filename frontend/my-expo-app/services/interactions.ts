@@ -1,6 +1,6 @@
-import http from "./api/http";
+import http from './api/http';
 
-export type InteractionDecision = "like" | "dislike" | "skip";
+export type InteractionDecision = 'like' | 'dislike' | 'skip';
 
 export async function logInteraction(payload: {
   isrc: string;
@@ -14,8 +14,9 @@ export async function logInteraction(payload: {
   bpm?: number | null;
   gain?: number | null;
   autoExport?: boolean;
+  position?: number;
 }) {
-  await http.post("/api/interactions", {
+  await http.post('/api/interactions', {
     Isrc: payload.isrc,
     Decision: payload.decision,
     DeezerTrackId: payload.deezerTrackId,
@@ -27,5 +28,6 @@ export async function logInteraction(payload: {
     Bpm: payload.bpm ?? undefined,
     Gain: payload.gain ?? undefined,
     InstantSync: payload.autoExport ?? false,
+    Position: payload.position ?? undefined,
   });
 }

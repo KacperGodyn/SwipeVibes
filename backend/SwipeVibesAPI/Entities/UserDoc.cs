@@ -40,5 +40,8 @@ namespace SwipeVibesAPI.Entities
 
         [FirestoreProperty]
         public int? Dislikes { get; set; }
+
+        [FirestoreProperty]
+        public bool CookiesAccepted { get; set; }
     }
 }

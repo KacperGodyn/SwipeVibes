@@ -51,9 +51,8 @@ const AVAILABLE_LANGUAGES = [
   'Korean',
 ];
 
-// Card dimension constants - reusable across screens
 const CARD_PADDING_HORIZONTAL = 16;
-const CARD_MARGIN_BOTTOM = 120; // Space for navbar + some padding
+const CARD_MARGIN_BOTTOM = 120;
 const CARD_BORDER_RADIUS = 24;
 
 type DangerActionType = 'reset' | 'playlists' | 'wipe' | null;
@@ -80,10 +79,8 @@ export default function SettingsScreen() {
   const options = [10, 20, 30] as const;
   const activeOptionIndex = options.indexOf(snippetDuration as 10 | 20 | 30);
 
-  // Card height: screen height minus top (theme toggle + padding) and bottom (navbar)
   const cardHeight = screenHeight - 240;
 
-  // Scrollbar state
   const scrollY = useSharedValue(0);
   const [contentHeight, setContentHeight] = useState(1);
   const [visibleHeight, setVisibleHeight] = useState(1);
@@ -94,9 +91,7 @@ export default function SettingsScreen() {
     },
   });
 
-  // Calculate scrollbar thumb stylestw
   const scrollIndicatorStyle = useAnimatedStyle(() => {
-    // If content fits in view, hide scrollbar
     if (contentHeight <= visibleHeight || visibleHeight <= 0) {
       return { opacity: 0 };
     }
@@ -115,12 +110,9 @@ export default function SettingsScreen() {
     };
   });
 
-  // Animation state for snippet duration slider
   const [optionWidth, setOptionWidth] = useState(0);
   const indicatorLeft = useSharedValue(0);
   const hasInitialized = useRef(false);
-
-  // Measure option button width on layout
   const handleOptionLayout = (e: LayoutChangeEvent) => {
     const { width } = e.nativeEvent.layout;
     if (width > 0 && optionWidth === 0) {
@@ -128,10 +120,9 @@ export default function SettingsScreen() {
     }
   };
 
-  // Animate indicator when selection changes
   useEffect(() => {
     if (optionWidth > 0 && activeOptionIndex >= 0) {
-      const targetLeft = activeOptionIndex * optionWidth + 4; // 4 = padding
+      const targetLeft = activeOptionIndex * optionWidth + 4;
       if (!hasInitialized.current) {
         indicatorLeft.value = targetLeft;
         hasInitialized.current = true;
@@ -184,7 +175,6 @@ export default function SettingsScreen() {
     </View>
   );
 
-  // API Executors
   const performReset = async (type: SwipeResetType) => {
     try {
       setIsLoading(true);
@@ -227,7 +217,6 @@ export default function SettingsScreen() {
   return (
     <ScreenLayout>
       <View style={styles.container}>
-        {/* Main Card */}
         <View
           style={[
             styles.card,
@@ -237,19 +226,16 @@ export default function SettingsScreen() {
               borderColor: colors.cardBorder,
             },
           ]}>
-          {/* Card Header */}
           <View style={styles.cardHeader}>
             <Text style={[styles.title, { color: colors.text }]}>Settings</Text>
           </View>
 
-          {/* Status Message */}
           {statusMessage && (
             <View style={styles.statusMessage}>
               <Text style={styles.statusText}>{statusMessage}</Text>
             </View>
           )}
 
-          {/* Scrollable Content */}
           <Animated.ScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
@@ -339,6 +325,8 @@ export default function SettingsScreen() {
               </Text>
               {renderChips(AVAILABLE_LANGUAGES, languageFilters || [], setLanguageFilters)}
             </View>
+
+            <View style={[styles.divider, { backgroundColor: colors.divider }]} />
 
             <View style={[styles.divider, { backgroundColor: colors.divider }]} />
 

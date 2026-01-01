@@ -40,8 +40,6 @@ namespace SwipeVibesAPI.Services
 
         public async Task DeleteUserInteractionsAsync(string userId, string? decisionType = null)
         {
-            Console.WriteLine($"[DeleteUserInteractions] Starting for user: {userId}, Decision: {decisionType ?? "ALL"}");
-
             var query = _db.Collection("interactions").WhereEqualTo("UserId", userId);
 
             if (!string.IsNullOrEmpty(decisionType))
@@ -49,17 +47,10 @@ namespace SwipeVibesAPI.Services
                 query = query.WhereEqualTo("Decision", decisionType);
             }
 
-            int totalDeleted = 0;
             while (true)
             {
                 var snapshot = await query.Limit(500).GetSnapshotAsync();
-                if (snapshot.Count == 0)
-                {
-                    Console.WriteLine("[DeleteUserInteractions] No more documents found.");
-                    break;
-                }
-
-                Console.WriteLine($"[DeleteUserInteractions] Found batch of {snapshot.Count} documents. Deleting...");
+                if (snapshot.Count == 0) break;
 
                 var batch = _db.StartBatch();
                 foreach (var doc in snapshot.Documents)
@@ -67,9 +58,7 @@ namespace SwipeVibesAPI.Services
                     batch.Delete(doc.Reference);
                 }
                 await batch.CommitAsync();
-                totalDeleted += snapshot.Count;
             }
-            Console.WriteLine($"[DeleteUserInteractions] Total deleted: {totalDeleted}");
         }
 
         public async Task<UserPrefsDoc?> GetUserPrefsAsync(string userId)
@@ -128,7 +117,7 @@ namespace SwipeVibesAPI.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error exporting like to Spotify: {ex.Message}");
+                // Silent fail for Spotify export
             }
         }
 
@@ -144,27 +133,8 @@ namespace SwipeVibesAPI.Services
             var refDoc = await _db.Collection("playlists").AddAsync(doc);
             doc.Id = refDoc.Id;
 
-            try
-            {
-                var accessToken = await GetSpotifyAccessTokenForUser(userId);
-                if (!string.IsNullOrEmpty(accessToken))
-                {
-                    var spotifyUserId = await _spotifyService.GetSpotifyUserIdAsync(accessToken);
-                    if (!string.IsNullOrEmpty(spotifyUserId))
-                    {
-                        var spotifyPlaylistId = await _spotifyService.CreatePlaylistAsync(spotifyUserId, name, accessToken);
-                        if (!string.IsNullOrEmpty(spotifyPlaylistId))
-                        {
-                            await refDoc.UpdateAsync("SpotifyPlaylistId", spotifyPlaylistId);
-                            doc.SpotifyPlaylistId = spotifyPlaylistId;
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error creating Spotify playlist: {ex.Message}");
-            }
+            // Note: Spotify playlist is NOT auto-created here.
+            // Users can use "Export to Spotify" feature if they want to sync.
 
             return doc;
         }
@@ -188,20 +158,17 @@ namespace SwipeVibesAPI.Services
 
         public async Task<bool> DeletePlaylistAsync(string userId, string playlistId)
         {
-            Console.WriteLine($"[DeletePlaylist] Attempting to delete playlist: {playlistId}");
             var docRef = _db.Collection("playlists").Document(playlistId);
             var snap = await docRef.GetSnapshotAsync();
 
             if (!snap.Exists)
             {
-                Console.WriteLine("[DeletePlaylist] Playlist not found.");
                 return false;
             }
 
             var playlist = snap.ConvertTo<PlaylistDoc>();
             if (playlist.UserId != userId)
             {
-                Console.WriteLine("[DeletePlaylist] Unauthorized user.");
                 return false;
             }
 
@@ -218,18 +185,14 @@ namespace SwipeVibesAPI.Services
                     batch.Delete(t.Reference);
                 }
                 await batch.CommitAsync();
-                deletedTracks += tracksSnap.Count;
             }
-            Console.WriteLine($"[DeletePlaylist] Deleted {deletedTracks} tracks from subcollection.");
 
             await docRef.DeleteAsync();
-            Console.WriteLine("[DeletePlaylist] Playlist document deleted.");
             return true;
         }
 
         public async Task DeleteAllUserPlaylistsAsync(string userId, bool unsubscribeSpotify)
         {
-            Console.WriteLine($"[DeleteAllPlaylists] Starting for user {userId}. UnsubSpotify: {unsubscribeSpotify}");
             var playlists = await GetUserPlaylistsAsync(userId);
             string? accessToken = null;
 
@@ -244,12 +207,11 @@ namespace SwipeVibesAPI.Services
                 {
                     try
                     {
-                        Console.WriteLine($"[DeleteAllPlaylists] Unfollowing Spotify playlist: {doc.SpotifyPlaylistId}");
                         await _spotifyService.UnfollowPlaylistAsync(doc.SpotifyPlaylistId, accessToken);
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        Console.WriteLine($"Failed to unfollow spotify playlist {doc.SpotifyPlaylistId}: {ex.Message}");
+                        // Silent fail for Spotify unfollow
                     }
                 }
 
@@ -259,19 +221,10 @@ namespace SwipeVibesAPI.Services
 
         public async Task DeleteUserAccountAsync(string userId)
         {
-            Console.WriteLine($"[DeleteAccount] Wiping data for user {userId}");
-
             await DeleteUserInteractionsAsync(userId);
-
             await DeleteAllUserPlaylistsAsync(userId, false);
-
-            Console.WriteLine("[DeleteAccount] Deleting user prefs...");
             await _db.Collection("user_prefs").Document(userId).DeleteAsync();
-
-            Console.WriteLine("[DeleteAccount] Deleting user doc...");
             await _db.Collection("users").Document(userId).DeleteAsync();
-
-            Console.WriteLine("[DeleteAccount] Wipe complete.");
         }
 
         public async Task AddTrackToPlaylistAsync(string userId, string playlistId, PlaylistTrackDoc track)
@@ -306,9 +259,9 @@ namespace SwipeVibesAPI.Services
                         }
                     }
                 }
-                catch (Exception ex)
+                catch
                 {
-                    Console.WriteLine($"Error adding track to Spotify: {ex.Message}");
+                    // Silent fail for Spotify sync
                 }
             }
         }
@@ -338,9 +291,9 @@ namespace SwipeVibesAPI.Services
                             await _spotifyService.RemoveTrackFromPlaylistAsync(playlistData.SpotifyPlaylistId, trackData.SpotifyUri, accessToken);
                         }
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        Console.WriteLine($"Error removing track from Spotify: {ex.Message}");
+                        // Silent fail for Spotify sync
                     }
                 }
 

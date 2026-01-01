@@ -1,5 +1,13 @@
-import React, { useEffect, useMemo, useCallback } from 'react';
-import { View, Text, useWindowDimensions } from 'react-native';
+import React, { useEffect, useMemo, useCallback, useState } from 'react';
+import {
+  View,
+  Text,
+  useWindowDimensions,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Platform,
+} from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
 import ScreenLayout from 'components/ScreenLayout';
@@ -24,21 +32,27 @@ import { useAudioPrefs } from '../services/audio/useAudioPrefs';
 import { logInteraction } from '../services/interactions';
 import ActivityIndicatorIcon from '../assets/HomeCard/activity_indicator.svg';
 
-import { addTrackToPlaylist } from '../services/auth/api';
-import { getString } from '../services/storage/mmkv';
+import { addTrackToPlaylist, getMyPlaylists, createPlaylist } from '../services/auth/api';
+import { getString, setString } from '../services/storage/mmkv';
+import { useTheme } from '../services/theme/ThemeContext';
 
 const SWIPE_THRESHOLD = 120;
 const SWIPE_VELOCITY_THRESHOLD = 800;
+const DEFAULT_PLAYLIST_NAME = 'SwipeVibes Liked';
 
 export default function HomeScreen() {
-  const { track, loading, error, refetch, undo, canUndo, player } = useRecommendation();
+  const { track, loading, error, refetch, undo, canUndo, player, positionInSession } =
+    useRecommendation();
   const { muted, ready, autoExportLikes } = useAudioPrefs();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const isFocused = useIsFocused();
+  const { colors } = useTheme();
 
   const translateX = useSharedValue(0);
   const rotation = useSharedValue(0);
   const loaderAnim = useSharedValue(0);
+
+  const [showPlaylistCreatedModal, setShowPlaylistCreatedModal] = useState(false);
 
   useEffect(() => {
     loaderAnim.value = withRepeat(
@@ -75,7 +89,6 @@ export default function HomeScreen() {
 
   const send = async (t: RandomTrackResponse, decision: 'like' | 'dislike' | 'skip') => {
     if (!t.isrc) return;
-    console.log(`Sending interaction: ${decision} for ${t.title}`);
 
     await logInteraction({
       isrc: t.isrc,
@@ -89,6 +102,7 @@ export default function HomeScreen() {
       bpm: t.bpm ?? null,
       gain: t.gain ?? null,
       autoExport: decision === 'like' ? autoExportLikes : false,
+      position: positionInSession,
     });
   };
 
@@ -115,22 +129,67 @@ export default function HomeScreen() {
     };
   });
 
+  const ensurePlaylistExists = async (): Promise<string | null> => {
+    const lastActivePlaylistId = getString('last_active_playlist_id');
+
+    if (lastActivePlaylistId) {
+      // Check if playlist still exists
+      try {
+        const playlists = await getMyPlaylists();
+        const exists = playlists.some((p) => p.id === lastActivePlaylistId);
+        if (exists) {
+          return lastActivePlaylistId;
+        }
+      } catch (err) {
+        console.error('Failed to check playlists:', err);
+      }
+    }
+
+    // No valid playlist - create default one
+    try {
+      const playlists = await getMyPlaylists();
+
+      // Check if any playlist exists
+      if (playlists.length > 0) {
+        // Use first available playlist
+        const firstPlaylist = playlists[0];
+        setString('last_active_playlist_id', firstPlaylist.id);
+        return firstPlaylist.id;
+      }
+
+      // No playlists at all - create SwipeVibes Liked
+      const newPlaylist = await createPlaylist(DEFAULT_PLAYLIST_NAME);
+      setString('last_active_playlist_id', newPlaylist.id);
+      setShowPlaylistCreatedModal(true);
+      return newPlaylist.id;
+    } catch (err) {
+      console.error('Failed to create default playlist:', err);
+      return null;
+    }
+  };
+
   const handleSwipeAction = (decision: 'like' | 'dislike', skipAutoAdd = false) => {
     if (loading || !track) return;
 
     if (decision === 'like' && !skipAutoAdd) {
-      const lastActivePlaylistId = getString('last_active_playlist_id');
-
-      if (lastActivePlaylistId) {
-        addTrackToPlaylist(lastActivePlaylistId, {
-          id: track.id,
-          title: track.title,
-          isrc: track.isrc || '',
-          artistId: track.artists?.[0]?.id || 0,
-          artistName: track.artists?.[0]?.name || 'Unknown',
-          albumCover: track.album?.coverMedium || '',
-        }).catch((err) => console.error('Failed to add to sticky playlist in bg:', err));
-      }
+      // Run playlist logic in background
+      (async () => {
+        const playlistId = await ensurePlaylistExists();
+        if (playlistId) {
+          try {
+            await addTrackToPlaylist(playlistId, {
+              id: track.id,
+              title: track.title,
+              isrc: track.isrc || '',
+              artistId: track.artists?.[0]?.id || 0,
+              artistName: track.artists?.[0]?.name || 'Unknown',
+              albumCover: track.album?.coverMedium || '',
+            });
+          } catch (err) {
+            console.error('Failed to add to playlist:', err);
+          }
+        }
+      })();
     }
 
     const swipeOutDuration = 300;
@@ -153,15 +212,13 @@ export default function HomeScreen() {
       );
     })
     .onEnd((e) => {
-      const { translationX, velocityX } = e;
+      const shouldSwipe =
+        Math.abs(e.translationX) > SWIPE_THRESHOLD ||
+        Math.abs(e.velocityX) > SWIPE_VELOCITY_THRESHOLD;
 
-      if (
-        Math.abs(translationX) > SWIPE_THRESHOLD ||
-        Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD
-      ) {
-        const decision = translationX > 0 ? 'like' : 'dislike';
-
-        runOnJS(handleSwipeAction)(decision);
+      if (shouldSwipe) {
+        const direction = e.translationX > 0 ? 'like' : 'dislike';
+        runOnJS(handleSwipeAction)(direction as 'like' | 'dislike');
       } else {
         translateX.value = withSpring(0);
         rotation.value = withSpring(0);
@@ -177,6 +234,27 @@ export default function HomeScreen() {
       style={{ paddingTop: 70 }}
       testID="home-screen-layout">
       <WebPlaybackStarter />
+
+      {/* Playlist Created Modal */}
+      <Modal
+        visible={showPlaylistCreatedModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowPlaylistCreatedModal(false)}>
+        <View style={modalStyles.overlay}>
+          <View style={[modalStyles.container, { backgroundColor: colors.card }]}>
+            <Text style={[modalStyles.title, { color: colors.text }]}>🎵 Playlist Created!</Text>
+            <Text style={[modalStyles.message, { color: colors.textSecondary }]}>
+              Your liked songs will be saved to "{DEFAULT_PLAYLIST_NAME}" playlist.
+            </Text>
+            <Pressable
+              onPress={() => setShowPlaylistCreatedModal(false)}
+              style={[modalStyles.button, { backgroundColor: colors.accent }]}>
+              <Text style={modalStyles.buttonText}>Got it!</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
 
       <View className="w-full flex-1 items-center">
         {error && <Text style={{ color: 'red', marginTop: 50 }}>Error: {String(error)}</Text>}
@@ -219,3 +297,41 @@ export default function HomeScreen() {
     </ScreenLayout>
   );
 }
+
+const modalStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  container: {
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 360,
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  message: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  button: {
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+});

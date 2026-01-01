@@ -154,7 +154,8 @@ namespace SwipeVibesAPI.Services
                 Username = newUser.Username,
                 Email = newUser.Email,
                 Role = newUser.Role,
-                IsSpotifyConnected = false
+                IsSpotifyConnected = false,
+                CookiesAccepted = false
             };
         }
 
@@ -173,7 +174,8 @@ namespace SwipeVibesAPI.Services
             var updates = new Dictionary<string, object>
             {
                 { "Username", request.Username },
-                { "Email", request.Email }
+                { "Email", request.Email },
+                { "CookiesAccepted", request.CookiesAccepted }
             };
 
             if (!string.IsNullOrEmpty(request.Password))
@@ -191,7 +193,8 @@ namespace SwipeVibesAPI.Services
                 Username = request.Username,
                 Email = request.Email,
                 Role = user.Role,
-                IsSpotifyConnected = !string.IsNullOrEmpty(user.SpotifyRefreshToken)
+                IsSpotifyConnected = !string.IsNullOrEmpty(user.SpotifyRefreshToken),
+                CookiesAccepted = request.CookiesAccepted
             };
         }
 
@@ -214,7 +217,8 @@ namespace SwipeVibesAPI.Services
                 Username = user.Username,
                 Email = user.Email ?? "",
                 Role = user.Role,
-                IsSpotifyConnected = !string.IsNullOrEmpty(user.SpotifyRefreshToken)
+                IsSpotifyConnected = !string.IsNullOrEmpty(user.SpotifyRefreshToken),
+                CookiesAccepted = user.CookiesAccepted
             };
         }
 
@@ -231,7 +235,8 @@ namespace SwipeVibesAPI.Services
                     Username = u.Username,
                     Email = u.Email ?? "",
                     Role = u.Role,
-                    IsSpotifyConnected = !string.IsNullOrEmpty(u.SpotifyRefreshToken)
+                    IsSpotifyConnected = !string.IsNullOrEmpty(u.SpotifyRefreshToken),
+                    CookiesAccepted = u.CookiesAccepted
                 });
             }
             return reply;
@@ -350,7 +355,8 @@ namespace SwipeVibesAPI.Services
                     Username = user.Username,
                     Role = user.Role,
                     Id = user.Id,
-                    IsSpotifyConnected = !string.IsNullOrEmpty(user.SpotifyRefreshToken)
+                    IsSpotifyConnected = !string.IsNullOrEmpty(user.SpotifyRefreshToken),
+                    CookiesAccepted = user.CookiesAccepted
                 };
             }
             catch (Exception ex)
@@ -474,7 +480,7 @@ namespace SwipeVibesAPI.Services
                     throw new RpcException(new Status(StatusCode.PermissionDenied, "You do not own this playlist."));
                 }
 
-                Console.WriteLine($"[AddTrackToPlaylist] Error: {ex.Message}");
+                // Silent fail for AddTrackToPlaylist
                 throw new RpcException(new Status(StatusCode.Internal, $"Internal error: {ex.Message}"));
             }
 
@@ -710,6 +716,152 @@ namespace SwipeVibesAPI.Services
             var userId = GetCurrentUserId(context);
             await _firestoreService.DeleteUserAccountAsync(userId);
             return new DeleteReply { Success = true, Message = "Account deleted forever" };
+        }
+        public override async Task<UserReply> PromoteToAdmin(PromoteToAdminRequest request, ServerCallContext context)
+        {
+            // Simple hardcoded secret for now - in prod use env vars or secret manager
+            const string AdminSecret = "SuperSecretPassword123";
+
+            if (request.Secret != AdminSecret)
+            {
+                _logger.LogWarning("Failed admin promotion attempt. Invalid secret.");
+                throw new RpcException(new Status(StatusCode.PermissionDenied, "Invalid admin secret"));
+            }
+
+            string targetUserId = request.UserId;
+            if (string.IsNullOrWhiteSpace(targetUserId))
+            {
+                targetUserId = GetCurrentUserId(context);
+            }
+
+            var docRef = _firestoreDb.Collection("users").Document(targetUserId);
+            var snapshot = await docRef.GetSnapshotAsync();
+
+            if (!snapshot.Exists)
+                throw new RpcException(new Status(StatusCode.NotFound, "User not found"));
+
+            await docRef.UpdateAsync("Role", "Admin");
+
+            var user = snapshot.ConvertTo<UserDoc>();
+            // Update local object to reflect change for reply
+            user.Role = "Admin";
+
+            _logger.LogInformation("User {UserId} promoted to Admin", targetUserId);
+
+            return new UserReply
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email ?? "",
+                Role = user.Role,
+                IsSpotifyConnected = !string.IsNullOrEmpty(user.SpotifyRefreshToken),
+                CookiesAccepted = user.CookiesAccepted
+            };
+        }
+
+        public override async Task<DeleteReply> AdminDeleteUser(AdminDeleteUserRequest request, ServerCallContext context)
+        {
+            // Verify admin role
+            var currentUserId = GetCurrentUserId(context);
+            var currentUser = await GetUserById(currentUserId);
+            if (currentUser?.Role != "Admin")
+                throw new RpcException(new Status(StatusCode.PermissionDenied, "Admin access required"));
+
+            await _firestoreService.DeleteUserAccountAsync(request.Id);
+            return new DeleteReply { Success = true, Message = "User deleted by Admin." };
+        }
+
+        public override async Task<AdminDashboardStatsReply> GetAdminDashboardStats(AdminDashboardStatsRequest request, ServerCallContext context)
+        {
+            var currentUserId = GetCurrentUserId(context);
+            var currentUser = await GetUserById(currentUserId);
+            if (currentUser?.Role != "Admin")
+                throw new RpcException(new Status(StatusCode.PermissionDenied, "Admin access required"));
+
+            // 1. Total Users
+            var usersSnap = await _firestoreDb.Collection("users").GetSnapshotAsync();
+            var totalUsers = usersSnap.Count;
+
+            // 2. Interactions Stats
+            var interactionsSnap = await _firestoreDb.Collection("interactions").GetSnapshotAsync();
+            var totalSwipes = interactionsSnap.Count;
+
+            int geminiLikes = 0;
+            int geminiDislikes = 0;
+
+            // Precision@K counters
+            int likesAt1 = 0, totalAt1 = 0;
+            int likesAt3 = 0, totalAt3 = 0;
+            int likesAt5 = 0, totalAt5 = 0;
+
+            foreach (var doc in interactionsSnap.Documents)
+            {
+                var isGemini = doc.ContainsField("Source") && doc.GetValue<string>("Source") == "gemini/recommendation";
+                if (!isGemini) continue;
+
+                var decision = doc.GetValue<string>("Decision");
+                var isLike = decision == "like";
+
+                if (isLike) geminiLikes++;
+                else if (decision == "dislike") geminiDislikes++;
+
+                // Precision@K (only count if position is tracked)
+                if (doc.ContainsField("Position"))
+                {
+                    var pos = doc.GetValue<int?>("Position") ?? 0;
+                    if (pos >= 1 && pos <= 5)
+                    {
+                        if (pos <= 1) { totalAt1++; if (isLike) likesAt1++; }
+                        if (pos <= 3) { totalAt3++; if (isLike) likesAt3++; }
+                        if (pos <= 5) { totalAt5++; if (isLike) likesAt5++; }
+                    }
+                }
+            }
+
+            double precision = (geminiLikes + geminiDislikes) > 0
+                ? (double)geminiLikes / (geminiLikes + geminiDislikes)
+                : 0.0;
+
+            double precisionAt1 = totalAt1 > 0 ? (double)likesAt1 / totalAt1 : 0.0;
+            double precisionAt3 = totalAt3 > 0 ? (double)likesAt3 / totalAt3 : 0.0;
+            double precisionAt5 = totalAt5 > 0 ? (double)likesAt5 / totalAt5 : 0.0;
+
+            return new AdminDashboardStatsReply
+            {
+                TotalUsers = totalUsers,
+                TotalSwipes = totalSwipes,
+                GeminiLikes = geminiLikes,
+                GeminiDislikes = geminiDislikes,
+                GeminiPrecision = precision,
+                PrecisionAt1 = precisionAt1,
+                PrecisionAt3 = precisionAt3,
+                PrecisionAt5 = precisionAt5
+            };
+        }
+
+        public override async Task<UserReply> SetCookiesAccepted(SetCookiesAcceptedRequest request, ServerCallContext context)
+        {
+            var userId = GetCurrentUserId(context);
+
+            var docRef = _firestoreDb.Collection("users").Document(userId);
+            var snapshot = await docRef.GetSnapshotAsync();
+
+            if (!snapshot.Exists)
+                throw new RpcException(new Status(StatusCode.NotFound, "User not found"));
+
+            await docRef.UpdateAsync("CookiesAccepted", request.Accepted);
+
+            var user = snapshot.ConvertTo<UserDoc>();
+
+            return new UserReply
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                Role = user.Role,
+                IsSpotifyConnected = !string.IsNullOrEmpty(user.SpotifyRefreshToken),
+                CookiesAccepted = request.Accepted
+            };
         }
     }
 }

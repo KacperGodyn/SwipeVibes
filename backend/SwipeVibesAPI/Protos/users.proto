@@ -45,6 +45,10 @@ service UserService {
   rpc ResetSwipeHistory (ResetSwipeHistoryRequest) returns (DeleteReply);
   rpc DeleteAllPlaylists (DeleteAllPlaylistsRequest) returns (DeleteReply);
   rpc DeleteAccount (Empty) returns (DeleteReply);
+  rpc PromoteToAdmin (PromoteToAdminRequest) returns (UserReply);
+  rpc GetAdminDashboardStats (AdminDashboardStatsRequest) returns (AdminDashboardStatsReply);
+  rpc AdminDeleteUser (AdminDeleteUserRequest) returns (DeleteReply);
+  rpc SetCookiesAccepted (SetCookiesAcceptedRequest) returns (UserReply);
 }
 
 message Empty {}
@@ -64,6 +68,7 @@ message UpdateUserRequest {
   string username = 2;
   string email = 3;
   string password = 4;
+  bool cookies_accepted = 5;
 }
 
 message LoginRequest {
@@ -79,6 +84,7 @@ message UserReply {
   string email = 3;
   string role = 4;
   bool is_spotify_connected = 5;
+  bool cookies_accepted = 6;
 }
 
 message UsersReply {
@@ -97,6 +103,7 @@ message LoginReply {
   string refresh_token = 4;
   string id = 5;
   bool is_spotify_connected = 6;
+  bool cookies_accepted = 7;
 }
 
 message UserInteractionsRequest {
@@ -225,4 +232,32 @@ message ResetSwipeHistoryRequest {
 
 message DeleteAllPlaylistsRequest {
   bool unsubscribe_spotify = 1;
+}
+
+message PromoteToAdminRequest {
+  string secret = 1;
+  string user_id = 2; // Optional, if not set, promote self
+}
+
+message AdminDeleteUserRequest {
+  string id = 1;
+}
+
+message AdminDashboardStatsRequest {
+  // Can add time range filters later
+}
+
+message AdminDashboardStatsReply {
+  int32 total_users = 1;
+  int32 total_swipes = 2;
+  double gemini_precision = 3;
+  int32 gemini_likes = 4;
+  int32 gemini_dislikes = 5;
+  double precision_at_1 = 6;
+  double precision_at_3 = 7;
+  double precision_at_5 = 8;
+}
+
+message SetCookiesAcceptedRequest {
+  bool accepted = 1;
 }

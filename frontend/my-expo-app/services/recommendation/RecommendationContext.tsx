@@ -25,6 +25,7 @@ type RecommendationContextType = {
   undo: () => void;
   canUndo: boolean;
   player: AudioPlayer;
+  positionInSession: number;
 };
 
 const RecommendationContext = createContext<RecommendationContextType | null>(null);
@@ -40,6 +41,7 @@ export function RecommendationProvider({ children }: PropsWithChildren) {
   const [history, setHistory] = useState<RandomTrackResponse[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [positionInSession, setPositionInSession] = useState<number>(0);
 
   const { ready: authReady, isAuthenticated } = useBootstrapAuth();
   const { genreFilters, languageFilters, ready: prefsReady } = useAudioPrefs();
@@ -113,6 +115,7 @@ export function RecommendationProvider({ children }: PropsWithChildren) {
         });
 
         setTrack(data);
+        setPositionInSession((prev) => prev + 1);
       } catch (err: any) {
         if (err?.code === 'ERR_CANCELED') return;
         console.error('[Fetch Error]', err);
@@ -162,6 +165,7 @@ export function RecommendationProvider({ children }: PropsWithChildren) {
         undo,
         canUndo: history.length > 0,
         player,
+        positionInSession,
       }}>
       {children}
     </RecommendationContext.Provider>

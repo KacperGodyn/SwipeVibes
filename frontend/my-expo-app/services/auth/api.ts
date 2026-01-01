@@ -1,5 +1,5 @@
-import { userClient } from "./gRPC/user/connectClient";
-import type { PartialMessage } from "@bufbuild/protobuf";
+import { userClient } from './gRPC/user/connectClient';
+import type { PartialMessage } from '@bufbuild/protobuf';
 import {
   LoginRequest,
   RefreshRequest,
@@ -23,11 +23,15 @@ import {
   ResetSwipeHistoryRequest,
   DeleteAllPlaylistsRequest,
   SwipeResetType,
-} from "./gRPC/user/users_pb";
-import { setAccessToken, setRefreshToken, getRefreshToken } from "./token"; 
-import { Platform, DeviceEventEmitter } from "react-native"; // Dodano DeviceEventEmitter
-import { setSavedUser, clearSavedUser } from "./userInfo";
-import { AUTH_EVENT } from "./useBootstrapAuth"; // Import nazwy eventu (opcjonalnie string "auth.state_change")
+  PromoteToAdminRequest,
+  AdminDashboardStatsRequest,
+  AdminDashboardStatsReply,
+  AdminDeleteUserRequest,
+} from './gRPC/user/users_pb';
+import { setAccessToken, setRefreshToken, getRefreshToken } from './token';
+import { Platform, DeviceEventEmitter } from 'react-native'; // Dodano DeviceEventEmitter
+import { setSavedUser, clearSavedUser } from './userInfo';
+import { AUTH_EVENT } from './useBootstrapAuth'; // Import nazwy eventu (opcjonalnie string "auth.state_change")
 
 const handleLoginResponse = (res: LoginReply) => {
   setAccessToken(res.token);
@@ -36,9 +40,9 @@ const handleLoginResponse = (res: LoginReply) => {
   }
 
   setSavedUser(res.username, res.role, res.id);
-  
+
   // Powiadamiamy aplikację o zalogowaniu
-  DeviceEventEmitter.emit("auth.state_change", true);
+  DeviceEventEmitter.emit('auth.state_change', true);
 
   return res;
 };
@@ -47,7 +51,7 @@ export async function registerUser(username: string, password: string, email?: s
   const req: PartialMessage<CreateUserRequest> = {
     username,
     password,
-    email
+    email,
   };
   const res: UserReply = await userClient.createUser(req);
   return res;
@@ -55,7 +59,7 @@ export async function registerUser(username: string, password: string, email?: s
 
 export async function loginWithSpotify(idTokenSpotify: string) {
   const req: PartialMessage<LoginRequest> = {
-    provider: "spotify",
+    provider: 'spotify',
     token: idTokenSpotify,
   };
   const res: LoginReply = await userClient.login(req);
@@ -64,7 +68,7 @@ export async function loginWithSpotify(idTokenSpotify: string) {
 
 export async function loginWithGoogle(idTokenGoogle: string) {
   const req: PartialMessage<LoginRequest> = {
-    provider: "google",
+    provider: 'google',
     token: idTokenGoogle,
   };
   const res: LoginReply = await userClient.login(req);
@@ -82,23 +86,23 @@ export async function loginWithPassword(username: string, password: string) {
 
 export async function getUserStatistics(userId: string): Promise<UserStatsReply> {
   const req: PartialMessage<UserStatsRequest> = {
-    userId: userId 
+    userId: userId,
   };
   const res: UserStatsReply = await userClient.getUserStats(req);
   return res;
 }
 
 export async function refreshAccess(): Promise<{ token: string }> {
-  const refreshToken = getRefreshToken() || "";
-  
-  const req: PartialMessage<RefreshRequest> = { 
-    refreshToken: refreshToken 
+  const refreshToken = getRefreshToken() || '';
+
+  const req: PartialMessage<RefreshRequest> = {
+    refreshToken: refreshToken,
   };
-  
+
   const res: RefreshReply = await userClient.refresh(req);
-  
+
   setAccessToken(res.token);
-  
+
   return { token: res.token };
 }
 
@@ -111,7 +115,7 @@ export async function logout(): Promise<void> {
     setAccessToken(null);
     setRefreshToken(null);
     // Powiadamiamy aplikację o wylogowaniu!
-    DeviceEventEmitter.emit("auth.state_change", false);
+    DeviceEventEmitter.emit('auth.state_change', false);
   }
 }
 
@@ -156,16 +160,19 @@ export async function addTrackToPlaylist(
     isrc: track.isrc,
     artistId: BigInt(track.artistId),
     artistName: track.artistName,
-    albumCover: track.albumCover
+    albumCover: track.albumCover,
   };
   const res: PlaylistTrackReply = await userClient.addTrackToPlaylist(req);
   return res.success;
 }
 
-export async function removeTrackFromPlaylist(playlistId: string, deezerTrackId: number): Promise<boolean> {
+export async function removeTrackFromPlaylist(
+  playlistId: string,
+  deezerTrackId: number
+): Promise<boolean> {
   const req: PartialMessage<RemoveTrackFromPlaylistRequest> = {
     playlistId,
-    deezerTrackId: BigInt(deezerTrackId)
+    deezerTrackId: BigInt(deezerTrackId),
   };
   const res: DeleteReply = await userClient.removeTrackFromPlaylist(req);
   return res.success;
@@ -190,5 +197,22 @@ export async function deleteAccount(): Promise<boolean> {
   if (res.success) {
     await logout();
   }
+  return res.success;
+}
+
+export async function promoteToAdmin(secret: string, userId?: string): Promise<UserReply> {
+  const req: PartialMessage<PromoteToAdminRequest> = { secret, userId };
+  const res: UserReply = await userClient.promoteToAdmin(req);
+  return res;
+}
+
+export async function getAdminStats(): Promise<AdminDashboardStatsReply> {
+  const res: AdminDashboardStatsReply = await userClient.getAdminDashboardStats({});
+  return res;
+}
+
+export async function adminDeleteUser(id: string): Promise<boolean> {
+  const req: PartialMessage<AdminDeleteUserRequest> = { id };
+  const res: DeleteReply = await userClient.adminDeleteUser(req);
   return res.success;
 }

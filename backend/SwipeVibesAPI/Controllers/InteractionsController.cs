@@ -32,6 +32,8 @@ namespace SwipeVibesAPI.Controllers
             public string? Album { get; set; }
             public double? Bpm { get; set; }
             public double? Gain { get; set; }
+            public int? Position { get; set; }
+            public bool InstantSync { get; set; }
         }
 
         [HttpPost]
@@ -63,14 +65,16 @@ namespace SwipeVibesAPI.Controllers
                 Title = body.Title,
                 Album = body.Album,
                 Bpm = body.Bpm,
-                Gain = body.Gain
+                Gain = body.Gain,
+                Position = body.Position
             };
 
             var added = await _fs.AddInteractionAsync(doc);
 
             await _fs.UpdateUserStatsAsync(userId!, body.Decision.ToLowerInvariant(), body.Bpm, body.Artist);
 
-            if (body.Decision.ToLowerInvariant() == "like")
+            // Only export to Spotify if InstantSync is enabled
+            if (body.Decision.ToLowerInvariant() == "like" && body.InstantSync)
             {
                 await _fs.ExportLikeToSpotifyAsync(userId!, body.Isrc);
             }

@@ -65,6 +65,7 @@ export default function GeneralNavigationContainer() {
     if (pathname.includes('/playlist/')) return 1; // Specific playlist details
     if (pathname.includes('/statistics')) return 1; // Keep Profile active for statistics
     if (pathname.includes('/settings')) return 2;
+    if (pathname.includes('/admin')) return 2;
     return 0;
   };
 

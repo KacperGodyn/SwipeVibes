@@ -114,20 +114,8 @@
       "DocumentGroups": [
         {
           "DockedWidth": 198,
-          "SelectedChildIndex": 6,
+          "SelectedChildIndex": 4,
           "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "GeminiGrpcService.cs",
-              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\GeminiGrpcService.cs",
-              "RelativeDocumentMoniker": "Services\\GeminiGrpcService.cs",
-              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\GeminiGrpcService.cs",
-              "RelativeToolTip": "Services\\GeminiGrpcService.cs",
-              "ViewState": "AgIAAJAAAAAAAAAAAAAuwHkAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-17T15:30:27.387Z"
-            },
             {
               "$type": "Document",
               "DocumentIndex": 1,
@@ -178,6 +166,31 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "UserGrpcService.cs",
+              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\UserGrpcService.cs",
+              "RelativeDocumentMoniker": "Services\\UserGrpcService.cs",
+              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\UserGrpcService.cs",
+              "RelativeToolTip": "Services\\UserGrpcService.cs",
+              "ViewState": "AgIAAOABAAAAAAAAAAAAAOwBAAArAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-13T18:04:19.27Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "GeminiGrpcService.cs",
+              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\GeminiGrpcService.cs",
+              "RelativeDocumentMoniker": "Services\\GeminiGrpcService.cs",
+              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\GeminiGrpcService.cs",
+              "RelativeToolTip": "Services\\GeminiGrpcService.cs",
+              "ViewState": "AgIAAJAAAAAAAAAAAAAuwHkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-17T15:30:27.387Z"
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 6,
               "Title": "UserDoc.cs",
               "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Entities\\UserDoc.cs",
@@ -187,19 +200,6 @@
               "ViewState": "AgIAAAUAAAAAAAAAAAAswCsAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-12-08T15:59:34.62Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "UserGrpcService.cs",
-              "DocumentMoniker": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\UserGrpcService.cs",
-              "RelativeDocumentMoniker": "Services\\UserGrpcService.cs",
-              "ToolTip": "C:\\_repos\\SwipeVibes\\backend\\SwipeVibesAPI\\Services\\UserGrpcService.cs",
-              "RelativeToolTip": "Services\\UserGrpcService.cs",
-              "ViewState": "AgIAALsBAAAAAAAAAAAQwOYBAAArAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-13T18:04:19.27Z",
-              "EditorCaption": ""
             },
             {
               "$type": "Document",

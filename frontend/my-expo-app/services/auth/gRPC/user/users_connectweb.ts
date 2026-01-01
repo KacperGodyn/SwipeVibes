@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { AddTrackToPlaylistRequest, CreatePlaylistRequest, CreateUserRequest, DeleteAllPlaylistsRequest, DeletePlaylistRequest, DeleteReply, Empty, ExportPlaylistReply, ExportPlaylistRequest, GetPlaylistTracksRequest, LoginReply, LoginRequest, LogoutReply, LogoutRequest, PlaylistReply, PlaylistsListReply, PlaylistTrackReply, PlaylistTracksListReply, RefreshReply, RefreshRequest, RemoveTrackFromPlaylistRequest, ResetSwipeHistoryRequest, SpotifyAuthUrlReply, SpotifyCallbackReply, SpotifyCallbackRequest, UpdateUserRequest, UserInteractionsReply, UserInteractionsRequest, UserReply, UserRequest, UsersReply, UserStatsReply, UserStatsRequest } from "./users_pb";
+import { AddTrackToPlaylistRequest, AdminDashboardStatsReply, AdminDashboardStatsRequest, AdminDeleteUserRequest, CreatePlaylistRequest, CreateUserRequest, DeleteAllPlaylistsRequest, DeletePlaylistRequest, DeleteReply, Empty, ExportPlaylistReply, ExportPlaylistRequest, GetPlaylistTracksRequest, LoginReply, LoginRequest, LogoutReply, LogoutRequest, PlaylistReply, PlaylistsListReply, PlaylistTrackReply, PlaylistTracksListReply, PromoteToAdminRequest, RefreshReply, RefreshRequest, RemoveTrackFromPlaylistRequest, ResetSwipeHistoryRequest, SetCookiesAcceptedRequest, SpotifyAuthUrlReply, SpotifyCallbackReply, SpotifyCallbackRequest, UpdateUserRequest, UserInteractionsReply, UserInteractionsRequest, UserReply, UserRequest, UsersReply, UserStatsReply, UserStatsRequest } from "./users_pb";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -210,6 +210,42 @@ export const UserService = {
       name: "DeleteAccount",
       I: Empty,
       O: DeleteReply,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc users.UserService.PromoteToAdmin
+     */
+    promoteToAdmin: {
+      name: "PromoteToAdmin",
+      I: PromoteToAdminRequest,
+      O: UserReply,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc users.UserService.GetAdminDashboardStats
+     */
+    getAdminDashboardStats: {
+      name: "GetAdminDashboardStats",
+      I: AdminDashboardStatsRequest,
+      O: AdminDashboardStatsReply,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc users.UserService.AdminDeleteUser
+     */
+    adminDeleteUser: {
+      name: "AdminDeleteUser",
+      I: AdminDeleteUserRequest,
+      O: DeleteReply,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc users.UserService.SetCookiesAccepted
+     */
+    setCookiesAccepted: {
+      name: "SetCookiesAccepted",
+      I: SetCookiesAcceptedRequest,
+      O: UserReply,
       kind: MethodKind.Unary,
     },
   }

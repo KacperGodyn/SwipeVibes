@@ -18,6 +18,7 @@ namespace SwipeVibesAPI.Entities
         [FirestoreProperty] public string? Album { get; set; }
         [FirestoreProperty] public double? Bpm { get; set; }
         [FirestoreProperty] public double? Gain { get; set; }
+        [FirestoreProperty] public int? Position { get; set; }
         [FirestoreProperty] public FSTimestamp Ts { get; set; }
     }
 }

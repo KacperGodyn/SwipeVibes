@@ -62,6 +62,13 @@ export class LogRequest extends Message<LogRequest> {
    */
   gain = 0;
 
+  /**
+   * Position in recommendation queue (1-indexed)
+   *
+   * @generated from field: int32 position = 11;
+   */
+  position = 0;
+
   constructor(data?: PartialMessage<LogRequest>) {
     super();
     proto3.util.initPartial(data, this);
@@ -80,6 +87,7 @@ export class LogRequest extends Message<LogRequest> {
     { no: 8, name: "album", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 9, name: "bpm", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
     { no: 10, name: "gain", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
+    { no: 11, name: "position", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): LogRequest {

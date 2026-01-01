@@ -3,6 +3,8 @@ import { View, Text, Pressable, Platform, StyleSheet } from 'react-native';
 import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
 import { useTheme } from '../services/theme/ThemeContext';
 import { getBool, setBool } from '../services/storage/mmkv';
+import { userClient } from '../services/auth/gRPC/user/connectClient';
+import { getAccessToken } from '../services/auth/token';
 
 export default function CookieConsentModal() {
   const [visible, setVisible] = useState(false);
@@ -17,9 +19,20 @@ export default function CookieConsentModal() {
     }
   }, []);
 
-  const handleAccept = () => {
+  const handleAccept = async () => {
+    // Save locally first
     setBool('cookie_consent_accepted', true);
     setVisible(false);
+
+    // Then sync to Firestore if authenticated
+    const token = getAccessToken();
+    if (token) {
+      try {
+        await userClient.setCookiesAccepted({ accepted: true });
+      } catch (err) {
+        // Silent fail - consent is still stored locally
+      }
+    }
   };
 
   if (!visible) return null;

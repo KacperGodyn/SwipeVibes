@@ -39,6 +39,7 @@ public class InteractionGrpcService : InteractionService.InteractionServiceBase
             Album = request.Album,
             Bpm = request.Bpm,
             Gain = request.Gain,
+            Position = request.Position == 0 ? null : request.Position,
         };
 
         var added = await _fs.AddInteractionAsync(doc);

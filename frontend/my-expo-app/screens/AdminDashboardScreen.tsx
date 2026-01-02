@@ -10,6 +10,7 @@ import {
   RefreshControl,
   Platform,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useTheme } from '../services/theme/ThemeContext';
 import { userClient } from '../services/auth/gRPC/user/connectClient';
 import { UserReply } from '../services/auth/gRPC/user/users_pb';
@@ -28,6 +29,7 @@ interface Stats {
 }
 
 export default function AdminDashboardScreen() {
+  const router = useRouter();
   const { colors } = useTheme();
   const [users, setUsers] = useState<UserReply[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,10 +52,17 @@ export default function AdminDashboardScreen() {
       });
     } catch (error: any) {
       console.error('Failed to fetch data', error);
+
+      const msg = error.message || '';
+      if (msg.includes('permission_denied') || msg.includes('Admin access required')) {
+        router.replace('/home');
+        return;
+      }
+
       if (Platform.OS === 'web') {
-        window.alert('Failed to fetch data: ' + error.message);
+        window.alert('Failed to fetch data: ' + msg);
       } else {
-        Alert.alert('Error', 'Failed to fetch data: ' + error.message);
+        Alert.alert('Error', 'Failed to fetch data: ' + msg);
       }
     }
   }, []);

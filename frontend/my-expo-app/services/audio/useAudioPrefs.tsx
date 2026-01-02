@@ -67,7 +67,6 @@ export function AudioPrefsProvider({ children }: PropsWithChildren) {
     languageRef.current = languageFilters;
   }, [languageFilters]);
 
-  // Initial Load
   useEffect(() => {
     try {
       const storedMuted = getBool(KEY_MUTED);

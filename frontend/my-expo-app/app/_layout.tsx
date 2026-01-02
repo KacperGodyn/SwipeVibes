@@ -38,8 +38,6 @@ function RootLayoutNav() {
     const inRedirectPage = segments[0] === 'oauth2redirect';
     const isAuthenticated = !!session;
 
-    console.log('[LAYOUT CHECK] Auth:', isAuthenticated, 'Path:', segments);
-
     if (!isAuthenticated) {
       if (!inAuthGroup && !inRedirectPage) {
         router.replace('/');
@@ -50,8 +48,7 @@ function RootLayoutNav() {
       }
 
       const inAdminPage = segments[0] === 'admin';
-      const { role } = (session as any) || {}; // Wait, session is string. We need role from hook.
-      // We will access role from useSession in the next step properly.
+      const { role } = (session as any) || {};
     }
   }, [session, segments, isLoading]);
 

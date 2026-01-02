@@ -29,17 +29,18 @@ export default function CardNavigationContainer({
       style={{
         backgroundColor: colors.input,
         borderColor: colors.inputBorder,
-        shadowColor: colors.text, // Subtle shadow using text color (black/white)
+        shadowColor: colors.text,
       }}>
       <Pressable
         className="items-center justify-center rounded-full border p-3 shadow-lg active:scale-95"
         style={{
           backgroundColor: colors.card,
           borderColor: colors.inputBorder,
-          shadowColor: '#000', // Buttons can keep black shadow for pop
+          shadowColor: '#000',
           opacity: undoDisabled ? 0.3 : 1,
         }}
-        onPress={() => !undoDisabled && onUndo?.()}>
+        onPress={() => !undoDisabled && onUndo?.()}
+        testID="undo-button">
         <UndoIcon width={28} height={28} color="#f0c954ff" />
       </Pressable>
 
@@ -50,7 +51,8 @@ export default function CardNavigationContainer({
           borderColor: colors.inputBorder,
           shadowColor: '#000',
         }}
-        onPress={onDislike}>
+        onPress={onDislike}
+        testID="dislike-button">
         <DislikeIcon width={32} height={32} color="#F05454" />
       </Pressable>
 
@@ -61,7 +63,8 @@ export default function CardNavigationContainer({
           borderColor: colors.inputBorder,
           shadowColor: '#000',
         }}
-        onPress={onSuper}>
+        onPress={onSuper}
+        testID="super-button">
         <StarIcon width={28} height={28} color="#4c6bafff" />
       </Pressable>
 
@@ -72,7 +75,8 @@ export default function CardNavigationContainer({
           borderColor: colors.inputBorder,
           shadowColor: '#000',
         }}
-        onPress={onLike}>
+        onPress={onLike}
+        testID="like-button">
         <LikeIcon width={32} height={32} color="#4CAF50" />
       </Pressable>
     </View>

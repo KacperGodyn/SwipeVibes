@@ -11,8 +11,6 @@ module.exports = {
         'vibe-accent': '#F05454',
       },
       fontFamily: {
-        // Ensuring we can user custom fonts if we added them,
-        // for now just extending default sans
         sans: ['System', 'sans-serif'],
       },
     },

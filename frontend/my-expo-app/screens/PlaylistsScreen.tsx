@@ -7,37 +7,34 @@ import {
   TextInput,
   Alert,
   useWindowDimensions,
-  ActivityIndicator, // Added ActivityIndicator
-  LayoutChangeEvent, // Added LayoutChangeEvent
+  ActivityIndicator,
+  LayoutChangeEvent,
 } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router'; // Added useRouter
+import { useRouter, useFocusEffect } from 'expo-router';
 import Animated, {
   FadeInDown,
-  FadeOutUp, // Added FadeOutUp
-  useSharedValue, // Added useSharedValue
-  useAnimatedScrollHandler, // Added useAnimatedScrollHandler
-  useAnimatedStyle, // Added useAnimatedStyle
-  withTiming, // Added withTiming
+  FadeOutUp,
+  useSharedValue,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  withTiming,
 } from 'react-native-reanimated';
 import ScreenLayout from 'components/ScreenLayout';
 import { useTheme } from '../services/theme/ThemeContext';
 import Playlists from 'components/playlists/Playlists';
 import { createPlaylist } from '../services/auth/api';
 
-// Icons
 import ReturnIcon from '../assets/HomeCard/undo.svg';
 import CancelIcon from '../assets/HomeCard/dislike.svg';
 import ConfirmIcon from '../assets/HomeCard/like.svg';
 import NewPlaylistIcon from '../assets/PlaylistsCard/new_playlist.svg';
-
-// Custom Card Constants
 const CARD_PADDING_HORIZONTAL = 16;
 const CARD_BORDER_RADIUS = 24;
 
 export default function PlaylistsScreen() {
   const { colors } = useTheme();
   const { height: screenHeight } = useWindowDimensions();
-  const router = useRouter(); // Initialized useRouter
+  const router = useRouter();
   const [refreshKey, setRefreshKey] = useState(0);
 
   const [isAddingNew, setIsAddingNew] = useState(false);
@@ -74,10 +71,8 @@ export default function PlaylistsScreen() {
     setNewPlaylistName('');
   };
 
-  // Card dimensions
   const cardHeight = screenHeight - 240;
 
-  // Scrollbar Logic
   const scrollY = useSharedValue(0);
   const [contentHeight, setContentHeight] = useState(1);
   const [visibleHeight, setVisibleHeight] = useState(1);
@@ -117,7 +112,6 @@ export default function PlaylistsScreen() {
               borderColor: colors.cardBorder,
             },
           ]}>
-          {/* Header Section */}
           <View style={styles.cardHeader}>
             <View style={styles.headerRow}>
               <Text style={[styles.title, { color: colors.text }]}>Playlists</Text>
@@ -142,9 +136,7 @@ export default function PlaylistsScreen() {
             </View>
           </View>
 
-          {/* Content */}
           <View style={styles.contentContainer}>
-            {/* Add Playlist Input Section */}
             {isAddingNew && (
               <Animated.View
                 entering={FadeInDown.duration(300)}
@@ -186,15 +178,13 @@ export default function PlaylistsScreen() {
               </Animated.View>
             )}
 
-            {/* Content with Custom Scrollbar */}
             <View style={styles.contentWrapper}>
               <Playlists
-                refreshTrigger={refreshKey} // Changed from refreshKey to refreshTrigger to match existing prop name
+                refreshTrigger={refreshKey}
                 onScroll={scrollHandler}
                 onContentSizeChange={(_, h) => setContentHeight(h)}
                 onLayout={(e) => setVisibleHeight(e.nativeEvent.layout.height)}
               />
-              {/* Custom Scrollbar */}
               <View style={styles.scrollTrack}>
                 <Animated.View
                   style={[
@@ -207,7 +197,6 @@ export default function PlaylistsScreen() {
             </View>
           </View>
 
-          {/* Footer with Return Button */}
           <View style={styles.footer}>
             <Pressable
               onPress={() => router.push('/profile')}
@@ -233,7 +222,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: CARD_PADDING_HORIZONTAL,
-    paddingTop: 60, // Consistent with others
+    paddingTop: 60,
     alignItems: 'center',
   },
   card: {
@@ -246,7 +235,7 @@ const styles = StyleSheet.create({
   cardHeader: {
     padding: 24,
     paddingBottom: 16,
-    zIndex: 10, // Ensure header is above scroll content if needed
+    zIndex: 10,
   },
   headerRow: {
     flexDirection: 'row',
@@ -312,7 +301,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: 'bold',
   },
-  // Content Wrapper ensuring correct layout for scrollbar
   contentWrapper: {
     flex: 1,
     marginHorizontal: 16,

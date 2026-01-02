@@ -1,8 +1,13 @@
-import { Platform } from "react-native";
-import { mmkv } from "../storage/mmkv";
+import { Platform } from 'react-native';
+import {
+  getSecureSync,
+  setSecureSync,
+  loadSecureToCache,
+  clearSecureCache,
+} from '../storage/secureStorage';
 
-const ACCESS_KEY = "sv:access";
-const REFRESH_KEY = "sv:refresh";
+const ACCESS_KEY = 'sv:access';
+const REFRESH_KEY = 'sv:refresh';
 
 let ACCESS: string | null = null;
 
@@ -10,58 +15,47 @@ export const getAccessToken = () => ACCESS;
 
 export const setAccessToken = (t: string | null) => {
   ACCESS = t;
-  try {
-    if (Platform.OS === "web") {
-      if (t) localStorage.setItem(ACCESS_KEY, t);
-      else localStorage.removeItem(ACCESS_KEY);
-    } else {
-      if (t) mmkv.set(ACCESS_KEY, t);
-      else mmkv.delete(ACCESS_KEY);
-    }
-  } catch {}
+  if (Platform.OS !== 'web') {
+    setSecureSync(ACCESS_KEY, t);
+  }
 };
 
 export const loadAccessToken = (): string | null => {
   if (ACCESS) return ACCESS;
-  try {
-    const t =
-      Platform.OS === "web"
-        ? localStorage.getItem(ACCESS_KEY)
-        : mmkv.contains(ACCESS_KEY)
-        ? mmkv.getString(ACCESS_KEY) ?? null
-        : null;
-    ACCESS = t;
-    return t;
-  } catch {
-    return null;
+
+  if (Platform.OS !== 'web') {
+    ACCESS = getSecureSync(ACCESS_KEY);
+    return ACCESS;
   }
+
+  return null;
 };
 
-
 export function setRefreshToken(token: string | null) {
-  try {
-    if (Platform.OS === 'web') {
-      if (token) localStorage.setItem(REFRESH_KEY, token);
-      else localStorage.removeItem(REFRESH_KEY);
-    } else {
-      if (token) mmkv.set(REFRESH_KEY, token);
-      else mmkv.delete(REFRESH_KEY);
-    }
-  } catch (e) {
-    console.error("Błąd zapisu refresh tokena", e);
+  if (Platform.OS !== 'web') {
+    setSecureSync(REFRESH_KEY, token);
   }
 }
 
 export function getRefreshToken(): string | null {
-  try {
-    if (Platform.OS === 'web') {
-      return localStorage.getItem(REFRESH_KEY);
-    }
-    if (mmkv.contains(REFRESH_KEY)) {
-        return mmkv.getString(REFRESH_KEY) ?? null;
-    }
-    return null;
-  } catch {
-    return null;
+  if (Platform.OS !== 'web') {
+    return getSecureSync(REFRESH_KEY);
+  }
+  return null;
+}
+
+export async function initializeTokens(): Promise<void> {
+  if (Platform.OS !== 'web') {
+    await loadSecureToCache([ACCESS_KEY, REFRESH_KEY]);
+    ACCESS = getSecureSync(ACCESS_KEY);
+  }
+}
+
+export function clearTokens(): void {
+  ACCESS = null;
+  if (Platform.OS !== 'web') {
+    setSecureSync(ACCESS_KEY, null);
+    setSecureSync(REFRESH_KEY, null);
+    clearSecureCache();
   }
 }

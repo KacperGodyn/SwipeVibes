@@ -86,9 +86,8 @@ export default function ProfileCard() {
 
   return (
     <View className="w-full items-center gap-8 py-8">
-      {/* Avatar Section */}
       <View className="relative">
-        <View className="border-vibe-accent h-32 w-32 overflow-hidden rounded-full border-2 shadow-[0_0_20px_rgba(240,84,84,0.4)]">
+        <View className="h-32 w-32 overflow-hidden rounded-full border-2 border-vibe-accent shadow-[0_0_20px_rgba(240,84,84,0.4)]">
           {savedAvatar ? (
             <Image source={{ uri: savedAvatar }} className="h-full w-full" />
           ) : (
@@ -104,13 +103,11 @@ export default function ProfileCard() {
         <View className="absolute bottom-0 right-0 h-6 w-6 rounded-full border-2 border-black bg-green-500" />
       </View>
 
-      {/* User Info */}
       <View className="items-center">
         <Text className="text-2xl font-bold text-white shadow-md">{username}</Text>
         <Text className="mt-1 text-xs uppercase tracking-widest text-gray-500">Free Plan</Text>
       </View>
 
-      {/* Actions */}
       <View className="w-full gap-4 px-8">
         <View className="gap-2">
           <Text className="text-center text-sm font-semibold text-gray-400">Integration</Text>

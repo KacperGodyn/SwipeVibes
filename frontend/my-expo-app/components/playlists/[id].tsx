@@ -28,7 +28,6 @@ import { ExportPlaylistRequest, type PlaylistTrack } from '../../services/auth/g
 import { useTheme } from '../../services/theme/ThemeContext';
 import Svg, { Path } from 'react-native-svg';
 
-// Icons
 import ReturnIcon from '../../assets/HomeCard/undo.svg';
 import ExportIcon from '../../assets/PlaylistsCard/export.svg';
 import TrashIcon from '../../assets/HomeCard/dislike.svg';
@@ -93,14 +92,7 @@ export default function PlaylistDetailsScreen() {
 
       if (response.success) {
         setExportSuccess(true);
-        setTimeout(() => setExportSuccess(false), 3000); // Reset after 3s
-
-        // Optional: still show alert or just let the animation be the feedback?
-        // User asked for animation, I will skip the generic 'Success' alert if the animation is clear,
-        // OR show a less intrusive one, OR just rely on the button state.
-        // But user might want to open Spotify. I'll keep the Alert but maybe delay it or rely on the button.
-        // Actually, the Alert has "Open Spotify" action, which is useful. I will keep it but maybe show it slightly after or simultaneously.
-        // The user request "dodaj jakąś małą animację fajki ... i otrzymaniu 200" implies visual feedback on the button.
+        setTimeout(() => setExportSuccess(false), 3000);
 
         Alert.alert('Success', 'Playlist exported to Spotify!', [
           { text: 'OK' },
@@ -241,7 +233,7 @@ export default function PlaylistDetailsScreen() {
                       ? colors.input
                       : colors.accent,
                   opacity: pressed || exporting ? 0.8 : 1,
-                  minWidth: exportSuccess ? 140 : 120, // Expand slightly for "Exported!"
+                  minWidth: exportSuccess ? 140 : 120,
                 },
               ]}>
               {exporting ? (

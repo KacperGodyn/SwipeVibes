@@ -40,7 +40,7 @@ namespace SwipeVibesAPI.Services
             _vertexAiEndpoint = $"projects/{projectId}/locations/{location}/publishers/google/models/{_modelId}";
         }
 
-        public override async Task<GetGeminiTrackRecommendationResponse> GetGeminiTrackRecommendation(
+        public virtual async Task<GetGeminiTrackRecommendationResponse> GetGeminiTrackRecommendation(
             GetGeminiTrackRecommendationRequest request, ServerCallContext context)
         {
             var genreFilters = request.GenreFilters?.ToList() ?? new List<string>();
@@ -57,7 +57,7 @@ namespace SwipeVibesAPI.Services
                 Contents = { new Content { Role = "user", Parts = { new Part { Text = userContent } } } },
                 GenerationConfig = new GenerationConfig
                 {
-                    Temperature = 0.5f, // Jeszcze niższa temperatura dla lepszego posłuszeństwa
+                    Temperature = 0.5f,
                     TopP = 0.9f,
                     MaxOutputTokens = 1024
                 }

@@ -16,13 +16,10 @@ using Google.Cloud.AIPlatform.V1Beta1;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-
-
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure Serilog
 builder.Host.UseSerilog((context, services, configuration) => configuration
     .ReadFrom.Configuration(context.Configuration)
     .ReadFrom.Services(services)
@@ -41,6 +38,7 @@ builder.Services.AddSingleton<JwtService>();
 builder.Services.AddSingleton<FirestoreService>();
 builder.Services.AddSingleton<UserGrpcService>();
 builder.Services.AddSingleton<GeminiGrpcService>();
+builder.Services.AddSingleton<ICookieService, CookieService>();
 
 builder.Services.AddHttpClient<ISpotifyService, SpotifyService>();
 
@@ -66,8 +64,6 @@ if (!string.IsNullOrWhiteSpace(saPath))
 }
 else
 {
-    Console.WriteLine("Initializing Firebase with Default Credentials (Cloud Run)");
-
     if (FirebaseAdmin.FirebaseApp.DefaultInstance == null)
     {
         FirebaseAdmin.FirebaseApp.Create(new FirebaseAdmin.AppOptions
@@ -82,14 +78,11 @@ GoogleCredential GetGoogleCredential(string? path, IEnumerable<string>? scopes =
 {
     if (!string.IsNullOrWhiteSpace(path))
     {
-        // Local development: Service Account file
         var creds = GoogleCredential.FromFile(path);
         return scopes != null ? creds.CreateScoped(scopes) : creds;
     }
     else
     {
-        // Cloud Run: Application Default Credentials
-        Console.WriteLine("Using Application Default Credentials (Cloud Run)");
         var creds = GoogleCredential.GetApplicationDefault();
         return scopes != null ? creds.CreateScoped(scopes) : creds;
     }
@@ -108,7 +101,6 @@ builder.Services.AddSingleton(provider =>
 
 builder.Services.AddSingleton(provider =>
 {
-    // Tutaj też hybrydowo
     var credential = GetGoogleCredential(saPath, PredictionServiceClient.DefaultScopes);
 
     var location = builder.Configuration["GCP:Location"] ?? "us-central1";
@@ -162,24 +154,24 @@ builder.Services
           NameClaimType = ClaimTypes.Name,
           RoleClaimType = ClaimTypes.Role
       };
+
+      options.Events = new JwtBearerEvents
+      {
+          OnMessageReceived = context =>
+          {
+              if (string.IsNullOrEmpty(context.Token) && context.Request.Cookies.TryGetValue("sv_access", out var cookieToken))
+              {
+                  context.Token = cookieToken;
+              }
+              return Task.CompletedTask;
+          }
+      };
   });
 
 if (builder.Environment.IsDevelopment())
 {
     builder.WebHost.ConfigureKestrel(options =>
     {
-        //// gRPC HTTP/2 endpoint
-        //// #TODO: might add TLS later
-        //options.ListenLocalhost(5000, o => o.Protocols = HttpProtocols.Http2);
-
-        //// REST HTTP/1.1 endpoint
-        ////options.ListenLocalhost(5001, o => o.Protocols = HttpProtocols.Http1);
-        //options.ListenLocalhost(5001, o =>
-        //{
-        //    o.Protocols = HttpProtocols.Http1;
-        //    o.UseHttps();
-        //});
-
         options.ListenLocalhost(5001, o =>
         {
             o.Protocols = HttpProtocols.Http1AndHttp2;

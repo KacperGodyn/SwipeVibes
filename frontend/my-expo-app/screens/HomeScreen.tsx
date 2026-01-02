@@ -133,7 +133,6 @@ export default function HomeScreen() {
     const lastActivePlaylistId = getString('last_active_playlist_id');
 
     if (lastActivePlaylistId) {
-      // Check if playlist still exists
       try {
         const playlists = await getMyPlaylists();
         const exists = playlists.some((p) => p.id === lastActivePlaylistId);
@@ -145,19 +144,15 @@ export default function HomeScreen() {
       }
     }
 
-    // No valid playlist - create default one
     try {
       const playlists = await getMyPlaylists();
 
-      // Check if any playlist exists
       if (playlists.length > 0) {
-        // Use first available playlist
         const firstPlaylist = playlists[0];
         setString('last_active_playlist_id', firstPlaylist.id);
         return firstPlaylist.id;
       }
 
-      // No playlists at all - create SwipeVibes Liked
       const newPlaylist = await createPlaylist(DEFAULT_PLAYLIST_NAME);
       setString('last_active_playlist_id', newPlaylist.id);
       setShowPlaylistCreatedModal(true);
@@ -172,7 +167,6 @@ export default function HomeScreen() {
     if (loading || !track) return;
 
     if (decision === 'like' && !skipAutoAdd) {
-      // Run playlist logic in background
       (async () => {
         const playlistId = await ensurePlaylistExists();
         if (playlistId) {
@@ -235,7 +229,6 @@ export default function HomeScreen() {
       testID="home-screen-layout">
       <WebPlaybackStarter />
 
-      {/* Playlist Created Modal */}
       <Modal
         visible={showPlaylistCreatedModal}
         transparent

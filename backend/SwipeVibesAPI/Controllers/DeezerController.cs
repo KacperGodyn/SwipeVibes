@@ -72,7 +72,7 @@ public class DeezerController : ControllerBase
         }
     }
 
-    // DTO (Reszta pliku pozostaje bez zmian)
+
     public sealed record RandomTrackResponse(
         long Id,
         string Title,
@@ -85,7 +85,7 @@ public class DeezerController : ControllerBase
         int Rank,
         string? ReleaseDate,
         bool ExplicitLyrics,
-        string ExplicitContentLyrics,    // "Unspecified" / "Clean" / "Explicit"
+        string ExplicitContentLyrics,
         string ExplicitCover,
         string? Preview,
         double? Bpm,

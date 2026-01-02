@@ -14,30 +14,7 @@ using SwipeVibesAPI.Services;
 
 namespace SwipeVibesAPI.Grpc
 {
-    internal class FakeServerCallContext : ServerCallContext
-    {
-        private readonly CancellationToken _cancellationToken;
-        protected override CancellationToken CancellationTokenCore => _cancellationToken;
 
-        public FakeServerCallContext(CancellationToken ct)
-        {
-            _cancellationToken = ct;
-        }
-
-        #region not implemented
-        protected override Task WriteResponseHeadersAsyncCore(Metadata responseHeaders) => throw new NotImplementedException();
-        protected override ContextPropagationToken CreatePropagationTokenCore(ContextPropagationOptions options) => throw new NotImplementedException();
-        protected override string MethodCore => "";
-        protected override string HostCore => "";
-        protected override string PeerCore => "";
-        protected override DateTime DeadlineCore => DateTime.MaxValue;
-        protected override Metadata RequestHeadersCore => new Metadata();
-        protected override Metadata ResponseTrailersCore => new Metadata();
-        protected override Status StatusCore { get => Status.DefaultSuccess; set => throw new NotImplementedException(); }
-        protected override WriteOptions WriteOptionsCore { get => null; set => throw new NotImplementedException(); }
-        protected override AuthContext AuthContextCore => null;
-        #endregion
-    }
 
     public class DeezerGrpcService : DeezerService.DeezerServiceBase
     {
@@ -85,9 +62,8 @@ namespace SwipeVibesAPI.Grpc
 
         public async Task<Track> GetAiRecommendedTrackAsync(string userId, CancellationToken ct = default)
         {
-            var fakeContext = new FakeServerCallContext(ct);
 
-            var interactionsTask = _userSvc.GetUserInteractions(new UserInteractionsRequest { UserId = userId }, fakeContext);
+            var interactionsTask = _userSvc.GetUserInteractions(new UserInteractionsRequest { UserId = userId }, null);
             var prefsTask = _firestoreService.GetUserPrefsAsync(userId);
 
             await Task.WhenAll(interactionsTask, prefsTask);
@@ -120,7 +96,7 @@ namespace SwipeVibesAPI.Grpc
                 if (userPrefs.LanguageFilters != null) geminiRequest.LanguageFilters.AddRange(userPrefs.LanguageFilters);
             }
 
-            var geminiResponse = await _geminiSvc.GetGeminiTrackRecommendation(geminiRequest, fakeContext);
+            var geminiResponse = await _geminiSvc.GetGeminiTrackRecommendation(geminiRequest, null);
 
             if (!geminiResponse.RecommendedArtistNames.Any())
             {

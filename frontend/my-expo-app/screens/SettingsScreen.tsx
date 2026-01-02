@@ -98,11 +98,10 @@ export default function SettingsScreen() {
 
     const indicatorHeight = (visibleHeight / contentHeight) * visibleHeight;
     const translateY =
-      (scrollY.value / (contentHeight - visibleHeight)) * (visibleHeight - indicatorHeight - 24); // -24 for padding
+      (scrollY.value / (contentHeight - visibleHeight)) * (visibleHeight - indicatorHeight - 24);
 
-    // Clamp values to keep inside header/footer bounds if needed, but simplified here
     return {
-      height: Math.max(indicatorHeight, 40), // Min height 40
+      height: Math.max(indicatorHeight, 40),
       transform: [
         { translateY: Math.max(0, Math.min(translateY, visibleHeight - indicatorHeight)) },
       ],
@@ -450,16 +449,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: CARD_PADDING_HORIZONTAL,
-    paddingTop: 70, // Space for theme toggle button
-    alignItems: 'center', // Center card on web
+    paddingTop: 70,
+    alignItems: 'center',
   },
 
   card: {
     borderRadius: CARD_BORDER_RADIUS,
     borderWidth: 1,
-    overflow: 'hidden', // IMPORTANT: Content must be clipped
+    overflow: 'hidden',
     width: '100%',
-    maxWidth: 500, // Limit width on web
+    maxWidth: 500,
   },
   cardHeader: {
     paddingHorizontal: 24,
@@ -494,7 +493,7 @@ const styles = StyleSheet.create({
   customScrollbarTrack: {
     position: 'absolute',
     right: 4,
-    top: 80, // Skip header
+    top: 80,
     bottom: 4,
     width: 4,
     borderRadius: 2,

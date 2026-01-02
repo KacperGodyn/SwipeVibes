@@ -1,7 +1,6 @@
 import * as WebBrowser from 'expo-web-browser';
 import * as React from 'react';
 import * as Google from 'expo-auth-session/providers/google';
-// import { makeRedirectUri } from 'expo-auth-session';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
@@ -19,21 +18,11 @@ export function useGoogleLogin({ onSuccess, onError }: UseGoogleLoginOptions = {
   const webClientId: string | undefined = google.webClientId;
   const iosClientId: string | undefined = google.iosClientId;
 
-  // const androidReversed = androidClientId
-  //   ? `com.googleusercontent.apps.${androidClientId.replace('.apps.googleusercontent.com', '')}`
-  //   : undefined;
-
-  // const androidRedirect =
-  //   Platform.OS === 'android' && androidReversed
-  //     ? makeRedirectUri({ scheme: androidReversed, path: 'oauth2redirect/google' })
-  //     : undefined;
-
   const config =
     Platform.OS === 'android'
       ? ({
           androidClientId,
           scopes: ['openid', 'email', 'profile'],
-          // ...(androidRedirect ? { redirectUri: androidRedirect } : {}),
         } as const)
       : Platform.OS === 'ios'
         ? ({

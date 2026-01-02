@@ -44,7 +44,6 @@ export default function GeneralNavigationContainer() {
   const { colors } = useTheme();
   const { refetch } = useRecommendation();
 
-  // Store measured button positions (center X of each button)
   const [buttonPositions, setButtonPositions] = useState<number[]>([0, 0, 0]);
   const indicatorLeft = useSharedValue(0);
   const hasInitialized = useRef(false);
@@ -61,9 +60,9 @@ export default function GeneralNavigationContainer() {
 
   const getActiveIndex = (): number => {
     if (pathname.includes('/profile')) return 1;
-    if (pathname.includes('/playlists')) return 1; // Keep Profile active for playlists
-    if (pathname.includes('/playlist/')) return 1; // Specific playlist details
-    if (pathname.includes('/statistics')) return 1; // Keep Profile active for statistics
+    if (pathname.includes('/playlists')) return 1;
+    if (pathname.includes('/playlist/')) return 1;
+    if (pathname.includes('/statistics')) return 1;
     if (pathname.includes('/settings')) return 2;
     if (pathname.includes('/admin')) return 2;
     return 0;
@@ -72,7 +71,6 @@ export default function GeneralNavigationContainer() {
   const activeIndex = getActiveIndex();
   const Vibe = VIBES[currentVibe] ?? MusicIcon;
 
-  // Measure button position on layout
   const handleButtonLayout = (index: number) => (e: LayoutChangeEvent) => {
     const { x, width } = e.nativeEvent.layout;
     const centerX = x + width / 2;
@@ -83,7 +81,6 @@ export default function GeneralNavigationContainer() {
     });
   };
 
-  // Animate indicator to active button's measured position
   useEffect(() => {
     const targetCenter = buttonPositions[activeIndex];
     if (targetCenter > 0) {
@@ -107,7 +104,6 @@ export default function GeneralNavigationContainer() {
 
   const handlePress = (item: NavItem) => {
     if (item === 'home' && (pathname === '/home' || pathname === '/')) {
-      // User clicked "Discover" while on Discover -> Refresh Song
       refetch();
     }
     router.push(`/${item === 'home' ? 'home' : item}`);

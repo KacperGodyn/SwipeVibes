@@ -20,25 +20,61 @@ namespace SwipeVibesAPI.Services
             _spotifyService = spotifyService;
         }
 
-        private async Task<string?> GetSpotifyAccessTokenForUser(string userId)
-        {
-            var snap = await _db.Collection("users").Document(userId).GetSnapshotAsync();
-            if (!snap.Exists) return null;
+        protected FirestoreService() { }
 
-            var user = snap.ConvertTo<UserDoc>();
-            if (string.IsNullOrEmpty(user.SpotifyRefreshToken)) return null;
+        public virtual async Task<UserDoc?> GetUserByIdAsync(string id)
+        {
+            var docRef = _db.Collection("users").Document(id);
+            var snapshot = await docRef.GetSnapshotAsync();
+            return snapshot.Exists ? snapshot.ConvertTo<UserDoc>() : null;
+        }
+
+        public virtual async Task<UserDoc?> GetUserByEmailAsync(string email)
+        {
+            var snapshot = await _db.Collection("users").WhereEqualTo("Email", email).Limit(1).GetSnapshotAsync();
+            return snapshot.Documents.FirstOrDefault()?.ConvertTo<UserDoc>();
+        }
+
+        public virtual async Task<UserDoc?> GetUserByUsernameAsync(string username)
+        {
+            var snapshot = await _db.Collection("users").WhereEqualTo("Username", username).Limit(1).GetSnapshotAsync();
+            return snapshot.Documents.FirstOrDefault()?.ConvertTo<UserDoc>();
+        }
+
+        public virtual async Task<UserDoc> CreateUserAsync(UserDoc user)
+        {
+            var refDoc = await _db.Collection("users").AddAsync(user);
+            user.Id = refDoc.Id;
+            return user;
+        }
+
+        public virtual async Task UpdateUserAsync(UserDoc user)
+        {
+             if (string.IsNullOrEmpty(user.Id)) throw new ArgumentException("User ID is required for update.");
+             await _db.Collection("users").Document(user.Id).SetAsync(user, SetOptions.MergeAll);
+        }
+
+        public virtual async Task UpdateUserCookiesAcceptedAsync(string userId, bool accepted)
+        {
+             await _db.Collection("users").Document(userId).UpdateAsync("CookiesAccepted", accepted);
+        }
+
+        public virtual async Task<string?> GetSpotifyAccessTokenForUser(string userId)
+        {
+            var user = await GetUserByIdAsync(userId);
+            if (user == null || string.IsNullOrEmpty(user.SpotifyRefreshToken)) return null;
 
             var tokenResponse = await _spotifyService.RefreshAccessTokenAsync(user.SpotifyRefreshToken);
             return tokenResponse?.AccessToken;
         }
 
-        public Task<DocumentReference> AddInteractionAsync(InteractionDoc doc)
+        public virtual Task<DocumentReference> AddInteractionAsync(InteractionDoc doc)
         {
             doc.Ts = FSTimestamp.FromDateTime(DateTime.UtcNow);
             return _db.Collection("interactions").AddAsync(doc);
         }
 
-        public async Task DeleteUserInteractionsAsync(string userId, string? decisionType = null)
+        public virtual async Task DeleteUserInteractionsAsync(string userId, string? decisionType = null)
         {
             var query = _db.Collection("interactions").WhereEqualTo("UserId", userId);
 
@@ -61,13 +97,13 @@ namespace SwipeVibesAPI.Services
             }
         }
 
-        public async Task<UserPrefsDoc?> GetUserPrefsAsync(string userId)
+        public virtual async Task<UserPrefsDoc?> GetUserPrefsAsync(string userId)
         {
             var snap = await _db.Collection("user_prefs").Document(userId).GetSnapshotAsync();
             return snap.Exists ? snap.ConvertTo<UserPrefsDoc>() : null;
         }
 
-        public Task SetUserPrefsAsync(string userId, bool audioMuted, bool autoExportLikes, List<string> genreFilters, List<string> languageFilters)
+        public virtual Task SetUserPrefsAsync(string userId, bool audioMuted, bool autoExportLikes, List<string> genreFilters, List<string> languageFilters)
         {
             var doc = new UserPrefsDoc
             {
@@ -80,7 +116,7 @@ namespace SwipeVibesAPI.Services
             return _db.Collection("user_prefs").Document(userId).SetAsync(doc, SetOptions.MergeAll);
         }
 
-        public async Task ExportLikeToSpotifyAsync(string userId, string isrc)
+        public virtual async Task ExportLikeToSpotifyAsync(string userId, string isrc)
         {
             try
             {
@@ -117,11 +153,10 @@ namespace SwipeVibesAPI.Services
             }
             catch (Exception ex)
             {
-                // Silent fail for Spotify export
             }
         }
 
-        public async Task<PlaylistDoc> CreatePlaylistAsync(string userId, string name)
+        public virtual async Task<PlaylistDoc> CreatePlaylistAsync(string userId, string name)
         {
             var doc = new PlaylistDoc
             {
@@ -133,13 +168,10 @@ namespace SwipeVibesAPI.Services
             var refDoc = await _db.Collection("playlists").AddAsync(doc);
             doc.Id = refDoc.Id;
 
-            // Note: Spotify playlist is NOT auto-created here.
-            // Users can use "Export to Spotify" feature if they want to sync.
-
             return doc;
         }
 
-        public async Task<List<(string Id, PlaylistDoc Doc)>> GetUserPlaylistsAsync(string userId)
+        public virtual async Task<List<(string Id, PlaylistDoc Doc)>> GetUserPlaylistsAsync(string userId)
         {
             var snapshot = await _db.Collection("playlists")
                 .WhereEqualTo("UserId", userId)
@@ -156,7 +188,7 @@ namespace SwipeVibesAPI.Services
                 .ToList();
         }
 
-        public async Task<bool> DeletePlaylistAsync(string userId, string playlistId)
+        public virtual async Task<bool> DeletePlaylistAsync(string userId, string playlistId)
         {
             var docRef = _db.Collection("playlists").Document(playlistId);
             var snap = await docRef.GetSnapshotAsync();
@@ -191,7 +223,7 @@ namespace SwipeVibesAPI.Services
             return true;
         }
 
-        public async Task DeleteAllUserPlaylistsAsync(string userId, bool unsubscribeSpotify)
+        public virtual async Task DeleteAllUserPlaylistsAsync(string userId, bool unsubscribeSpotify)
         {
             var playlists = await GetUserPlaylistsAsync(userId);
             string? accessToken = null;
@@ -211,7 +243,6 @@ namespace SwipeVibesAPI.Services
                     }
                     catch
                     {
-                        // Silent fail for Spotify unfollow
                     }
                 }
 
@@ -219,7 +250,7 @@ namespace SwipeVibesAPI.Services
             }
         }
 
-        public async Task DeleteUserAccountAsync(string userId)
+        public virtual async Task DeleteUserAccountAsync(string userId)
         {
             await DeleteUserInteractionsAsync(userId);
             await DeleteAllUserPlaylistsAsync(userId, false);
@@ -227,7 +258,7 @@ namespace SwipeVibesAPI.Services
             await _db.Collection("users").Document(userId).DeleteAsync();
         }
 
-        public async Task AddTrackToPlaylistAsync(string userId, string playlistId, PlaylistTrackDoc track)
+        public virtual async Task AddTrackToPlaylistAsync(string userId, string playlistId, PlaylistTrackDoc track)
         {
             var playlistRef = _db.Collection("playlists").Document(playlistId);
             var playlistSnap = await playlistRef.GetSnapshotAsync();
@@ -261,12 +292,11 @@ namespace SwipeVibesAPI.Services
                 }
                 catch
                 {
-                    // Silent fail for Spotify sync
                 }
             }
         }
 
-        public async Task RemoveTrackFromPlaylistAsync(string userId, string playlistId, long deezerTrackId)
+        public virtual async Task RemoveTrackFromPlaylistAsync(string userId, string playlistId, long deezerTrackId)
         {
             var playlistRef = _db.Collection("playlists").Document(playlistId);
             var playlistSnap = await playlistRef.GetSnapshotAsync();
@@ -293,7 +323,6 @@ namespace SwipeVibesAPI.Services
                     }
                     catch
                     {
-                        // Silent fail for Spotify sync
                     }
                 }
 
@@ -301,7 +330,7 @@ namespace SwipeVibesAPI.Services
             }
         }
 
-        public async Task<List<PlaylistTrackDoc>> GetPlaylistTracksAsync(string userId, string playlistId)
+        public virtual async Task<List<PlaylistTrackDoc>> GetPlaylistTracksAsync(string userId, string playlistId)
         {
             var playlistRef = _db.Collection("playlists").Document(playlistId);
             var playlistSnap = await playlistRef.GetSnapshotAsync();
@@ -311,7 +340,7 @@ namespace SwipeVibesAPI.Services
             return snapshot.Documents.Select(d => d.ConvertTo<PlaylistTrackDoc>()).ToList();
         }
 
-        public async Task UpdateUserStatsAsync(string userId, string decision, double? bpm, string? artist)
+        public virtual async Task UpdateUserStatsAsync(string userId, string decision, double? bpm, string? artist)
         {
             var userRef = _db.Collection("users").Document(userId);
 

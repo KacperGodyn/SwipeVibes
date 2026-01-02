@@ -73,7 +73,7 @@ namespace SwipeVibesAPI.Controllers
 
             await _fs.UpdateUserStatsAsync(userId!, body.Decision.ToLowerInvariant(), body.Bpm, body.Artist);
 
-            // Only export to Spotify if InstantSync is enabled
+
             if (body.Decision.ToLowerInvariant() == "like" && body.InstantSync)
             {
                 await _fs.ExportLikeToSpotifyAsync(userId!, body.Isrc);

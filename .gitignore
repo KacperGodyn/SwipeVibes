@@ -23,8 +23,13 @@ local.properties
 
 .vscode/
 .idea/
+.vs
 *.swp
 *.swo
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
 
 .DS_Store
 Thumbs.db
@@ -92,3 +97,15 @@ Protos/obj/
 
 backend/SwipeVibesAPI/appsettings.json
 frontend/my-expo-app/firebase.ts
+.firebase/
+
+# Tests
+frontend/my-expo-app/__tests__/
+frontend/my-expo-app/jest.config.js
+frontend/my-expo-app/jest-setup.js
+frontend/my-expo-app/all_output.txt
+frontend/my-expo-app/integration_log*.txt
+frontend/my-expo-app/test_output.txt
+frontend/my-expo-app/jest_direct.txt
+frontend/my-expo-app/coverage/
+frontend/my-expo-app/.nyc_output/

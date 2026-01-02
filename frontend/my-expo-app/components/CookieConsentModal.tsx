@@ -20,18 +20,14 @@ export default function CookieConsentModal() {
   }, []);
 
   const handleAccept = async () => {
-    // Save locally first
     setBool('cookie_consent_accepted', true);
     setVisible(false);
 
-    // Then sync to Firestore if authenticated
     const token = getAccessToken();
     if (token) {
       try {
         await userClient.setCookiesAccepted({ accepted: true });
-      } catch (err) {
-        // Silent fail - consent is still stored locally
-      }
+      } catch (err) {}
     }
   };
 

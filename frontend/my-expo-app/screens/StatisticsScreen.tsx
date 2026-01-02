@@ -15,7 +15,6 @@ import { getSavedUserId } from '../services/auth/userInfo';
 import ScreenLayout from 'components/ScreenLayout';
 import { useTheme } from '../services/theme/ThemeContext';
 
-// Reuse constants for consistency
 const CARD_PADDING_HORIZONTAL = 16;
 const CARD_BORDER_RADIUS = 24;
 
@@ -93,7 +92,6 @@ export default function StatisticsScreen() {
   const likeRatio =
     totalInteractions > 0 ? Math.round(((stats?.likes || 0) / totalInteractions) * 100) : 0;
 
-  // Card dimensions
   const cardHeight = screenHeight - 240;
 
   return (
@@ -165,7 +163,7 @@ export default function StatisticsScreen() {
                     <StatCard
                       label="Liked"
                       value={stats?.likes || 0}
-                      borderColor="rgba(34, 197, 94, 0.3)" // Green tint
+                      borderColor="rgba(34, 197, 94, 0.3)"
                     />
                   </View>
                   <View style={styles.gap} />
@@ -173,7 +171,7 @@ export default function StatisticsScreen() {
                     <StatCard
                       label="Disliked"
                       value={stats?.dislikes || 0}
-                      borderColor="rgba(239, 68, 68, 0.3)" // Red tint
+                      borderColor="rgba(239, 68, 68, 0.3)"
                     />
                   </View>
                 </View>
@@ -201,7 +199,7 @@ export default function StatisticsScreen() {
                     <View
                       style={[
                         styles.progressBarFill,
-                        { width: `${likeRatio}%`, backgroundColor: '#22c55e' }, // Green
+                        { width: `${likeRatio}%`, backgroundColor: '#22c55e' },
                       ]}
                     />
                   </View>

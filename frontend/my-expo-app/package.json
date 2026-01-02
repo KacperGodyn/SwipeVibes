@@ -12,7 +12,8 @@
     "format": "eslint \"**/*.{js,jsx,ts,tsx}\" --fix && prettier \"**/*.{js,jsx,ts,tsx,json}\" --write",
     "web": "cross-env APP_ENV=development expo start --web",
     "build:web": "cross-env APP_ENV=production expo export --platform web --clear",
-    "deploy": "yarn build:web && firebase deploy"
+    "deploy": "yarn build:web && firebase deploy",
+    "test": "jest"
   },
   "dependencies": {
     "@bufbuild/protobuf": "^1.10.0",
@@ -32,6 +33,7 @@
     "expo-linear-gradient": "^15.0.7",
     "expo-linking": "8.0.8",
     "expo-router": "6.0.12",
+    "expo-secure-store": "^15.0.8",
     "expo-status-bar": "3.0.8",
     "expo-web-browser": "^15.0.8",
     "firebase": "^12.4.0",
@@ -59,6 +61,8 @@
     "@babel/core": "^7.26.0",
     "@expo/cli": "54.0.11",
     "@svgr/webpack": "^8.1.0",
+    "@testing-library/react-native": "^13.3.3",
+    "@types/jest": "^29.0.0",
     "@types/minimatch": "6.0.0",
     "@types/react": "19.1.10",
     "@types/react-native": "0.73.0",
@@ -69,9 +73,12 @@
     "eslint-config-expo": "10.0.0",
     "eslint-config-prettier": "10.1.2",
     "gh-pages": "6.3.0",
+    "jest": "^29.0.0",
+    "jest-expo": "^54.0.16",
     "prettier": "3.2.5",
     "prettier-plugin-tailwindcss": "0.6.14",
     "react-native-svg-transformer": "^1.5.1",
+    "react-test-renderer": "19.1.0",
     "tailwindcss": "3.4.18",
     "typescript": "5.9.3"
   }

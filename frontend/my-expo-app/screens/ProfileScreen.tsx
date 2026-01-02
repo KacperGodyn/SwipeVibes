@@ -18,7 +18,6 @@ import { refreshAccess } from '../services/auth/api';
 import { getSavedUsername, getSavedAvatar } from '../services/auth/userInfo';
 import { SpotifyConnectButton } from 'components/buttons/SpotifyConnectButton';
 
-// Reuse constants from SettingsScreen for consistency
 const CARD_PADDING_HORIZONTAL = 16;
 const CARD_BORDER_RADIUS = 24;
 
@@ -30,7 +29,6 @@ type JwtPayload = {
   [k: string]: any;
 };
 
-// Helper to decode JWT (moved from ProfileCard)
 function decodeJwt(token: string | null): JwtPayload | null {
   if (!token) return null;
   const parts = token.split('.');
@@ -75,8 +73,7 @@ export default function ProfileScreen() {
   const savedAvatar = getSavedAvatar();
   const username = savedUsername ?? payload?.name ?? payload?.unique_name ?? '(unknown)';
 
-  // Card dimensions
-  const cardHeight = screenHeight - 240; // Matched to SettingsScreen calculations
+  const cardHeight = screenHeight - 240;
 
   const onLogout = async () => {
     setWorking(true);
@@ -99,18 +96,14 @@ export default function ProfileScreen() {
               borderColor: colors.cardBorder,
             },
           ]}>
-          {/* Header */}
           <View style={styles.cardHeader}>
             <Text style={[styles.title, { color: colors.text }]}>Profile</Text>
           </View>
-
-          {/* Scrollable Content */}
           <ScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}>
             <View style={styles.contentContainer}>
-              {/* Avatar Section */}
               <View style={styles.avatarContainer}>
                 <View style={[styles.avatarWrapper, { borderColor: colors.accent }]}>
                   {savedAvatar ? (
@@ -125,19 +118,15 @@ export default function ProfileScreen() {
                     </View>
                   )}
                 </View>
-                {/* Online Status */}
                 <View style={[styles.statusBadge, { borderColor: colors.card }]} />
               </View>
 
-              {/* User Info */}
               <View style={styles.userInfo}>
                 <Text style={[styles.username, { color: colors.text }]}>{username}</Text>
                 <Text style={[styles.planBadge, { color: colors.textSecondary }]}>FREE PLAN</Text>
               </View>
 
-              {/* Actions Section */}
               <View style={styles.actionsSection}>
-                {/* Integration */}
                 <View style={styles.integrationBlock}>
                   <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
                     Integration
@@ -149,7 +138,6 @@ export default function ProfileScreen() {
 
                 <View style={[styles.divider, { backgroundColor: colors.divider }]} />
 
-                {/* Nav Buttons */}
                 <View style={styles.buttonContainer}>
                   <Pressable
                     onPress={() => router.push('/statistics')}
@@ -183,7 +171,6 @@ export default function ProfileScreen() {
                     </Text>
                   </Pressable>
 
-                  {/* Logout */}
                   <Pressable
                     onPress={onLogout}
                     disabled={working}
@@ -232,16 +219,15 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     alignItems: 'center',
-    gap: 16, // Reduced from 24
+    gap: 16,
     paddingTop: 8,
   },
-  // Avatar
   avatarContainer: {
     position: 'relative',
   },
   avatarWrapper: {
-    width: 100, // Reduced from 120
-    height: 100, // Reduced from 120
+    width: 100,
+    height: 100,
     borderRadius: 50,
     borderWidth: 3,
     overflow: 'hidden',
@@ -276,10 +262,9 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#22c55e', // Green
+    backgroundColor: '#22c55e',
     borderWidth: 3,
   },
-  // User Info
   userInfo: {
     alignItems: 'center',
     gap: 4,
@@ -294,13 +279,12 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     textTransform: 'uppercase',
   },
-  // Actions
   actionsSection: {
     width: '100%',
-    gap: 8, // Reduced from 12
+    gap: 8,
   },
   integrationBlock: {
-    gap: 6, // Reduced from 8
+    gap: 6,
   },
   sectionLabel: {
     fontSize: 12,
@@ -318,17 +302,17 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     width: '100%',
-    marginVertical: 8, // Reduced from 12
+    marginVertical: 8,
   },
   buttonContainer: {
     width: '100%',
     alignItems: 'center',
-    gap: 8, // Reduced from 12
+    gap: 8,
   },
   actionButton: {
     width: '100%',
     maxWidth: 320,
-    paddingVertical: 12, // Reduced from 14
+    paddingVertical: 12,
     borderRadius: 16,
     borderWidth: 1,
     alignItems: 'center',
@@ -339,10 +323,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   logoutButton: {
-    marginTop: 8, // Reduced from 12
+    marginTop: 8,
     width: '100%',
     maxWidth: 320,
-    paddingVertical: 12, // Reduced from 14
+    paddingVertical: 12,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(239, 68, 68, 0.3)',

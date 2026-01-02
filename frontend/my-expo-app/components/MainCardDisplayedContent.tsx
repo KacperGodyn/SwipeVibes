@@ -51,17 +51,12 @@ export default function MainCardDisplayedContent({
     setLocalMuted(muted);
   }, [muted]);
 
-  // Pause if lost focus
   useEffect(() => {
     if (!isFocused) {
       try {
         player.pause();
       } catch {}
     } else if (source && !localMuted) {
-      // Resume if regained focus and should be playing
-      // tryPlay(); // Optional: do we want auto-resume? User didn't explicitly ask, but typical behavior.
-      // User said "problem is timeami leci dalej".
-      // Only pause on blur is the critical fix.
     }
   }, [isFocused, player]);
 
@@ -86,7 +81,6 @@ export default function MainCardDisplayedContent({
   useEffect(() => {
     if (!source) return;
     const interval = setInterval(() => {
-      // Only loop if focused
       if (isFocused && player.playing && player.currentTime >= snippetDuration) {
         player.seekTo(0);
       }
@@ -201,10 +195,6 @@ export default function MainCardDisplayedContent({
     );
   }
 
-  // --- Main Card Design ---
-
-  // Calculate dynamic image size based on remaining space
-  // Card Height - Padding (32) - Header (36) - Meta (70) - Controls (80) - Gaps (approx 30) - Extra Spacing (70)
   const availableHeight = cardHeight - 320;
   const imageSize = Math.min(availableHeight, 280);
 
@@ -219,7 +209,6 @@ export default function MainCardDisplayedContent({
           borderColor: colors.cardBorder,
         },
       ]}>
-      {/* Top Status Bar (Mute) */}
       <View style={styles.header}>
         <Pressable
           onPress={() => toggleMute()}
@@ -235,7 +224,6 @@ export default function MainCardDisplayedContent({
         </Pressable>
       </View>
 
-      {/* Album Art Container */}
       <View
         style={[
           styles.imageContainer,
@@ -257,7 +245,6 @@ export default function MainCardDisplayedContent({
         )}
       </View>
 
-      {/* Meta Info */}
       <View style={styles.metaContainer}>
         <Text style={[styles.trackTitle, { color: colors.text }]} numberOfLines={1}>
           {title}
@@ -267,7 +254,6 @@ export default function MainCardDisplayedContent({
         </Text>
       </View>
 
-      {/* Controls */}
       <View style={styles.controlsContainer}>
         <CardNavigationContainer
           onUndo={onUndo}
@@ -315,7 +301,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: 'hidden',
     marginBottom: 8,
-    // Shadow for depth
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -341,21 +326,20 @@ const styles = StyleSheet.create({
     width: '85%',
     alignItems: 'center',
     gap: 2,
-    marginBottom: 6, // Reduced from 8 to 6
+    marginBottom: 6,
   },
   trackTitle: {
-    fontSize: 18, // Reduced from 22 to 18
+    fontSize: 18,
     fontWeight: '800',
     textAlign: 'center',
   },
   artistName: {
-    fontSize: 12, // Reduced from 14 to 12
+    fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
-    marginBottom: 4, // Kept as 4
+    marginBottom: 4,
   },
   controlsContainer: {
-    // Removed scale to prevent overflow/crowding
     paddingBottom: 4,
   },
 });

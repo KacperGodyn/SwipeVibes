@@ -29,9 +29,9 @@ import {
   AdminDeleteUserRequest,
 } from './gRPC/user/users_pb';
 import { setAccessToken, setRefreshToken, getRefreshToken } from './token';
-import { Platform, DeviceEventEmitter } from 'react-native'; // Dodano DeviceEventEmitter
+import { Platform, DeviceEventEmitter } from 'react-native';
 import { setSavedUser, clearSavedUser } from './userInfo';
-import { AUTH_EVENT } from './useBootstrapAuth'; // Import nazwy eventu (opcjonalnie string "auth.state_change")
+import { AUTH_EVENT } from './useBootstrapAuth';
 
 const handleLoginResponse = (res: LoginReply) => {
   setAccessToken(res.token);
@@ -41,7 +41,6 @@ const handleLoginResponse = (res: LoginReply) => {
 
   setSavedUser(res.username, res.role, res.id);
 
-  // Powiadamiamy aplikację o zalogowaniu
   DeviceEventEmitter.emit('auth.state_change', true);
 
   return res;
@@ -114,7 +113,6 @@ export async function logout(): Promise<void> {
     clearSavedUser();
     setAccessToken(null);
     setRefreshToken(null);
-    // Powiadamiamy aplikację o wylogowaniu!
     DeviceEventEmitter.emit('auth.state_change', false);
   }
 }
@@ -177,8 +175,6 @@ export async function removeTrackFromPlaylist(
   const res: DeleteReply = await userClient.removeTrackFromPlaylist(req);
   return res.success;
 }
-
-// --- Danger Zone ---
 
 export async function resetSwipeHistory(type: SwipeResetType): Promise<boolean> {
   const req: PartialMessage<ResetSwipeHistoryRequest> = { type };
